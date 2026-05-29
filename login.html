@@ -263,6 +263,19 @@
                         localStorage.setItem('userUsername', response.student.email);
                         localStorage.setItem('userPhone', response.student.phone || '');
                         localStorage.setItem('userRegistered', 'true');
+                        const savedStudentId = localStorage.getItem('currentStudentId');
+                        let savedStudent = null;
+                        try {
+                            savedStudent = savedStudentId ? JSON.parse(localStorage.getItem(savedStudentId) || 'null') : null;
+                        } catch (error) {
+                            savedStudent = null;
+                        }
+                        const resolvedRollNo = response.student.rollNo || response.student.rollno ||
+                            (savedStudent && (savedStudent.rollNo || savedStudent.rollno || savedStudent.userRollNo)) ||
+                            localStorage.getItem('userRollNo') || '';
+                        if (resolvedRollNo) {
+                            localStorage.setItem('userRollNo', resolvedRollNo);
+                        }
                         const localPaymentStatus = localStorage.getItem('paymentStatus');
                         const localPaymentVerified = localStorage.getItem('paymentVerified');
                         const currentEmail = (localStorage.getItem('userEmail') || localStorage.getItem('userUsername') || '').toLowerCase();
@@ -282,6 +295,17 @@
                             return;
                         }
                         localStorage.setItem('isLoggedIn', 'true');
+
+                        if (resolvedRollNo && !response.student.rollNo && typeof APIService !== 'undefined') {
+                            APIService.updateProfile({
+                                firstName: response.student.firstName,
+                                lastName: response.student.lastName,
+                                phone: response.student.phone,
+                                college: response.student.college || localStorage.getItem('userCollege') || '',
+                                course: response.student.course || localStorage.getItem('userSkill') || '',
+                                rollNo: resolvedRollNo
+                            }).catch(error => console.warn('Roll number sync failed:', error.message));
+                        }
 
                         if (remember) {
                             localStorage.setItem('rememberUsername', username);

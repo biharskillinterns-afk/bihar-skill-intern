@@ -24,7 +24,32 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost';
 // Student Registration
 router.post('/register', validateStudentRegistration, async (req, res) => {
     try {
-        const { firstName, lastName, email, phone, password, dob, gender, college, course = '', district } = req.body;
+        const {
+            firstName,
+            lastName,
+            email,
+            phone,
+            password,
+            dob,
+            gender,
+            college,
+            course = '',
+            district,
+            rollNo,
+            rollno,
+            guardian,
+            address,
+            university,
+            degree,
+            department,
+            semester,
+            session,
+            emergencyName,
+            emergencyPhone,
+            relationship,
+            profileImage,
+            signature
+        } = req.body;
         
         const connection = await req.db.getConnection();
         
@@ -43,9 +68,36 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
         
         // Insert student
         const [result] = await connection.query(
-            `INSERT INTO students (firstName, lastName, email, phone, password, dob, gender, college, course, district, createdAt) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-            [firstName, lastName, email, phone, hashedPassword, dob, gender, college, course, district]
+            `INSERT INTO students
+                (firstName, lastName, email, phone, password, dob, gender, college, course, district,
+                 rollNo, guardian, address, university, degree, department, semester, session,
+                 emergencyName, emergencyPhone, relationship, profileImage, signature, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [
+                firstName,
+                lastName,
+                email,
+                phone,
+                hashedPassword,
+                dob,
+                gender,
+                college,
+                course,
+                district,
+                rollNo || rollno || '',
+                guardian || '',
+                address || '',
+                university || 'Veer Kunwar Singh University',
+                degree || '',
+                department || '',
+                semester || '',
+                session || '',
+                emergencyName || '',
+                emergencyPhone || '',
+                relationship || '',
+                profileImage || '',
+                signature || ''
+            ]
         );
         
         connection.release();
@@ -65,7 +117,26 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 firstName,
                 lastName,
                 email,
-                phone
+                phone,
+                dob,
+                gender,
+                college,
+                course,
+                district,
+                rollNo: rollNo || rollno || '',
+                rollno: rollNo || rollno || '',
+                guardian: guardian || '',
+                address: address || '',
+                university: university || 'Veer Kunwar Singh University',
+                degree: degree || '',
+                department: department || '',
+                semester: semester || '',
+                session: session || '',
+                emergencyName: emergencyName || '',
+                emergencyPhone: emergencyPhone || '',
+                relationship: relationship || '',
+                profileImage: profileImage || '',
+                signature: signature || ''
             }
         });
     } catch (error) {
@@ -140,7 +211,20 @@ router.post('/login', validateLogin, async (req, res) => {
                 course: student.course,
                 district: student.district,
                 state: student.state,
+                rollNo: student.rollNo,
+                rollno: student.rollNo,
+                guardian: student.guardian,
+                address: student.address,
+                university: student.university,
+                degree: student.degree,
+                department: student.department,
+                semester: student.semester,
+                session: student.session,
+                emergencyName: student.emergencyName,
+                emergencyPhone: student.emergencyPhone,
+                relationship: student.relationship,
                 profileImage: student.profileImage,
+                signature: student.signature,
                 bio: student.bio,
                 paymentStatus
             }

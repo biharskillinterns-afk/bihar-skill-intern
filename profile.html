@@ -1014,7 +1014,16 @@
 
         function getRegistrationValue(studentData, field, storageKey, fallback = '') {
             const authStorage = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
-            return (studentData && studentData[field]) || authStorage.getItem(storageKey) || fallback;
+            const aliases = {
+                rollno: ['rollno', 'rollNo', 'userRollNo'],
+                guardian: ['guardian', 'fatherName', 'userGuardian'],
+                skill: ['skill', 'course', 'selectedSkill', 'userSkill']
+            };
+            const fields = aliases[field] || [field];
+            for (const key of fields) {
+                if (studentData && studentData[key]) return studentData[key];
+            }
+            return authStorage.getItem(storageKey) || fallback;
         }
 
         function applyStoredSignature(studentData = null) {
@@ -1211,6 +1220,19 @@
                 const data = await res.json();
                 if (!data.success) throw new Error(data.message || 'Failed to fetch profile');
                 const student = data.student;
+                if (typeof BSIAuthStorage !== 'undefined') {
+                    BSIAuthStorage.saveStudent(student, student.passwordHash);
+                    const savedStudentId = BSIAuthStorage.getItem('currentStudentId');
+                    const savedStudentJson = savedStudentId ? BSIAuthStorage.getItem(savedStudentId) : null;
+                    if (savedStudentJson) {
+                        BSIAuthStorage.setItem('student', savedStudentJson);
+                    }
+                }
+                const registeredStudent = getRegisteredStudentData();
+                const rollNo = student.rollNo || student.rollno || (registeredStudent && (registeredStudent.rollNo || registeredStudent.rollno)) || localStorage.getItem('userRollNo') || '';
+                if (rollNo) {
+                    localStorage.setItem('userRollNo', rollNo);
+                }
 
                 document.getElementById('profileName').textContent = student.firstName + ' ' + student.lastName;
                 document.getElementById('profileEmail').textContent = student.email;
@@ -1218,7 +1240,6 @@
                 document.getElementById('displayName').textContent = student.firstName + ' ' + student.lastName;
 
                 const initials = (student.firstName[0] + (student.lastName ? student.lastName[0] : '')).toUpperCase();
-                const registeredStudent = getRegisteredStudentData();
                 syncRegistrationImages(registeredStudent);
                 if (student.profileImage) {
                     localStorage.setItem('userProfileImage', student.profileImage);
@@ -1551,6 +1572,17 @@
                             phone,
                             college: localStorage.getItem('userCollege') || '',
                             course: skill,
+                            rollNo: localStorage.getItem('userRollNo') || '',
+                            guardian: localStorage.getItem('userGuardian') || '',
+                            address: localStorage.getItem('userAddress') || '',
+                            university: localStorage.getItem('userUniversity') || 'Veer Kunwar Singh University',
+                            degree: localStorage.getItem('userDegree') || '',
+                            department: localStorage.getItem('userDepartment') || '',
+                            semester: localStorage.getItem('userSemester') || '',
+                            session: localStorage.getItem('userSession') || '',
+                            emergencyName: localStorage.getItem('userEmergencyName') || '',
+                            emergencyPhone: localStorage.getItem('userEmergencyPhone') || '',
+                            relationship: localStorage.getItem('userRelationship') || '',
                             profileImage: localStorage.getItem('userProfileImage') || ''
                         })
                     });

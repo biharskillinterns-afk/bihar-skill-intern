@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const pool = require('./config/database');
 const { ensureDatabaseExists } = require('./config/database');
-const { ensureSchema } = require('./config/schema');
+const { ensureSchema, ensureRuntimeSchema } = require('./config/schema');
 const paymentsRouter = require('./routes/payments');
 
 const app = express();
@@ -90,6 +90,7 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 async function startServer() {
     await ensureDatabaseExists();
+    await ensureRuntimeSchema(pool);
 
     if (process.env.SKIP_SCHEMA_SYNC !== 'true') {
         await ensureSchema(pool);

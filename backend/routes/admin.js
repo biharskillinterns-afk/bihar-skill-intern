@@ -57,7 +57,8 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
         const [students] = await connection.query(
-            `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state, status, createdAt
+            `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state,
+                    rollNo, rollNo AS rollno, status, createdAt
              FROM students`
         );
         connection.release();
@@ -81,7 +82,9 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
         const [students] = await connection.query(
-            `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state, profileImage, bio, status, createdAt, updatedAt
+            `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state,
+                    rollNo, rollNo AS rollno, guardian, address, university, degree, department, semester, session,
+                    emergencyName, emergencyPhone, relationship, profileImage, signature, bio, status, createdAt, updatedAt
              FROM students WHERE id = ?`,
             [req.params.id]
         );

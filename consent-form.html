@@ -783,28 +783,33 @@
                 || student.email
                 || '';
             const rollNo = student.rollno || student.rollNo || '';
+            const setStorageValue = (key, value) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    localStorage.setItem(key, value);
+                }
+            };
 
             if (isAdminConsentMode()) {
-                localStorage.setItem('adminConsentActiveStudentId', student.id || '');
-                localStorage.setItem('adminConsentActiveRollNo', rollNo);
+                setStorageValue('adminConsentActiveStudentId', student.id || '');
+                setStorageValue('adminConsentActiveRollNo', rollNo);
                 return;
             }
 
-            localStorage.setItem('currentStudentId', student.id || localStorage.getItem('currentStudentId') || '');
-            localStorage.setItem('userName', displayName);
-            localStorage.setItem('userEmail', student.email || '');
-            localStorage.setItem('userPhone', student.phone || '');
-            localStorage.setItem('userGender', student.gender || '');
-            localStorage.setItem('userGuardian', student.guardian || student.fatherName || '');
-            localStorage.setItem('userDOB', student.dob || '');
-            localStorage.setItem('userAddress', student.address || '');
-            localStorage.setItem('userState', student.state || 'Bihar');
-            localStorage.setItem('userDistrict', student.district || '');
-            localStorage.setItem('userCollege', student.college || '');
-            localStorage.setItem('userDepartment', student.department || '');
-            localStorage.setItem('userSession', student.session || '');
-            localStorage.setItem('userRollNo', rollNo);
-            localStorage.setItem('userSkill', student.skill || student.course || student.selectedSkill || student.userSkill || '');
+            setStorageValue('currentStudentId', student.id || localStorage.getItem('currentStudentId') || '');
+            setStorageValue('userName', displayName);
+            setStorageValue('userEmail', student.email || '');
+            setStorageValue('userPhone', student.phone || '');
+            setStorageValue('userGender', student.gender || '');
+            setStorageValue('userGuardian', student.guardian || student.fatherName || '');
+            setStorageValue('userDOB', student.dob || '');
+            setStorageValue('userAddress', student.address || '');
+            setStorageValue('userState', student.state || 'Bihar');
+            setStorageValue('userDistrict', student.district || '');
+            setStorageValue('userCollege', student.college || '');
+            setStorageValue('userDepartment', student.department || '');
+            setStorageValue('userSession', student.session || '');
+            setStorageValue('userRollNo', rollNo);
+            setStorageValue('userSkill', student.skill || student.course || student.selectedSkill || student.userSkill || '');
             syncRegistrationImages(student);
         }
 
@@ -891,7 +896,16 @@
         }
 
         function getRegistrationValue(studentData, field, storageKey, fallback = '') {
-            return (studentData && studentData[field]) || localStorage.getItem(storageKey) || fallback;
+            const aliases = {
+                rollno: ['rollno', 'rollNo', 'userRollNo'],
+                guardian: ['guardian', 'fatherName', 'userGuardian'],
+                skill: ['skill', 'course', 'selectedSkill', 'userSkill']
+            };
+            const fields = aliases[field] || [field];
+            for (const key of fields) {
+                if (studentData && studentData[key]) return studentData[key];
+            }
+            return localStorage.getItem(storageKey) || fallback;
         }
 
         function formatDateForInput(date) {

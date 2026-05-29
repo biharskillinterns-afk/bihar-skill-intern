@@ -84,6 +84,34 @@ async function ensureSchema(pool) {
     }
 }
 
+async function ensureRuntimeSchema(pool) {
+    const connection = await pool.getConnection();
+
+    try {
+        const requiredStudentColumns = [
+            ['rollNo', "VARCHAR(50)"],
+            ['guardian', "VARCHAR(150)"],
+            ['address', "TEXT"],
+            ['university', "VARCHAR(150) DEFAULT 'Veer Kunwar Singh University'"],
+            ['degree', "VARCHAR(100)"],
+            ['department', "VARCHAR(100)"],
+            ['semester', "VARCHAR(50)"],
+            ['session', "VARCHAR(50)"],
+            ['emergencyName', "VARCHAR(150)"],
+            ['emergencyPhone', "VARCHAR(20)"],
+            ['relationship', "VARCHAR(100)"],
+            ['signature', "LONGTEXT"]
+        ];
+
+        for (const [columnName, definition] of requiredStudentColumns) {
+            await connection.query(`ALTER TABLE students ADD COLUMN IF NOT EXISTS \`${columnName}\` ${definition}`);
+        }
+    } finally {
+        connection.release();
+    }
+}
+
 module.exports = {
-    ensureSchema
+    ensureSchema,
+    ensureRuntimeSchema
 };

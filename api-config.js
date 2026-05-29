@@ -260,7 +260,7 @@ class BSIAuthStorage {
         this.setItem('userDepartment', studentData.department || '');
         this.setItem('userSemester', studentData.semester || '');
         this.setItem('userSession', studentData.session || '');
-        this.setItem('userRollNo', studentData.rollno || studentData.rollNo || studentData.userRollNo || '');
+        this.setItem('userRollNo', studentData.rollno || studentData.rollNo || studentData.userRollNo || this.getItem('userRollNo') || '');
         this.setItem('userSkill', studentData.skill || studentData.course || studentData.selectedSkill || studentData.userSkill || '');
         this.setItem('userEmergencyName', studentData.emergencyName || '');
         this.setItem('userEmergencyPhone', studentData.emergencyPhone || '');
@@ -403,7 +403,9 @@ class APIService {
             }
             if (response.student) {
                 BSIAuthStorage.saveStudent(response.student, response.student.passwordHash);
-                BSIAuthStorage.setItem('student', JSON.stringify(response.student));
+                const savedStudentId = BSIAuthStorage.getItem('currentStudentId');
+                const savedStudent = savedStudentId ? BSIAuthStorage.getItem(savedStudentId) : null;
+                BSIAuthStorage.setItem('student', savedStudent || JSON.stringify(response.student));
             }
         }
 
@@ -432,7 +434,9 @@ class APIService {
                 BSIAuthStorage.setItem('paymentStatus', paymentStatus);
                 BSIAuthStorage.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
                 BSIAuthStorage.setItem('isLoggedIn', paymentStatus === 'completed' ? 'true' : 'false');
-                BSIAuthStorage.setItem('student', JSON.stringify(response.student));
+                const savedStudentId = BSIAuthStorage.getItem('currentStudentId');
+                const savedStudent = savedStudentId ? BSIAuthStorage.getItem(savedStudentId) : null;
+                BSIAuthStorage.setItem('student', savedStudent || JSON.stringify(response.student));
             }
         }
         return response;

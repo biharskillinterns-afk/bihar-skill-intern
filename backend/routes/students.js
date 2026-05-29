@@ -7,7 +7,9 @@ router.get('/profile', verifyToken, isStudent, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
         const [students] = await connection.query(
-            `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state, profileImage, bio, status, createdAt, updatedAt
+            `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state,
+                    rollNo, rollNo AS rollno, guardian, address, university, degree, department, semester, session,
+                    emergencyName, emergencyPhone, relationship, profileImage, signature, bio, status, createdAt, updatedAt
              FROM students WHERE id = ?`,
             [req.user.id]
         );
@@ -36,12 +38,67 @@ router.get('/profile', verifyToken, isStudent, async (req, res) => {
 // Update student profile
 router.put('/profile', verifyToken, isStudent, async (req, res) => {
     try {
-        const { firstName, lastName, phone, college, course, profileImage } = req.body;
+        const {
+            firstName,
+            lastName,
+            phone,
+            college,
+            course,
+            rollNo,
+            rollno,
+            guardian,
+            address,
+            university,
+            degree,
+            department,
+            semester,
+            session,
+            emergencyName,
+            emergencyPhone,
+            relationship,
+            profileImage,
+            signature
+        } = req.body;
         const connection = await req.db.getConnection();
         
         await connection.query(
-            `UPDATE students SET firstName = ?, lastName = ?, phone = ?, college = ?, course = ?, profileImage = COALESCE(?, profileImage) WHERE id = ?`,
-            [firstName, lastName, phone, college, course, profileImage ?? null, req.user.id]
+            `UPDATE students
+             SET firstName = ?, lastName = ?, phone = ?, college = ?, course = ?,
+                 rollNo = COALESCE(?, rollNo),
+                 guardian = COALESCE(?, guardian),
+                 address = COALESCE(?, address),
+                 university = COALESCE(?, university),
+                 degree = COALESCE(?, degree),
+                 department = COALESCE(?, department),
+                 semester = COALESCE(?, semester),
+                 session = COALESCE(?, session),
+                 emergencyName = COALESCE(?, emergencyName),
+                 emergencyPhone = COALESCE(?, emergencyPhone),
+                 relationship = COALESCE(?, relationship),
+                 profileImage = COALESCE(?, profileImage),
+                 signature = COALESCE(?, signature)
+             WHERE id = ?`,
+            [
+                firstName,
+                lastName,
+                phone,
+                college,
+                course,
+                rollNo ?? rollno ?? null,
+                guardian ?? null,
+                address ?? null,
+                university ?? null,
+                degree ?? null,
+                department ?? null,
+                semester ?? null,
+                session ?? null,
+                emergencyName ?? null,
+                emergencyPhone ?? null,
+                relationship ?? null,
+                profileImage ?? null,
+                signature ?? null,
+                req.user.id
+            ]
         );
         
         connection.release();
