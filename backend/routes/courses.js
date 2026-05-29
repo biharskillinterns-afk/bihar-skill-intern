@@ -6,7 +6,7 @@ const { verifyToken, isStudent } = require('../middleware/auth');
 router.get('/', async (req, res) => {
     try {
         const connection = await req.db.getConnection();
-        const [courses] = await connection.query('SELECT * FROM courses WHERE status = "active"');
+        const [courses] = await connection.query("SELECT * FROM courses WHERE status = 'active'");
         connection.release();
         
         res.json({
@@ -55,7 +55,7 @@ router.post('/:id/enroll', verifyToken, isStudent, async (req, res) => {
         const connection = await req.db.getConnection();
 
         const [courses] = await connection.query(
-            'SELECT id FROM courses WHERE id = ? AND status = "active"',
+            "SELECT id FROM courses WHERE id = ? AND status = 'active'",
             [req.params.id]
         );
 

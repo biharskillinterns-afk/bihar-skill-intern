@@ -79,7 +79,7 @@ function getOptionalUser(req) {
 
 async function getDefaultCourseId(connection) {
     const [courses] = await connection.query(
-        'SELECT id FROM courses WHERE status = "active" ORDER BY id ASC LIMIT 1'
+        "SELECT id FROM courses WHERE status = 'active' ORDER BY id ASC LIMIT 1"
     );
 
     return courses[0]?.id || null;
@@ -675,8 +675,8 @@ router.post('/initiate', verifyToken, isStudent, async (req, res) => {
 
         const courseParams = courseId ? [courseId] : [];
         const courseQuery = courseId
-            ? 'SELECT id, fee FROM courses WHERE id = ? AND status = "active"'
-            : 'SELECT id, fee FROM courses WHERE status = "active" ORDER BY id ASC LIMIT 1';
+            ? "SELECT id, fee FROM courses WHERE id = ? AND status = 'active'"
+            : "SELECT id, fee FROM courses WHERE status = 'active' ORDER BY id ASC LIMIT 1";
         const [courses] = await connection.query(courseQuery, courseParams);
 
         if (courses.length === 0) {

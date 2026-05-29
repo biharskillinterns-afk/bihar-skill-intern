@@ -142,7 +142,7 @@ router.get('/stats', verifyToken, isAdmin, async (req, res) => {
         const [totalStudents] = await connection.query('SELECT COUNT(*) as count FROM students');
         const [totalCourses] = await connection.query('SELECT COUNT(*) as count FROM courses');
         const [totalCertificates] = await connection.query('SELECT COUNT(*) as count FROM certificates WHERE status = "issued"');
-        const [totalPayments] = await connection.query('SELECT SUM(amount) as total FROM payments WHERE status = "completed"');
+        const [totalPayments] = await connection.query("SELECT SUM(amount) as total FROM payments WHERE status = 'completed'");
         
         connection.release();
         

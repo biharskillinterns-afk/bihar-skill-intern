@@ -106,7 +106,7 @@ router.post('/login', validateLogin, async (req, res) => {
         }
 
         const [completedPayments] = await connection.query(
-            'SELECT id FROM payments WHERE studentId = ? AND status = "completed" LIMIT 1',
+            "SELECT id FROM payments WHERE studentId = ? AND status = 'completed' LIMIT 1",
             [student.id]
         );
         connection.release();
