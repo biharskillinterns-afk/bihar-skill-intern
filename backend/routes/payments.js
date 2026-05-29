@@ -201,6 +201,51 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
     }
 }
 
+async function syncCompletedPaymentsForStudent(db, studentId, studentEmail = '') {
+    let connection;
+    try {
+        connection = await db.getConnection();
+        const [pendingPayments] = await connection.query(
+            `SELECT id, amount, gatewayOrderId
+             FROM payments
+             WHERE studentId = ? AND status = 'pending' AND gatewayOrderId IS NOT NULL
+             ORDER BY createdAt DESC LIMIT 5`,
+            [studentId]
+        );
+
+        if (pendingPayments.length === 0) return false;
+
+        const razorpay = getRazorpayClient();
+        let updated = false;
+        for (const payment of pendingPayments) {
+            const paymentsResponse = await razorpay.orders.fetchPayments(payment.gatewayOrderId);
+            const successfulPayment = (paymentsResponse.items || []).find(item =>
+                ['captured', 'authorized'].includes(item.status)
+            );
+
+            if (successfulPayment) {
+                await markRegistrationPaymentCompleted(
+                    { db, headers: {} },
+                    {
+                        razorpayPaymentId: successfulPayment.id,
+                        razorpayOrderId: payment.gatewayOrderId,
+                        studentEmail,
+                        amount: payment.amount
+                    }
+                );
+                updated = true;
+            }
+        }
+
+        return updated;
+    } catch (error) {
+        console.warn('Unable to sync completed Razorpay payments:', error.message);
+        return false;
+    } finally {
+        if (connection) connection.release();
+    }
+}
+
 router.post('/registration-order', async (req, res) => {
     try {
         const { studentName, studentEmail, studentPhone, localOrderId } = req.body;
@@ -559,3 +604,4 @@ router.get('/history', verifyToken, isStudent, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.syncCompletedPaymentsForStudent = syncCompletedPaymentsForStudent;

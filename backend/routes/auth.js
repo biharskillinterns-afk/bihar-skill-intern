@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const { validateStudentRegistration, validateLogin, validateForgotPassword, validateResetPassword, validateAdminRegistration } = require('../middleware/validation');
 const { verifyToken } = require('../middleware/auth');
+const { syncCompletedPaymentsForStudent } = require('./payments');
 
 const getJwtSecret = () => {
     if (process.env.JWT_SECRET) {
@@ -110,7 +111,11 @@ router.post('/login', validateLogin, async (req, res) => {
         );
         connection.release();
 
-        const paymentStatus = completedPayments.length > 0 ? 'completed' : 'pending';
+        let paymentStatus = completedPayments.length > 0 ? 'completed' : 'pending';
+        if (paymentStatus === 'pending') {
+            const synced = await syncCompletedPaymentsForStudent(req.db, student.id, student.email);
+            paymentStatus = synced ? 'completed' : 'pending';
+        }
         
         // Generate JWT
         const token = jwt.sign(

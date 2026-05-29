@@ -263,7 +263,11 @@
                         localStorage.setItem('userUsername', response.student.email);
                         localStorage.setItem('userPhone', response.student.phone || '');
                         localStorage.setItem('userRegistered', 'true');
-                        const paymentStatus = response.student.paymentStatus || localStorage.getItem('paymentStatus') || 'pending';
+                        const localPaymentStatus = localStorage.getItem('paymentStatus');
+                        const localPaymentVerified = localStorage.getItem('paymentVerified');
+                        const paymentStatus = localPaymentStatus === 'completed' || localPaymentVerified === 'true'
+                            ? 'completed'
+                            : response.student.paymentStatus || localPaymentStatus || 'pending';
                         localStorage.setItem('paymentStatus', paymentStatus);
                         localStorage.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
                         if (paymentStatus !== 'completed') {

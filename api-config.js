@@ -333,6 +333,7 @@ class APIService {
 
     static async loginStudent(email, password) {
         const existingPaymentStatus = BSIAuthStorage.getItem('paymentStatus');
+        const existingPaymentVerified = BSIAuthStorage.getItem('paymentVerified');
         const response = await this.request('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password })
@@ -342,7 +343,9 @@ class APIService {
             BSIAuthStorage.setItem('authToken', response.token);
             if (response.student) {
                 BSIAuthStorage.saveStudent(response.student, response.student.passwordHash);
-                const paymentStatus = response.student.paymentStatus || existingPaymentStatus || 'pending';
+                const paymentStatus = existingPaymentStatus === 'completed' || existingPaymentVerified === 'true'
+                    ? 'completed'
+                    : response.student.paymentStatus || existingPaymentStatus || 'pending';
                 BSIAuthStorage.setItem('paymentStatus', paymentStatus);
                 BSIAuthStorage.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
                 BSIAuthStorage.setItem('isLoggedIn', paymentStatus === 'completed' ? 'true' : 'false');
