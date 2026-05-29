@@ -11,6 +11,7 @@
         localStorage.setItem('paymentVerified', 'true');
         localStorage.setItem('isRegistrationComplete', 'true');
         localStorage.setItem('isLoggedIn', 'false');
+        localStorage.setItem('paymentCompletedAt', new Date().toISOString());
         const params = new URLSearchParams(window.location.search);
         if (params.get('razorpay_payment_id')) {
             localStorage.setItem('razorpayPaymentId', params.get('razorpay_payment_id'));

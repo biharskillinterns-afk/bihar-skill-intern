@@ -194,7 +194,9 @@
 
         function saveCompletedPayment(paymentData = {}) {
             setStoredValue('paymentStatus', 'completed');
-            setStoredValue('paymentDate', new Date().toLocaleString());
+            const completedAt = paymentData.completedAt || new Date().toISOString();
+            setStoredValue('paymentDate', new Date(completedAt).toLocaleString());
+            setStoredValue('paymentCompletedAt', completedAt);
             setStoredValue('paymentAmount', String(paymentData.amount || getPaymentAmount()));
             setStoredValue('paymentMethod', 'razorpay');
             setStoredValue('paymentGateway', 'razorpay');

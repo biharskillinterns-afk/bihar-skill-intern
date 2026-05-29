@@ -794,8 +794,8 @@ router.get('/history', verifyToken, isStudent, async (req, res) => {
     try {
         connection = await req.db.getConnection();
         const [payments] = await connection.query(
-            `SELECT p.*, c.courseName FROM payments p
-             JOIN courses c ON p.courseId = c.id
+            `SELECT p.*, COALESCE(c.courseName, 'Registration Fee') AS courseName FROM payments p
+             LEFT JOIN courses c ON p.courseId = c.id
              WHERE p.studentId = ? ORDER BY p.createdAt DESC`,
             [req.user.id]
         );
