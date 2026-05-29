@@ -590,6 +590,14 @@
                 console.warn('Backend admin login failed:', apiError.message);
             }
 
+            if (!isLocalDemoMode()) {
+                messageBox.textContent = 'Backend admin login failed. Please use the admin account created on the live server.';
+                messageBox.className = 'message error';
+                submitButton.disabled = false;
+                submitButton.textContent = 'Login as Admin';
+                return;
+            }
+
             const demoCredentials = getDemoAdminCredentials();
             if (adminId === demoCredentials.email && adminPassword === demoCredentials.password) {
                 completeAdminLogin(adminId, rememberMe, messageBox);

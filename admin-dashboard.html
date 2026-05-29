@@ -2026,6 +2026,14 @@
         window.addEventListener('load', () => {
             // Check if admin is logged in
             const isAdminLoggedIn = StorageManager.get('isAdminLoggedIn');
+            const hasBackendToken = Boolean(StorageManager.get('authToken') || StorageManager.get('token'));
+            const isLiveSite = window.location.protocol !== 'file:' && !['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+            if (isLiveSite && !hasBackendToken) {
+                StorageManager.set('isAdminLoggedIn', false);
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
             if ((!isAdminLoggedIn || isAdminLoggedIn !== true) && isAdminDemoModeEnabled()) {
                 StorageManager.set('isAdminLoggedIn', true);
                 StorageManager.set('adminEmail', StorageManager.get('adminEmail') || 'Local Admin');
