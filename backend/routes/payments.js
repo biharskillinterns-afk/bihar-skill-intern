@@ -252,6 +252,7 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
         }
     } catch (error) {
         console.warn('Unable to mark Razorpay payment completed:', error.message);
+        req.paymentCompletionError = error.message;
         return false;
     } finally {
         if (connection) connection.release();
@@ -590,6 +591,7 @@ router.post('/registration-reconcile', async (req, res) => {
             status: databaseUpdated ? 'completed' : 'not_updated',
             paymentStatus: databaseUpdated ? 'completed' : 'pending',
             databaseUpdated,
+            error: databaseUpdated ? undefined : req.paymentCompletionError,
             razorpayPaymentId: successfulPayment.id,
             razorpayOrderId: successfulPayment.order_id || razorpayOrderId
         });
