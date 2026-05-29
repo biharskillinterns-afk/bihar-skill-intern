@@ -602,6 +602,59 @@ router.post('/registration-reconcile', async (req, res) => {
     }
 });
 
+router.get('/registration-debug', async (req, res) => {
+    let connection;
+    try {
+        const studentEmail = String(req.query.studentEmail || '').trim().toLowerCase();
+        if (!studentEmail) {
+            return res.status(400).json({
+                success: false,
+                message: 'Student email is required'
+            });
+        }
+
+        connection = await req.db.getConnection();
+        const [students] = await connection.query(
+            'SELECT id, email, phone, createdAt FROM students WHERE LOWER(email) = ? LIMIT 1',
+            [studentEmail]
+        );
+        const [courses] = await connection.query(
+            'SELECT id, courseName, status FROM courses ORDER BY id ASC LIMIT 5'
+        );
+
+        let payments = [];
+        let enrollments = [];
+        if (students[0]) {
+            [payments] = await connection.query(
+                `SELECT id, studentId, courseId, amount, status, gatewayOrderId, gatewayPaymentId, createdAt, completedAt
+                 FROM payments WHERE studentId = ? ORDER BY id DESC LIMIT 10`,
+                [students[0].id]
+            );
+            [enrollments] = await connection.query(
+                'SELECT id, studentId, courseId, status, enrolledAt FROM student_courses WHERE studentId = ? ORDER BY id DESC LIMIT 10',
+                [students[0].id]
+            );
+        }
+
+        res.json({
+            success: true,
+            studentFound: Boolean(students[0]),
+            student: students[0] || null,
+            courses,
+            payments,
+            enrollments
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch registration debug details',
+            error: error.message
+        });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
 // Create a local payment record. The frontend can also complete registration without backend.
 router.post('/initiate', verifyToken, isStudent, async (req, res) => {
     let connection;
