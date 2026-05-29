@@ -175,6 +175,22 @@
             status.className = `status ${type}`;
         }
 
+        function redirectToLogin() {
+            const loginUrl = new URL('login.html', window.location.href).href;
+            const status = document.getElementById('paymentStatus');
+            status.innerHTML = `Payment successful. <a href="${loginUrl}" style="color: inherit; font-weight: 800;">Continue to Login</a>`;
+            status.className = 'status success';
+            document.querySelectorAll('.razorpay-container').forEach(container => container.remove());
+
+            setTimeout(() => {
+                window.location.replace(loginUrl);
+            }, 250);
+
+            setTimeout(() => {
+                window.location.href = loginUrl;
+            }, 900);
+        }
+
         function resetPayButton(message) {
             const payButton = document.getElementById('payButton');
             document.querySelectorAll('.razorpay-container').forEach(container => container.remove());
@@ -325,10 +341,7 @@
                 setStoredValue('isRegistrationComplete', 'true');
                 setStoredValue('isLoggedIn', 'false');
 
-                setStatus('Payment successful. Redirecting to login...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 900);
+                redirectToLogin();
             } catch (error) {
                 payButton.disabled = false;
                 payButton.textContent = 'Pay Securely';
