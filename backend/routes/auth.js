@@ -134,6 +134,14 @@ router.post('/login', validateLogin, async (req, res) => {
                 lastName: student.lastName,
                 email: student.email,
                 phone: student.phone,
+                dob: student.dob,
+                gender: student.gender,
+                college: student.college,
+                course: student.course,
+                district: student.district,
+                state: student.state,
+                profileImage: student.profileImage,
+                bio: student.bio,
                 paymentStatus
             }
         });

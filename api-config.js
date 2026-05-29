@@ -181,6 +181,38 @@ class BSIAuthStorage {
             this.clearGeneratedStudentArtifacts();
         }
 
+        let existingStudent = null;
+        try {
+            existingStudent = JSON.parse(this.getItem(studentData.id) || 'null');
+        } catch (error) {
+            existingStudent = null;
+        }
+
+        if (!existingStudent && nextEmail) {
+            try {
+                const studentIds = JSON.parse(this.getItem('allStudentIds') || '[]');
+                for (const id of studentIds) {
+                    const candidate = JSON.parse(this.getItem(id) || 'null');
+                    if (candidate && String(candidate.email || '').toLowerCase() === nextEmail) {
+                        existingStudent = candidate;
+                        break;
+                    }
+                }
+            } catch (error) {
+                existingStudent = null;
+            }
+        }
+
+        studentData = {
+            ...(existingStudent || {}),
+            ...Object.fromEntries(
+                Object.entries(studentData).filter(([, value]) =>
+                    value !== undefined && value !== null && value !== ''
+                )
+            ),
+            id: studentData.id
+        };
+
         const paymentStatus = studentData.paymentStatus === 'completed' ||
             (sameStudentEmail && (existingPaymentStatus === 'completed' || existingPaymentVerified === 'true'))
             ? 'completed'
@@ -233,7 +265,7 @@ class BSIAuthStorage {
         this.setItem('userEmergencyName', studentData.emergencyName || '');
         this.setItem('userEmergencyPhone', studentData.emergencyPhone || '');
         this.setItem('userRelationship', studentData.relationship || '');
-        this.setItem('userProfileImage', studentData.profilePhoto || studentData.profileImage || '');
+        this.setItem('userProfileImage', studentData.profilePhoto || studentData.profileImage || this.getItem('userProfileImage') || '');
         this.setItem('userSignatureImage', studentData.signature || '');
         this.setItem('userRegistered', 'true');
         this.setItem('paymentStatus', paymentStatus);
