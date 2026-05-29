@@ -531,12 +531,23 @@
         </div>
     </div>
 
+    <script src="api-config.js"></script>
     <script>
         window.addEventListener('load', () => {
-            const isLoggedIn = localStorage.getItem('isLoggedIn');
-            if (!isLoggedIn || isLoggedIn === 'false') {
-                window.location.href = 'login.html';
-                return;
+            if (typeof BSIAuthStorage !== 'undefined') {
+                if (!BSIAuthStorage.requireCompletedStudent({ alert: false })) return;
+            } else {
+                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                const paymentComplete = localStorage.getItem('paymentStatus') === 'completed' ||
+                    localStorage.getItem('isRegistrationComplete') === 'true';
+                if (!isLoggedIn) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                if (!paymentComplete) {
+                    window.location.href = 'payment.html';
+                    return;
+                }
             }
 
             loadAttendanceData();

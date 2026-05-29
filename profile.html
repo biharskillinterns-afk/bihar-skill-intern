@@ -1123,7 +1123,10 @@
         window.addEventListener('load', () => {
             console.log('Profile page loaded');
             const token = getStoredProfileValue('authToken') || getStoredProfileValue('token');
-            const isLoggedIn = getStoredProfileValue('isLoggedIn') === 'true' || getStoredProfileValue('userRegistered') === 'true';
+            const isLoggedIn = getStoredProfileValue('isLoggedIn') === 'true';
+            const paymentComplete = typeof BSIAuthStorage !== 'undefined'
+                ? BSIAuthStorage.hasCompletedRegistration()
+                : getStoredProfileValue('paymentStatus') === 'completed' || getStoredProfileValue('isRegistrationComplete') === 'true';
             const hasUserData = getStoredProfileValue('userName') || getStoredProfileValue('currentStudentId');
             
             console.log('Token:', token);
@@ -1132,10 +1135,15 @@
             console.log('userName:', getStoredProfileValue('userName'));
             console.log('currentStudentId:', getStoredProfileValue('currentStudentId'));
             
-            // Allow access if user has data, even if not "logged in"
-            if (!token && !isLoggedIn && !hasUserData) {
-                alert('Please register or login first!');
-                window.location.href = 'register.html';
+            if (!isLoggedIn || (!token && !hasUserData)) {
+                alert('Please login first!');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!paymentComplete) {
+                alert('Please complete your registration payment first.');
+                window.location.href = 'payment.html';
                 return;
             }
 

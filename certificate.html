@@ -1310,11 +1310,14 @@
         }
 
         window.addEventListener('load', () => {
-            const paymentComplete = localStorage.getItem('paymentStatus') === 'completed' || localStorage.getItem('isRegistrationComplete') === 'true';
+            const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const paymentComplete = typeof BSIAuthStorage !== 'undefined'
+                ? BSIAuthStorage.hasCompletedRegistration()
+                : localStorage.getItem('paymentStatus') === 'completed' || localStorage.getItem('isRegistrationComplete') === 'true';
             const result = getCertificateResult();
-            if (!paymentComplete || !result) {
-                alert(!paymentComplete ? 'Please complete payment before viewing your certificate.' : 'Please pass a course before viewing your certificate.');
-                window.location.href = !paymentComplete ? 'payment.html' : 'courses.html';
+            if (!loggedIn || !paymentComplete || !result) {
+                alert(!loggedIn ? 'Please login first.' : (!paymentComplete ? 'Please complete payment before viewing your certificate.' : 'Please pass a course before viewing your certificate.'));
+                window.location.href = !loggedIn ? 'login.html' : (!paymentComplete ? 'payment.html' : 'courses.html');
                 return;
             }
 

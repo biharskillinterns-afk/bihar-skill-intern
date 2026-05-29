@@ -154,6 +154,16 @@ class BSIAuthStorage {
             'userPassword',
             'userRegistered',
             'isLoggedIn',
+            'paymentStatus',
+            'paymentVerified',
+            'paymentDate',
+            'paymentAmount',
+            'paymentMethod',
+            'paymentGateway',
+            'razorpayPaymentId',
+            'razorpayOrderId',
+            'razorpaySignature',
+            'isRegistrationComplete',
             'authToken',
             'token'
         ].forEach(key => this.removeItem(key));
@@ -164,9 +174,18 @@ class BSIAuthStorage {
         const previousStudentId = this.getItem('currentStudentId');
         const previousEmail = (this.getItem('userEmail') || this.getItem('userUsername') || '').toLowerCase();
         const nextEmail = String(studentData.email || '').toLowerCase();
+        const sameStudentEmail = previousEmail && nextEmail && previousEmail === nextEmail;
+        const existingPaymentStatus = this.getItem('paymentStatus');
+        const existingPaymentVerified = this.getItem('paymentVerified');
         if ((previousStudentId && String(previousStudentId) !== String(studentData.id)) || (previousEmail && nextEmail && previousEmail !== nextEmail)) {
             this.clearGeneratedStudentArtifacts();
         }
+
+        const paymentStatus = studentData.paymentStatus === 'completed' ||
+            (sameStudentEmail && (existingPaymentStatus === 'completed' || existingPaymentVerified === 'true'))
+            ? 'completed'
+            : 'pending';
+        studentData.paymentStatus = paymentStatus;
 
         this.setItem(studentData.id, JSON.stringify(studentData));
 
@@ -217,8 +236,8 @@ class BSIAuthStorage {
         this.setItem('userProfileImage', studentData.profilePhoto || studentData.profileImage || '');
         this.setItem('userSignatureImage', studentData.signature || '');
         this.setItem('userRegistered', 'true');
-        this.setItem('paymentStatus', studentData.paymentStatus || 'pending');
-        this.setItem('isRegistrationComplete', studentData.paymentStatus === 'completed' ? 'true' : 'false');
+        this.setItem('paymentStatus', paymentStatus);
+        this.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
         this.setItem('isLoggedIn', 'false');
     }
 
@@ -253,6 +272,34 @@ class BSIAuthStorage {
         }
 
         return null;
+    }
+
+    static hasCompletedRegistration() {
+        return this.getItem('paymentStatus') === 'completed' ||
+            this.getItem('isRegistrationComplete') === 'true' ||
+            this.getItem('paymentVerified') === 'true';
+    }
+
+    static hasActiveStudentLogin() {
+        return this.getItem('isLoggedIn') === 'true' && Boolean(this.getItem('userEmail') || this.getItem('userUsername'));
+    }
+
+    static requireCompletedStudent(options = {}) {
+        const loginUrl = options.loginUrl || 'login.html';
+        const paymentUrl = options.paymentUrl || 'payment.html';
+        if (!this.hasActiveStudentLogin()) {
+            if (options.alert !== false) alert('Please login first!');
+            window.location.href = loginUrl;
+            return false;
+        }
+
+        if (!this.hasCompletedRegistration()) {
+            if (options.alert !== false) alert('Please complete your registration payment first.');
+            window.location.href = paymentUrl;
+            return false;
+        }
+
+        return true;
     }
 }
 
@@ -334,6 +381,10 @@ class APIService {
     static async loginStudent(email, password) {
         const existingPaymentStatus = BSIAuthStorage.getItem('paymentStatus');
         const existingPaymentVerified = BSIAuthStorage.getItem('paymentVerified');
+        const existingEmail = (BSIAuthStorage.getItem('userEmail') || BSIAuthStorage.getItem('userUsername') || '').toLowerCase();
+        const loginEmail = String(email || '').toLowerCase();
+        const canTrustExistingPayment = existingEmail === loginEmail &&
+            (existingPaymentStatus === 'completed' || existingPaymentVerified === 'true');
         const response = await this.request('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password })
@@ -343,9 +394,9 @@ class APIService {
             BSIAuthStorage.setItem('authToken', response.token);
             if (response.student) {
                 BSIAuthStorage.saveStudent(response.student, response.student.passwordHash);
-                const paymentStatus = existingPaymentStatus === 'completed' || existingPaymentVerified === 'true'
+                const paymentStatus = response.student.paymentStatus === 'completed' || canTrustExistingPayment
                     ? 'completed'
-                    : response.student.paymentStatus || existingPaymentStatus || 'pending';
+                    : 'pending';
                 BSIAuthStorage.setItem('paymentStatus', paymentStatus);
                 BSIAuthStorage.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
                 BSIAuthStorage.setItem('isLoggedIn', paymentStatus === 'completed' ? 'true' : 'false');

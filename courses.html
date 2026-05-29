@@ -1077,18 +1077,24 @@
         }
 
         window.addEventListener('load', async () => {
-            const isLoggedIn = StorageManager.get('isLoggedIn');
-            if (!isLoggedIn || isLoggedIn === 'false') {
-                alert('Please login first!');
-                window.location.href = 'login.html';
-                return;
-            }
+            if (typeof BSIAuthStorage !== 'undefined') {
+                if (!BSIAuthStorage.requireCompletedStudent()) return;
+            } else {
+                const isLoggedIn = StorageManager.get('isLoggedIn') === true || StorageManager.get('isLoggedIn') === 'true';
+                if (!isLoggedIn) {
+                    alert('Please login first!');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-            const paymentComplete = StorageManager.get('paymentStatus') === 'completed' || StorageManager.get('isRegistrationComplete') === true;
-            if (!paymentComplete) {
-                alert('Please complete your registration payment first.');
-                window.location.href = 'payment.html';
-                return;
+                const paymentComplete = StorageManager.get('paymentStatus') === 'completed' ||
+                    StorageManager.get('isRegistrationComplete') === true ||
+                    StorageManager.get('isRegistrationComplete') === 'true';
+                if (!paymentComplete) {
+                    alert('Please complete your registration payment first.');
+                    window.location.href = 'payment.html';
+                    return;
+                }
             }
 
             const userName = getSafeUserName();
@@ -1380,7 +1386,16 @@
         }
 
         function logout() {
+            if (typeof APIService !== 'undefined') {
+                APIService.logout();
+                return;
+            }
             StorageManager.set('isLoggedIn', false);
+            StorageManager.remove('authToken');
+            StorageManager.remove('token');
+            StorageManager.remove('paymentStatus');
+            StorageManager.remove('isRegistrationComplete');
+            StorageManager.remove('paymentVerified');
             window.location.href = 'index.html';
         }
     </script>

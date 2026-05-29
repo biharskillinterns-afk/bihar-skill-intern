@@ -2178,10 +2178,21 @@
         }
 
         window.addEventListener('load', () => {
-            const isLoggedIn = StorageManager.get('isLoggedIn');
-            if (!isLoggedIn || isLoggedIn === 'false') {
-                window.location.href = 'login.html';
-                return;
+            if (typeof BSIAuthStorage !== 'undefined') {
+                if (!BSIAuthStorage.requireCompletedStudent({ alert: false })) return;
+            } else {
+                const isLoggedIn = StorageManager.get('isLoggedIn') === true || StorageManager.get('isLoggedIn') === 'true';
+                const paymentComplete = StorageManager.get('paymentStatus') === 'completed' ||
+                    StorageManager.get('isRegistrationComplete') === true ||
+                    StorageManager.get('isRegistrationComplete') === 'true';
+                if (!isLoggedIn) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                if (!paymentComplete) {
+                    window.location.href = 'payment.html';
+                    return;
+                }
             }
 
             const courseId = new URLSearchParams(window.location.search).get('course');

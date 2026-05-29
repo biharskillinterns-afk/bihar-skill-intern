@@ -265,9 +265,12 @@
                         localStorage.setItem('userRegistered', 'true');
                         const localPaymentStatus = localStorage.getItem('paymentStatus');
                         const localPaymentVerified = localStorage.getItem('paymentVerified');
-                        const paymentStatus = localPaymentStatus === 'completed' || localPaymentVerified === 'true'
+                        const currentEmail = (localStorage.getItem('userEmail') || localStorage.getItem('userUsername') || '').toLowerCase();
+                        const canTrustLocalPayment = currentEmail === username &&
+                            (localPaymentStatus === 'completed' || localPaymentVerified === 'true');
+                        const paymentStatus = response.student.paymentStatus === 'completed' || canTrustLocalPayment
                             ? 'completed'
-                            : response.student.paymentStatus || localPaymentStatus || 'pending';
+                            : 'pending';
                         localStorage.setItem('paymentStatus', paymentStatus);
                         localStorage.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
                         if (paymentStatus !== 'completed') {

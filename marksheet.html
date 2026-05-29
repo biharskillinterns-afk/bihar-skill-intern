@@ -454,6 +454,16 @@
         }
 
         window.addEventListener('load', () => {
+            const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const paymentComplete = typeof BSIAuthStorage !== 'undefined'
+                ? BSIAuthStorage.hasCompletedRegistration()
+                : localStorage.getItem('paymentStatus') === 'completed' || localStorage.getItem('isRegistrationComplete') === 'true';
+            if (!loggedIn || !paymentComplete) {
+                alert(!loggedIn ? 'Please login first.' : 'Please complete your registration payment first.');
+                window.location.href = !loggedIn ? 'login.html' : 'payment.html';
+                return;
+            }
+
             if (loadLocalMarksheetData()) {
                 return;
             }
