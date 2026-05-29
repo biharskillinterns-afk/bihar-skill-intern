@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config();
 const pool = require('./config/database');
+const { ensureSchema } = require('./config/schema');
 
 const app = express();
 
@@ -79,9 +80,20 @@ app.use((req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Backend server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+async function startServer() {
+    if (process.env.SKIP_SCHEMA_SYNC !== 'true') {
+        await ensureSchema(pool);
+    }
+
+    app.listen(PORT, () => {
+        console.log(`Backend server running on port ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+}
+
+startServer().catch(error => {
+    console.error('Failed to start server:', error.message);
+    process.exit(1);
 });
 
 module.exports = app;
