@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config();
 const pool = require('./config/database');
+const { ensureDatabaseExists } = require('./config/database');
 const { ensureSchema } = require('./config/schema');
 
 const app = express();
@@ -81,6 +82,8 @@ app.use((req, res) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 async function startServer() {
+    await ensureDatabaseExists();
+
     if (process.env.SKIP_SCHEMA_SYNC !== 'true') {
         await ensureSchema(pool);
     }
