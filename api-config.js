@@ -277,7 +277,7 @@ class APIService {
             ...(options.headers || {})
         };
         const controller = options.signal ? null : new AbortController();
-        const timeoutId = controller ? setTimeout(() => controller.abort(), 3000) : null;
+        const timeoutId = controller ? setTimeout(() => controller.abort(), 70000) : null;
         let response;
 
         try {
@@ -420,6 +420,23 @@ class APIService {
         return this.request('/admin/stats');
     }
 
+    static async getAdminPaymentAmount() {
+        return this.request('/admin/settings/payment-amount');
+    }
+
+    static async updateAdminPaymentAmount(amount) {
+        return this.request('/admin/settings/payment-amount', {
+            method: 'PUT',
+            body: JSON.stringify({ amount })
+        });
+    }
+
+    static async resetAdminPaymentAmount() {
+        return this.request('/admin/settings/payment-amount/reset', {
+            method: 'POST'
+        });
+    }
+
     // =============================================
     // COURSES ENDPOINTS
     // =============================================
@@ -454,6 +471,10 @@ class APIService {
             method: 'POST',
             body: JSON.stringify({ amount, ...studentData })
         });
+    }
+
+    static async getRegistrationPaymentAmount() {
+        return this.request('/payments/registration-amount');
     }
 
     static async verifyPayment(paymentId) {

@@ -1575,6 +1575,7 @@
 
         function renderAdminExtras() {
             renderPaymentAmountSettings();
+            loadPaymentAmountSettings();
             renderProgressTracker();
             renderQuizReport();
             renderCertificatePanel();
@@ -1589,6 +1590,19 @@
             return Number.isFinite(amount) && amount > 0 ? Math.round(amount) : DEFAULT_PAYMENT_AMOUNT;
         }
 
+        async function loadPaymentAmountSettings() {
+            try {
+                if (typeof APIService === 'undefined') return;
+                const response = await APIService.getAdminPaymentAmount();
+                if (response?.success && Number(response.amount) > 0) {
+                    StorageManager.set('bsiPaymentAmount', Math.round(Number(response.amount)));
+                    renderPaymentAmountSettings();
+                }
+            } catch (error) {
+                console.warn('Unable to load server payment amount:', error.message);
+            }
+        }
+
         function renderPaymentAmountSettings() {
             const input = document.getElementById('paymentAmountInput');
             const status = document.getElementById('paymentAmountStatus');
@@ -1597,7 +1611,7 @@
             if (status) status.textContent = `Current payment amount: ₹${amount}`;
         }
 
-        function savePaymentAmount() {
+        async function savePaymentAmount() {
             const input = document.getElementById('paymentAmountInput');
             const amount = Number(input?.value);
             if (!Number.isFinite(amount) || amount < 1) {
@@ -1606,15 +1620,33 @@
             }
 
             const roundedAmount = Math.round(amount);
-            StorageManager.set('bsiPaymentAmount', roundedAmount);
+            try {
+                if (typeof APIService !== 'undefined') {
+                    const response = await APIService.updateAdminPaymentAmount(roundedAmount);
+                    if (!response?.success) throw new Error(response?.message || 'Payment amount update failed');
+                }
+                StorageManager.set('bsiPaymentAmount', roundedAmount);
+            } catch (error) {
+                alert(`Payment amount save nahi ho paya: ${error.message}`);
+                return;
+            }
             addActivityLog(`Payment amount changed to ₹${roundedAmount}`);
             renderPaymentAmountSettings();
             renderActivityLog();
             alert(`Payment amount ₹${roundedAmount} set ho gaya.`);
         }
 
-        function resetPaymentAmount() {
-            StorageManager.set('bsiPaymentAmount', DEFAULT_PAYMENT_AMOUNT);
+        async function resetPaymentAmount() {
+            try {
+                if (typeof APIService !== 'undefined') {
+                    const response = await APIService.resetAdminPaymentAmount();
+                    if (!response?.success) throw new Error(response?.message || 'Payment amount reset failed');
+                }
+                StorageManager.set('bsiPaymentAmount', DEFAULT_PAYMENT_AMOUNT);
+            } catch (error) {
+                alert(`Payment amount reset nahi ho paya: ${error.message}`);
+                return;
+            }
             addActivityLog(`Payment amount reset to ₹${DEFAULT_PAYMENT_AMOUNT}`);
             renderPaymentAmountSettings();
             renderActivityLog();

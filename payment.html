@@ -191,12 +191,26 @@
             return orderId;
         }
 
+        async function loadRegistrationAmount() {
+            try {
+                if (typeof APIService === 'undefined') return;
+                const response = await APIService.getRegistrationPaymentAmount();
+                if (response?.success && Number(response.amount) > 0) {
+                    setStoredValue('bsiPaymentAmount', String(Math.round(Number(response.amount))));
+                    document.getElementById('paymentAmount').textContent = `₹${getPaymentAmount()}`;
+                }
+            } catch (error) {
+                console.warn('Unable to load registration amount:', error.message);
+            }
+        }
+
         window.addEventListener('load', () => {
             const userName = getStoredValue('userName', 'Student');
             const userEmail = getStoredValue('userEmail', '-');
             document.getElementById('studentName').textContent = userName;
             document.getElementById('studentEmail').textContent = userEmail;
             document.getElementById('paymentAmount').textContent = `₹${getPaymentAmount()}`;
+            loadRegistrationAmount();
 
             if (!getStoredValue('userRegistered', '')) {
                 setStatus('Please complete registration first.');

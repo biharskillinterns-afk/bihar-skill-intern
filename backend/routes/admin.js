@@ -1,6 +1,56 @@
 const express = require('express');
 const router = express.Router();
 const { verifyToken, isAdmin } = require('../middleware/auth');
+const { getRegistrationAmount, setRegistrationAmount, DEFAULT_REGISTRATION_AMOUNT } = require('../config/settings');
+
+router.get('/settings/payment-amount', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const amount = await getRegistrationAmount(req.db);
+        res.json({
+            success: true,
+            amount
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch payment amount',
+            error: error.message
+        });
+    }
+});
+
+router.put('/settings/payment-amount', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const amount = await setRegistrationAmount(req.db, req.body.amount);
+        res.json({
+            success: true,
+            amount,
+            message: `Registration payment amount updated to ₹${amount}`
+        });
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to update payment amount'
+        });
+    }
+});
+
+router.post('/settings/payment-amount/reset', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const amount = await setRegistrationAmount(req.db, DEFAULT_REGISTRATION_AMOUNT);
+        res.json({
+            success: true,
+            amount,
+            message: `Registration payment amount reset to ₹${amount}`
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to reset payment amount',
+            error: error.message
+        });
+    }
+});
 
 // Get all students
 router.get('/students', verifyToken, isAdmin, async (req, res) => {

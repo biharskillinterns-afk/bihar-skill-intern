@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const { verifyToken, isStudent } = require('../middleware/auth');
+const { getRegistrationAmount } = require('../config/settings');
 
 const getJwtSecret = () => {
     if (process.env.JWT_SECRET) {
@@ -181,16 +182,9 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
 
 router.post('/registration-order', async (req, res) => {
     try {
-        const { amount, studentName, studentEmail, studentPhone, localOrderId } = req.body;
+        const { studentName, studentEmail, studentPhone, localOrderId } = req.body;
         const { keyId, keySecret } = getRazorpayConfig();
-        const payableAmount = getValidAmount(amount);
-
-        if (!payableAmount) {
-            return res.status(400).json({
-                success: false,
-                message: 'Valid amount is required'
-            });
-        }
+        const payableAmount = await getRegistrationAmount(req.db);
 
         if (!keyId || !keySecret) {
             return res.status(500).json({
@@ -236,6 +230,23 @@ router.post('/registration-order', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to create registration payment order',
+            error: error.message
+        });
+    }
+});
+
+router.get('/registration-amount', async (req, res) => {
+    try {
+        const amount = await getRegistrationAmount(req.db);
+        res.json({
+            success: true,
+            amount,
+            currency: 'INR'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch registration amount',
             error: error.message
         });
     }
