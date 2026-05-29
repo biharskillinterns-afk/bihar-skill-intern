@@ -206,6 +206,29 @@
             setStoredValue('isLoggedIn', 'false');
         }
 
+        async function checkCompletedPayment(order, amount) {
+            const status = await APIService.getRegistrationPaymentStatus(order.razorpayOrderId, {
+                studentEmail: getStoredValue('userEmail', ''),
+                amount: String(order.amount || amount || getPaymentAmount())
+            });
+
+            if (status?.success && status.status === 'completed') {
+                if (paymentStatusTimer) {
+                    clearInterval(paymentStatusTimer);
+                    paymentStatusTimer = null;
+                }
+                saveCompletedPayment({
+                    amount: order.amount || amount || getPaymentAmount(),
+                    razorpayPaymentId: status.razorpayPaymentId,
+                    razorpayOrderId: status.razorpayOrderId || order.razorpayOrderId
+                });
+                redirectToLogin();
+                return true;
+            }
+
+            return false;
+        }
+
         function startPaymentStatusPolling(order, amount) {
             if (paymentStatusTimer) clearInterval(paymentStatusTimer);
             let attempts = 0;
@@ -218,21 +241,7 @@
                 }
 
                 try {
-                    const status = await APIService.getRegistrationPaymentStatus(order.razorpayOrderId, {
-                        studentEmail: getStoredValue('userEmail', ''),
-                        amount: String(order.amount || amount || getPaymentAmount())
-                    });
-
-                    if (status?.success && status.status === 'completed') {
-                        clearInterval(paymentStatusTimer);
-                        paymentStatusTimer = null;
-                        saveCompletedPayment({
-                            amount: order.amount || amount || getPaymentAmount(),
-                            razorpayPaymentId: status.razorpayPaymentId,
-                            razorpayOrderId: status.razorpayOrderId || order.razorpayOrderId
-                        });
-                        redirectToLogin();
-                    }
+                    await checkCompletedPayment(order, amount);
                 } catch (error) {
                     console.warn('Payment status check failed:', error.message);
                 }
@@ -357,8 +366,6 @@
                     local_order_id: getStoredValue('orderId', ''),
                     student_email: getStoredValue('userEmail', '')
                 },
-                callback_url: getCallbackUrl(order, amount),
-                redirect: true,
                 theme: {
                     color: '#2563eb'
                 },
@@ -366,7 +373,13 @@
                     await verifyPayment(response, order, payButton);
                 },
                 modal: {
-                    ondismiss: function () {
+                    ondismiss: async function () {
+                        try {
+                            const completed = await checkCompletedPayment(order, amount);
+                            if (completed) return;
+                        } catch (error) {
+                            console.warn('Payment status check on close failed:', error.message);
+                        }
                         payButton.disabled = false;
                         payButton.textContent = 'Pay Securely';
                     }
