@@ -85,6 +85,25 @@ async function getDefaultCourseId(connection) {
     return courses[0]?.id || null;
 }
 
+async function getOrCreateDefaultCourseId(connection) {
+    const activeCourseId = await getDefaultCourseId(connection);
+    if (activeCourseId) return activeCourseId;
+
+    const [anyCourses] = await connection.query('SELECT id FROM courses ORDER BY id ASC LIMIT 1');
+    if (anyCourses[0]?.id) return anyCourses[0].id;
+
+    const [result] = await connection.query(
+        `INSERT INTO courses (courseName, description, duration, instructor, level, certificate, fee, status, syllabus, createdAt)
+         VALUES (?, ?, 30, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active', '', NOW())`,
+        [
+            'Bihar Skill Interns Foundation',
+            'Default registration course for Bihar Skill Interns students'
+        ]
+    );
+
+    return result.insertId;
+}
+
 async function findStudentId(connection, req, studentEmail) {
     const user = getOptionalUser(req);
     if (user?.role === 'student' && user.id) {
@@ -146,7 +165,7 @@ async function savePendingRegistrationPayment(req, paymentData) {
     try {
         connection = await req.db.getConnection();
         const studentId = await findStudentId(connection, req, paymentData.studentEmail);
-        const courseId = await getDefaultCourseId(connection);
+        const courseId = await getOrCreateDefaultCourseId(connection);
 
         if (!studentId || !courseId) {
             return;
@@ -181,7 +200,7 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
         connection = await req.db.getConnection();
         const existingPayment = await findPaymentByOrder(connection, paymentData.razorpayOrderId);
         const studentId = existingPayment?.studentId || await findStudentId(connection, req, paymentData.studentEmail);
-        const courseId = existingPayment?.courseId || await getDefaultCourseId(connection);
+        const courseId = existingPayment?.courseId || await getOrCreateDefaultCourseId(connection);
 
         if (!studentId || !courseId) {
             return false;
@@ -492,7 +511,7 @@ router.get('/registration-status/:orderId', async (req, res) => {
             });
         }
 
-        await markRegistrationPaymentCompleted(req, {
+        const databaseUpdated = await markRegistrationPaymentCompleted(req, {
             razorpayPaymentId: successfulPayment.id,
             razorpayOrderId: orderId,
             studentEmail: studentEmail || getPaymentEmail(successfulPayment),
@@ -504,6 +523,7 @@ router.get('/registration-status/:orderId', async (req, res) => {
             success: true,
             status: 'completed',
             paymentStatus: 'completed',
+            databaseUpdated,
             razorpayPaymentId: successfulPayment.id,
             razorpayOrderId: orderId
         });
@@ -511,6 +531,72 @@ router.get('/registration-status/:orderId', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch payment status',
+            error: error.message
+        });
+    }
+});
+
+router.post('/registration-reconcile', async (req, res) => {
+    try {
+        const { studentEmail = '', razorpayPaymentId = '', razorpayOrderId = '' } = req.body;
+
+        if (!studentEmail || (!razorpayPaymentId && !razorpayOrderId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Student email and Razorpay payment/order ID are required'
+            });
+        }
+
+        const razorpay = getRazorpayClient();
+        let successfulPayment = null;
+
+        if (razorpayPaymentId) {
+            const payment = await razorpay.payments.fetch(razorpayPaymentId);
+            if (['captured', 'authorized'].includes(payment.status)) {
+                successfulPayment = payment;
+            }
+        } else {
+            const paymentsResponse = await razorpay.orders.fetchPayments(razorpayOrderId);
+            successfulPayment = (paymentsResponse.items || []).find(payment =>
+                ['captured', 'authorized'].includes(payment.status)
+            );
+        }
+
+        if (!successfulPayment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Captured Razorpay payment not found'
+            });
+        }
+
+        const paymentEmail = getPaymentEmail(successfulPayment);
+        if (paymentEmail && paymentEmail !== String(studentEmail).trim().toLowerCase()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment email does not match student email'
+            });
+        }
+
+        const databaseUpdated = await markRegistrationPaymentCompleted(req, {
+            razorpayPaymentId: successfulPayment.id,
+            razorpayOrderId: successfulPayment.order_id || razorpayOrderId,
+            studentEmail,
+            amount: getValidAmount(Number(successfulPayment.amount) / 100) || await getRegistrationAmount(req.db),
+            paymentMethod: mapPaymentMethod(successfulPayment.method)
+        });
+
+        res.json({
+            success: databaseUpdated,
+            status: databaseUpdated ? 'completed' : 'not_updated',
+            paymentStatus: databaseUpdated ? 'completed' : 'pending',
+            databaseUpdated,
+            razorpayPaymentId: successfulPayment.id,
+            razorpayOrderId: successfulPayment.order_id || razorpayOrderId
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to reconcile registration payment',
             error: error.message
         });
     }
