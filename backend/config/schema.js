@@ -104,7 +104,10 @@ async function ensureRuntimeSchema(pool) {
         ];
 
         for (const [columnName, definition] of requiredStudentColumns) {
-            await connection.query(`ALTER TABLE students ADD COLUMN IF NOT EXISTS \`${columnName}\` ${definition}`);
+            const [columns] = await connection.query('SHOW COLUMNS FROM students LIKE ?', [columnName]);
+            if (columns.length === 0) {
+                await connection.query(`ALTER TABLE students ADD COLUMN \`${columnName}\` ${definition}`);
+            }
         }
     } finally {
         connection.release();
