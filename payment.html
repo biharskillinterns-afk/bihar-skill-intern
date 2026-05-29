@@ -150,8 +150,6 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
         const DEFAULT_REGISTRATION_AMOUNT = 299;
-        let activeCheckout = null;
-        let checkoutLoadTimer = null;
 
         function getStorage() {
             return typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
@@ -264,12 +262,10 @@
                     color: '#2563eb'
                 },
                 handler: async function (response) {
-                    if (checkoutLoadTimer) clearTimeout(checkoutLoadTimer);
                     await verifyPayment(response, order, payButton);
                 },
                 modal: {
                     ondismiss: function () {
-                        if (checkoutLoadTimer) clearTimeout(checkoutLoadTimer);
                         payButton.disabled = false;
                         payButton.textContent = 'Pay Securely';
                     }
@@ -277,28 +273,13 @@
             };
 
             const checkout = new Razorpay(options);
-            activeCheckout = checkout;
             checkout.on('payment.failed', function (response) {
-                if (checkoutLoadTimer) clearTimeout(checkoutLoadTimer);
                 payButton.disabled = false;
                 payButton.textContent = 'Pay Securely';
                 setStatus(response?.error?.description || 'Payment failed. Please try again.');
             });
             checkout.open();
             payButton.textContent = 'Complete payment in popup';
-
-            checkoutLoadTimer = setTimeout(() => {
-                const hasCheckoutFrame = document.querySelector('.razorpay-checkout-frame');
-                if (!hasCheckoutFrame) return;
-                try {
-                    if (activeCheckout && typeof activeCheckout.close === 'function') {
-                        activeCheckout.close();
-                    }
-                } catch (error) {
-                    console.warn('Unable to close Razorpay checkout:', error.message);
-                }
-                resetPayButton('Razorpay popup load nahi hua. Page refresh karke dobara try karein, ya Chrome/Edge browser me localhost:3000 open karein.');
-            }, 20000);
         }
 
         async function verifyPayment(response, order, payButton) {
