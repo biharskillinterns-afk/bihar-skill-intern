@@ -25,6 +25,18 @@ function getRazorpayConfig() {
     };
 }
 
+function getRazorpayClient() {
+    const { keyId, keySecret } = getRazorpayConfig();
+    if (!keyId || !keySecret) {
+        throw new Error('Razorpay keys are not configured on the server');
+    }
+
+    return new Razorpay({
+        key_id: keyId,
+        key_secret: keySecret
+    });
+}
+
 function getFrontendUrl(req) {
     const frontend = req.query.frontend || req.body.frontend || process.env.FRONTEND_URL || 'https://biharskillinterns-afk.github.io/bihar-skill-intern';
     try {
@@ -335,6 +347,56 @@ router.post('/registration-callback', async (req, res) => {
         redirectUrl.searchParams.set('payment', 'failed');
         redirectUrl.searchParams.set('reason', error.message || 'verification_failed');
         res.redirect(303, redirectUrl.toString());
+    }
+});
+
+router.get('/registration-status/:orderId', async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const studentEmail = req.query.studentEmail || '';
+        const amount = getValidAmount(req.query.amount) || await getRegistrationAmount(req.db);
+
+        if (!orderId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID is required'
+            });
+        }
+
+        const razorpay = getRazorpayClient();
+        const paymentsResponse = await razorpay.orders.fetchPayments(orderId);
+        const payments = paymentsResponse.items || [];
+        const successfulPayment = payments.find(payment =>
+            ['captured', 'authorized'].includes(payment.status)
+        );
+
+        if (!successfulPayment) {
+            return res.json({
+                success: true,
+                status: 'pending'
+            });
+        }
+
+        await markRegistrationPaymentCompleted(req, {
+            razorpayPaymentId: successfulPayment.id,
+            razorpayOrderId: orderId,
+            studentEmail,
+            amount
+        });
+
+        res.json({
+            success: true,
+            status: 'completed',
+            paymentStatus: 'completed',
+            razorpayPaymentId: successfulPayment.id,
+            razorpayOrderId: orderId
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch payment status',
+            error: error.message
+        });
     }
 });
 

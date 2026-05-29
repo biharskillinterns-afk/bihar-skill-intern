@@ -150,6 +150,7 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
         const DEFAULT_REGISTRATION_AMOUNT = 299;
+        let paymentStatusTimer = null;
 
         function getStorage() {
             return typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
@@ -189,6 +190,53 @@
             setTimeout(() => {
                 window.location.href = loginUrl;
             }, 900);
+        }
+
+        function saveCompletedPayment(paymentData = {}) {
+            setStoredValue('paymentStatus', 'completed');
+            setStoredValue('paymentDate', new Date().toLocaleString());
+            setStoredValue('paymentAmount', String(paymentData.amount || getPaymentAmount()));
+            setStoredValue('paymentMethod', 'razorpay');
+            setStoredValue('paymentGateway', 'razorpay');
+            if (paymentData.razorpayPaymentId) setStoredValue('razorpayPaymentId', paymentData.razorpayPaymentId);
+            if (paymentData.razorpayOrderId) setStoredValue('razorpayOrderId', paymentData.razorpayOrderId);
+            if (paymentData.razorpaySignature) setStoredValue('razorpaySignature', paymentData.razorpaySignature);
+            setStoredValue('paymentVerified', 'true');
+            setStoredValue('isRegistrationComplete', 'true');
+            setStoredValue('isLoggedIn', 'false');
+        }
+
+        function startPaymentStatusPolling(order, amount) {
+            if (paymentStatusTimer) clearInterval(paymentStatusTimer);
+            let attempts = 0;
+            paymentStatusTimer = setInterval(async () => {
+                attempts += 1;
+                if (attempts > 80) {
+                    clearInterval(paymentStatusTimer);
+                    paymentStatusTimer = null;
+                    return;
+                }
+
+                try {
+                    const status = await APIService.getRegistrationPaymentStatus(order.razorpayOrderId, {
+                        studentEmail: getStoredValue('userEmail', ''),
+                        amount: String(order.amount || amount || getPaymentAmount())
+                    });
+
+                    if (status?.success && status.status === 'completed') {
+                        clearInterval(paymentStatusTimer);
+                        paymentStatusTimer = null;
+                        saveCompletedPayment({
+                            amount: order.amount || amount || getPaymentAmount(),
+                            razorpayPaymentId: status.razorpayPaymentId,
+                            razorpayOrderId: status.razorpayOrderId || order.razorpayOrderId
+                        });
+                        redirectToLogin();
+                    }
+                } catch (error) {
+                    console.warn('Payment status check failed:', error.message);
+                }
+            }, 3000);
         }
 
         function getFrontendBaseUrl() {
@@ -333,6 +381,7 @@
             });
             checkout.open();
             payButton.textContent = 'Complete payment in popup';
+            startPaymentStatusPolling(order, amount);
         }
 
         async function verifyPayment(response, order, payButton) {
@@ -352,17 +401,13 @@
                     throw new Error(verified?.message || 'Payment verification failed.');
                 }
 
-                setStoredValue('paymentStatus', 'completed');
-                setStoredValue('paymentDate', new Date().toLocaleString());
-                setStoredValue('paymentAmount', String(order.amount || getPaymentAmount()));
-                setStoredValue('paymentMethod', 'razorpay');
-                setStoredValue('paymentGateway', 'razorpay');
-                setStoredValue('razorpayPaymentId', response.razorpay_payment_id);
-                setStoredValue('razorpayOrderId', response.razorpay_order_id || order.razorpayOrderId);
-                setStoredValue('razorpaySignature', response.razorpay_signature);
-                setStoredValue('paymentVerified', 'true');
-                setStoredValue('isRegistrationComplete', 'true');
-                setStoredValue('isLoggedIn', 'false');
+                if (paymentStatusTimer) clearInterval(paymentStatusTimer);
+                saveCompletedPayment({
+                    amount: order.amount || getPaymentAmount(),
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpayOrderId: response.razorpay_order_id || order.razorpayOrderId,
+                    razorpaySignature: response.razorpay_signature
+                });
 
                 redirectToLogin();
             } catch (error) {

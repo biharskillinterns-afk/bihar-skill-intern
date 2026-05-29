@@ -477,6 +477,14 @@ class APIService {
         return this.request('/payments/registration-amount');
     }
 
+    static async getRegistrationPaymentStatus(razorpayOrderId, paymentDetails = {}) {
+        const params = new URLSearchParams(paymentDetails);
+        const query = params.toString() ? `?${params.toString()}` : '';
+        return this.request(`/payments/registration-status/${encodeURIComponent(razorpayOrderId)}${query}`, {
+            method: 'GET'
+        });
+    }
+
     static async verifyPayment(paymentId) {
         return this.request('/payments/verify', {
             method: 'POST',
