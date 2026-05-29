@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Marksheet - Bihar Skill Intern</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                color: black;
+            }
+            .top-nav, .action-section {
+                display: none;
+            }
+            .container {
+                width: 210mm !important;
+                min-height: 297mm !important;
+                max-width: 210mm !important;
+                margin: 0 auto !important;
+                padding: 20mm 15mm !important;
+                box-shadow: none !important;
+                background: white !important;
+                page-break-after: always;
+            }
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+
+        .top-nav {
+            background: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .nav-logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2563eb;
+        }
+
+        .org-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 3px;
+        }
+
+        .org-unit {
+            font-size: 0.95em;
+            color: #1e3a8a;
+            margin-bottom: 8px;
+        }
+
+        .marksheet-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .session {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Student Info Section */
+        .info-section {
+            margin-bottom: 30px;
+            margin-top: 30px;
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            margin-bottom: 0;
+            border: 1px solid #d1d5db;
+        }
+
+        .info-item {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            border-right: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .info-item:nth-child(even) {
+            border-right: none;
+        }
+
+        .info-item:nth-child(n+5) {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: bold;
+            background: #f3f4f6;
+            padding: 12px 15px;
+            color: #1f2937;
+            border-right: 1px solid #d1d5db;
+            font-size: 0.9em;
+        }
+
+        .info-value {
+            padding: 12px 15px;
+            color: #374151;
+            font-size: 0.9em;
+        }
+
+        /* Assessment Results */
+        .results-section {
+            background: #dbeafe;
+            border-left: 4px solid #2563eb;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 0;
+        }
+
+        .results-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .result-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .result-value.percentage {
+            color: #1e40af;
+        }
+
+        .result-value.status {
+            color: #16a34a;
+            font-size: 1.5em;
+        }
+
+        /* Footer */
+        .footer-note {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .generated-date {
+            text-align: center;
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        /* Action Buttons */
+        .action-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+
+        .btn-certificate {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-certificate:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+        }
+
+        .btn-report {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-report:hover {
+            background: #15803d;
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .top-nav,
+            .action-section {
+                display: none;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 40px;
+                box-shadow: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .info-row {
+                grid-template-columns: 1fr;
+            }
+
+            .info-item {
+                grid-template-columns: 150px 1fr;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 210mm !important;
+                min-height: 297mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .top-nav,
+            .action-section {
+                display: none !important;
+            }
+
+            .container {
+                width: 210mm !important;
+                min-height: 297mm !important;
+                max-width: 210mm !important;
+                margin: 0 auto !important;
+                padding: 14mm !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                background: #fff !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <div class="nav-logo">Bihar Skill Intern</div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="instagram.html" target="_blank" style="text-decoration:none; color:#2563eb; font-weight:600;">📷 Instagram</a>
+            <a href="https://whatsapp.com/channel/0029VabLntu30LKRfOAXc50K" target="_blank" style="text-decoration:none; color:#111; font-weight:600;"><svg viewBox="0 0 64 64" aria-hidden="true" style="width:24px;height:24px;vertical-align:middle;margin-right:4px;"><rect x="5" y="5" width="54" height="54" rx="13" fill="#050505"/><path d="M18.5 48.5l2.2-8.3a17.7 17.7 0 1 1 6.2 5.3l-8.4 3z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/><path d="M25 23.5c.5-1.4 1.4-1.8 2.4-1.8h1.6c.6 0 1 .3 1.3.9l1.7 4.1c.3.6.2 1.1-.2 1.6l-1.3 1.5c1.4 2.5 3.5 4.5 6.1 5.9l1.5-1.3c.5-.4 1.1-.5 1.7-.2l4.1 1.9c.6.3.9.8.8 1.5-.2 1.6-.8 2.9-1.8 4-1 1.1-2.3 1.4-3.9 1.1-8.3-1.7-15.1-8.4-16.8-16.6-.4-1.5-.1-2.9.8-4.6z" fill="#fff"/></svg>WhatsApp</a>
+            <button style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: 600;" onclick="printMarksheetA4()">🖨️ Print</button>
+            <button style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: 600;" onclick="window.location.href='courses.html'">← Back</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="org-name">Bihar Skill Intern</div>
+            <div class="org-unit">Internship & Skill Development Program</div>
+            <div class="marksheet-title">ASSESSMENT MARKSHEET</div>
+            <div class="session">Academic Session 2025 - 2026</div>
+        </div>
+
+        <!-- Student Information -->
+        <div class="info-section">
+            <div class="info-row">
+                <div class="info-item">
+                    <div class="info-label">Student Name</div>
+                    <div class="info-value" id="studentName">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">University Roll No</div>
+                    <div class="info-value" id="rollNumber">-</div>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-item">
+                    <div class="info-label">College Name</div>
+                    <div class="info-value" id="collegeName">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value" id="department">-</div>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-item">
+                    <div class="info-label">Internship Topic</div>
+                    <div class="info-value" id="courseName">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Assessment Date</div>
+                    <div class="info-value" id="assessmentDate">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment Results -->
+        <div class="results-section">
+            <div class="results-title">Assessment Results</div>
+            <div class="results-grid">
+                <div class="result-item">
+                    <div class="result-label">Score Percentage:</div>
+                    <div class="result-value percentage" id="scorePercentage">0%</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Grade:</div>
+                    <div class="result-value">A+</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Status:</div>
+                    <div class="result-value status" id="passStatus">PASSED</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-note">
+            This is a computer generated marksheet. No signature required.
+        </div>
+        <div class="generated-date" id="generatedDate">Generated on: 1/21/2026, 12:43:29 PM</div>
+
+        <!-- Action Buttons -->
+        <div class="action-section">
+            <button class="action-btn btn-certificate" onclick="downloadCertificate()">
+                📜 Download Certificate
+            </button>
+            <button class="action-btn btn-report" onclick="generateReport()">
+                📄 Generate Report
+            </button>
+        </div>
+    </div>
+
+    <script src="api-config.js"></script>
+    <script>
+        function getSafeLocalStorageItem(key, fallback = '') {
+            const value = localStorage.getItem(key);
+            if (value === null || value === undefined) return fallback;
+            const cleaned = value.trim();
+            if (!cleaned || ['null', 'undefined'].includes(cleaned.toLowerCase())) return fallback;
+            return cleaned;
+        }
+
+        function readCurrentStudent() {
+            const studentId = localStorage.getItem('currentStudentId');
+            if (!studentId) return null;
+
+            try {
+                const student = JSON.parse(localStorage.getItem(studentId) || 'null');
+                return student && typeof student === 'object' ? student : null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function getStudentField(student, field, storageKey, fallback = '') {
+            return (student && student[field]) || getSafeLocalStorageItem(storageKey, fallback);
+        }
+
+        window.addEventListener('load', () => {
+            if (loadLocalMarksheetData()) {
+                return;
+            }
+
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            if (!token) {
+                return;
+            }
+            fetchMarksheetData(token);
+        });
+
+        function calculateGrade(percentage) {
+            if (percentage >= 90) return 'A+';
+            if (percentage >= 80) return 'A';
+            if (percentage >= 70) return 'B+';
+            if (percentage >= 60) return 'B';
+            return 'C';
+        }
+
+        async function fetchMarksheetData(token) {
+            try {
+                // Fetch student profile
+                const profileRes = await fetch(`${API_BASE_URL}/students/profile`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const profileData = await profileRes.json();
+                if (!profileData.success) throw new Error(profileData.message || 'Profile fetch failed');
+                const student = profileData.student;
+
+                // Fetch progress (assuming one course for marksheet)
+                const progressRes = await fetch(`${API_BASE_URL}/students/progress`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const progressData = await progressRes.json();
+                if (!progressData.success) throw new Error(progressData.message || 'Progress fetch failed');
+                const progress = progressData.progress && progressData.progress[0] ? progressData.progress[0] : {};
+
+                // Calculate percentage and grade
+                const totalQuestions = progress.totalQuestions || 50;
+                const correctAnswers = progress.correctAnswers || 0;
+                const scorePercentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+                const grade = calculateGrade(scorePercentage);
+
+                // Get current date
+                const today = new Date();
+                const assessmentDate = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                const generatedTime = today.toLocaleString('en-IN');
+
+                // Update UI
+                document.getElementById('studentName').textContent = student.firstName + ' ' + student.lastName;
+                document.getElementById('rollNumber').textContent = student.id || 'N/A';
+                document.getElementById('courseName').textContent = progress.courseName || student.course || '-';
+                document.getElementById('department').textContent = student.college || '-';
+                document.getElementById('collegeName').textContent = student.college || '-';
+                document.getElementById('assessmentDate').textContent = assessmentDate;
+                document.getElementById('scorePercentage').textContent = scorePercentage + '%';
+
+                // Update grade display
+                const gradeElement = document.querySelector('.results-grid .result-item:nth-child(2) .result-value');
+                if (gradeElement) {
+                    gradeElement.textContent = grade;
+                }
+
+                document.getElementById('passStatus').textContent = scorePercentage >= 60 ? '✓ PASSED' : '✗ FAILED';
+                document.getElementById('generatedDate').textContent = 'Generated on: ' + generatedTime;
+            } catch (err) {
+                alert('Marksheet load failed: ' + err.message);
+            }
+        }
+
+        function getSelectedCourseResult() {
+            const selectedCourseId = sessionStorage.getItem('quizCourseId') || localStorage.getItem('selectedCourseId');
+            const candidateIds = selectedCourseId
+                ? [selectedCourseId]
+                : Object.keys(localStorage)
+                    .filter(key => key.startsWith('courseResult_'))
+                    .map(key => key.replace('courseResult_', ''));
+
+            for (const courseId of candidateIds) {
+                try {
+                    const result = JSON.parse(localStorage.getItem('courseResult_' + courseId) || 'null');
+                    const resultCourseId = result && result.courseId ? String(result.courseId) : String(courseId);
+                    const enrolled = localStorage.getItem('course_' + courseId) === 'true';
+                    if (enrolled && result && String(resultCourseId) === String(courseId) && result.passed && Number(result.scorePercentage) >= 60) {
+                        return { ...result, courseId: result.courseId || courseId };
+                    }
+                } catch (error) {
+                    console.warn('Unable to read saved course result:', error.message);
+                }
+            }
+
+            return null;
+        }
+
+        function loadLocalMarksheetData() {
+            const result = getSelectedCourseResult();
+            const student = readCurrentStudent();
+            const studentName = getStudentField(student, 'name', 'userName', 'Student') ||
+                [student?.firstName, student?.lastName].filter(Boolean).join(' ').trim() ||
+                'Student';
+            const rollNo = (student && (student.rollno || student.rollNo || student.userRollNo)) || getSafeLocalStorageItem('userRollNo', 'N/A');
+
+            if (!result) {
+                document.getElementById('studentName').textContent = studentName;
+                document.getElementById('rollNumber').textContent = rollNo;
+                document.getElementById('courseName').textContent = 'Complete a dashboard course quiz first';
+                document.getElementById('passStatus').textContent = 'NOT ELIGIBLE';
+                return false;
+            }
+
+            const selectedCourse = result.courseName;
+            const quizScore = Number(result.scorePercentage) || 0;
+            const correctAnswers = Number(result.correctAnswers) || 0;
+            const totalQuestions = Number(result.totalQuestions) || 0;
+            const grade = result.grade || calculateGrade(quizScore);
+            const today = new Date();
+
+            document.getElementById('studentName').textContent = studentName;
+            document.getElementById('rollNumber').textContent = rollNo;
+            document.getElementById('courseName').textContent = selectedCourse;
+            document.getElementById('department').textContent = getStudentField(student, 'department', 'userDepartment', '-');
+            document.getElementById('collegeName').textContent = getStudentField(student, 'college', 'userCollege', '-');
+            document.getElementById('assessmentDate').textContent = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+            document.getElementById('scorePercentage').textContent = quizScore + '%';
+
+            const gradeElement = document.querySelector('.results-grid .result-item:nth-child(2) .result-value');
+            if (gradeElement) gradeElement.textContent = grade;
+
+            const correctElement = document.querySelector('.results-grid .result-item:nth-child(3) .result-value');
+            if (correctElement) correctElement.textContent = correctAnswers + '/' + totalQuestions;
+
+            document.getElementById('passStatus').textContent = 'PASSED';
+
+            const generatedTimeElement = document.getElementById('generatedTime');
+            if (generatedTimeElement) generatedTimeElement.textContent = today.toLocaleString('en-IN');
+
+            localStorage.setItem('selectedCourseId', result.courseId);
+            localStorage.setItem('selectedCourseName', result.courseName);
+            localStorage.setItem('courseForCertificate', result.courseName);
+            localStorage.setItem('courseEmojiForCertificate', result.courseEmoji || '');
+            localStorage.setItem('studentScore', quizScore);
+            localStorage.setItem('scorePercentage', quizScore);
+            localStorage.setItem('studentGrade', grade);
+            localStorage.setItem('certificateNumber', result.certificateNumber || localStorage.getItem('certificateNumber') || '');
+            return true;
+        }
+
+        function downloadCertificate() {
+            const result = getSelectedCourseResult();
+            if (!result) {
+                alert('Certificate is available only after completing a course quiz with 60% or more.');
+                return;
+            }
+            localStorage.setItem('selectedCourseId', result.courseId);
+            localStorage.setItem('courseForCertificate', result.courseName);
+            localStorage.setItem('studentGrade', result.grade);
+            window.location.href = 'POSK.html';
+        }
+
+        function generateReport() {
+            const userName = localStorage.getItem('userName') || 'Student';
+            const result = getSelectedCourseResult();
+            const userCourse = result ? result.courseName : (localStorage.getItem('courseForCertificate') || localStorage.getItem('selectedCourseName') || 'Not completed');
+            const scorePercentage = result ? result.scorePercentage : 0;
+            const grade = result ? result.grade : 'N/A';
+
+            let reportContent = `INTERNSHIP COMPLETION REPORT
+${new Date().toLocaleDateString()}
+
+========================================
+STUDENT INFORMATION
+========================================
+Student Name: ${userName}
+Course: ${userCourse}
+Session: 2025-26
+
+========================================
+ASSESSMENT RESULTS
+========================================
+Score Percentage: ${scorePercentage}%
+Grade: ${grade}
+Status: ${scorePercentage >= 60 ? 'PASSED' : 'FAILED'}
+
+========================================
+ATTENDANCE RECORD
+========================================
+Total Days: 15
+Days Present: 15
+Attendance: 100%
+
+========================================
+CERTIFICATE STATUS
+========================================
+Eligible for Certificate: ${scorePercentage >= 60 ? 'YES' : 'NO'}
+Certificate ID: BSI-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}
+
+Generated on: ${new Date().toLocaleString('en-IN')}
+========================================`;
+
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Report_${userName}_${new Date().getTime()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function printMarksheetA4() {
+            const topNav = document.querySelector('.top-nav');
+            const topNavStyle = topNav.style.display;
+            topNav.style.display = 'none';
+            window.print();
+            setTimeout(() => {
+                topNav.style.display = topNavStyle;
+            }, 500);
+        }
+    </script>
+</body>
+</html>

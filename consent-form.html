@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Consent & Information Form - Bihar Skill Intern</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .top-nav, .form-section {
+                display: none;
+            }
+            .consent-document {
+                display: block !important;
+                max-width: 210mm;
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0 auto;
+                padding: 10mm 11mm;
+                box-shadow: none;
+                border: 0;
+            }
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+
+        .top-nav {
+            background: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .nav-logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .btn-print {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: #059669;
+        }
+
+        .btn-back {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #dc2626;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-family: Arial, sans-serif;
+        }
+
+        input[readonly] {
+            background-color: #f0f9ff;
+            border-color: #0284c7;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            background: #2563eb;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            background: #1d4ed8;
+        }
+
+        /* Consent Document */
+        .consent-document {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 10mm 11mm;
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+            border: 1px solid #bdbdbd;
+            color: #111;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .exam-top-name {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 2mm;
+            text-transform: uppercase;
+        }
+
+        .doc-header {
+            text-align: center;
+            margin-bottom: 4mm;
+            border-bottom: 1.5px solid #111;
+            padding-bottom: 3mm;
+            position: relative;
+        }
+
+        .organization-name {
+            font-size: 18px;
+            font-weight: 800;
+            color: #000;
+            letter-spacing: 0;
+            margin-bottom: 1mm;
+        }
+
+        .organization-details {
+            font-size: 11px;
+            color: #222;
+            margin: 1px 0;
+        }
+
+        .doc-title {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 800;
+            color: #000;
+            margin-top: 2mm;
+            padding: 1mm 5mm;
+            border: 1px solid #111;
+            text-transform: uppercase;
+        }
+
+        .doc-content {
+            font-size: 11px;
+            line-height: 1.35;
+            color: #111;
+            margin: 0;
+        }
+
+        .exam-section {
+            border: 1px solid #111;
+            margin-top: 3mm;
+        }
+
+        .exam-section-title {
+            background: #e9e9e9;
+            border-bottom: 1px solid #111;
+            padding: 1.5mm 2mm;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .exam-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .exam-grid.with-photo {
+            grid-template-columns: 1fr 32mm;
+            align-items: stretch;
+        }
+
+        .exam-row {
+            display: grid;
+            grid-template-columns: 35mm 1fr;
+            border-bottom: 1px solid #111;
+            min-height: 8mm;
+        }
+
+        .exam-row:last-child {
+            border-bottom: 0;
+        }
+
+        .exam-grid > .exam-row:nth-child(odd) {
+            border-right: 1px solid #111;
+        }
+
+        .exam-label {
+            background: #f5f5f5;
+            border-right: 1px solid #111;
+            padding: 1.5mm 2mm;
+            font-weight: 700;
+        }
+
+        .exam-value {
+            padding: 1.5mm 2mm;
+            word-break: break-word;
+        }
+
+        .photo-panel {
+            border-left: 1px solid #111;
+            padding: 2mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 1.5mm;
+        }
+
+        .photo-frame {
+            width: 27mm;
+            height: 34mm;
+            border: 1px solid #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f3f3f3;
+            color: #555;
+            font-size: 10px;
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-caption {
+            font-size: 9px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .skills-box {
+            min-height: 16mm;
+            padding: 2mm;
+            border-top: 1px solid #111;
+        }
+
+        .declaration-box {
+            border: 1px solid #111;
+            margin-top: 4mm;
+            padding: 3mm;
+            text-align: justify;
+            font-size: 10.5px;
+        }
+
+        .declaration-title {
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 2mm;
+            text-align: left;
+        }
+
+        .signature-section {
+            margin-top: 8mm;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18mm;
+            align-items: end;
+        }
+
+        .signature-box {
+            min-height: 22mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .signature-line {
+            border-bottom: 1.5px solid #000;
+            min-height: 15mm;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            padding-bottom: 1mm;
+        }
+
+        .signature-line img {
+            max-width: 45mm;
+            max-height: 14mm;
+        }
+
+        .signature-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 1mm;
+        }
+
+        .doc-footer {
+            margin-top: 5mm;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #333;
+            border-top: 1px solid #999;
+            padding-top: 2mm;
+        }
+
+        .success-message {
+            display: none;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #6ee7b7;
+        }
+
+        @media print {
+            .success-message {
+                display: none !important;
+            }
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .signature-section {
+                flex-direction: column;
+            }
+            .signature-box {
+                width: 100%;
+                margin-bottom: 30px;
+            }
+        }
+
+        .section-break {
+            margin: 25px 0;
+            padding: 20px 0;
+            border-top: 1px solid #ddd;
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 15px;
+            border-left: 4px solid #f59e0b;
+            margin: 15px 0;
+            border-radius: 3px;
+        }
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 210mm !important;
+                min-height: 297mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .top-nav,
+            .form-section,
+            .success-message {
+                display: none !important;
+            }
+
+            .container,
+            .consent-document {
+                width: 210mm !important;
+                min-height: 297mm !important;
+                max-width: 210mm !important;
+                margin: 0 auto !important;
+                padding: 12mm !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                border: 0 !important;
+                background: #fff !important;
+            }
+
+            .consent-document {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <div class="nav-logo">📋 Consent & Information Form</div>
+        <div class="btn-group">
+            <button class="btn-print" onclick="printConsentFormA4()">🖨️ Print Form</button>
+            <button class="btn-back" onclick="goBackFromConsent()">Back</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="success-message" id="successMessage">
+            ✅ Form submitted successfully! You can now print it.
+        </div>
+
+        <!-- Input Form -->
+        <div class="form-section" id="formSection">
+            <h2>📝 Fill Student Information</h2>
+            
+            <form id="consentForm">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="fullName">Full Name *</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fatherName">Father's Name</label>
+                        <input type="text" id="fatherName">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="text" id="phone" required>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob">
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address">
+                    </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <input type="text" id="state">
+                    </div>
+                    <div class="form-group">
+                        <label for="pincode">Pincode</label>
+                        <input type="text" id="pincode">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="courseName">Course Name *</label>
+                    <input type="text" id="courseName" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="startDate">Course Start Date</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">Course End Date</label>
+                        <input type="date" id="endDate">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="skillsLearned">Skills Learned</label>
+                    <textarea id="skillsLearned" placeholder="List all skills acquired during internship..."></textarea>
+                </div>
+
+                <div class="highlight">
+                    <strong>⚠️ Consent Declaration:</strong>
+                    <p style="margin-top: 10px;">I hereby declare that the above information is correct and accurate. I consent to the processing of my personal data for certification and educational purposes.</p>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="agreeTerms" required>
+                    <label for="agreeTerms" style="margin: 0;">I agree to the terms and conditions</label>
+                </div>
+
+                <button type="submit" class="btn-submit">Generate Printable Form</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Printable Document -->
+    <div class="consent-document" id="consentDocument">
+        <div class="exam-top-name" id="docTopName">STUDENT NAME</div>
+        <div class="doc-header">
+            <div class="organization-name">Bihar Skill Intern</div>
+            <div class="organization-details">Online Internship & Skill Development Platform</div>
+            <div class="organization-details" id="docUniversity">Veer Kunwar Singh University, Ara (Bihar)</div>
+            <div class="doc-title">Student Consent & Information Form</div>
+            <div style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                Date: <span id="docDate"></span>
+            </div>
+        </div>
+
+        <div class="doc-content">
+            <div class="exam-section">
+                <div class="exam-section-title">Course / College Details</div>
+                <div class="exam-grid">
+                    <div class="exam-row">
+                        <div class="exam-label">Course</div>
+                        <div class="exam-value" id="docCourseName">-</div>
+                    </div>
+                    <div class="exam-row">
+                        <div class="exam-label">Session</div>
+                        <div class="exam-value" id="docSession">-</div>
+                    </div>
+                    <div class="exam-row">
+                        <div class="exam-label">College</div>
+                        <div class="exam-value" id="docCollege">-</div>
+                    </div>
+                    <div class="exam-row">
+                        <div class="exam-label">Roll No.</div>
+                        <div class="exam-value" id="docRollNo">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exam-section">
+                <div class="exam-section-title">Student Details</div>
+                <div class="exam-grid with-photo">
+                    <div>
+                        <div class="exam-grid">
+                            <div class="exam-row">
+                                <div class="exam-label">Student Name</div>
+                                <div class="exam-value" id="docFullName">-</div>
+                            </div>
+                            <div class="exam-row">
+                                <div class="exam-label">Father Name</div>
+                                <div class="exam-value" id="docFatherName">-</div>
+                            </div>
+                            <div class="exam-row">
+                                <div class="exam-label">Date of Birth</div>
+                                <div class="exam-value" id="docDOB">-</div>
+                            </div>
+                            <div class="exam-row">
+                                <div class="exam-label">Gender</div>
+                                <div class="exam-value" id="docGender">-</div>
+                            </div>
+                            <div class="exam-row">
+                                <div class="exam-label">Mobile</div>
+                                <div class="exam-value" id="docPhone">-</div>
+                            </div>
+                            <div class="exam-row">
+                                <div class="exam-label">E-mail</div>
+                                <div class="exam-value" id="docEmail">-</div>
+                            </div>
+                        </div>
+                        <div class="exam-row">
+                            <div class="exam-label">Address</div>
+                            <div class="exam-value"><span id="docAddress">-</span>, <span id="docCity">-</span>, <span id="docState">-</span>, PIN-<span id="docPincode">-</span></div>
+                        </div>
+                    </div>
+                    <div class="photo-panel">
+                        <div class="photo-frame">
+                            <img id="docPhoto" src="" alt="Student Photo" style="display: none;">
+                            <div id="noPhoto">Photo</div>
+                        </div>
+                        <div class="photo-caption">Student Photograph</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exam-section">
+                <div class="exam-section-title">Training / Consent Details</div>
+                <div class="exam-grid">
+                    <div class="exam-row">
+                        <div class="exam-label">Start Date</div>
+                        <div class="exam-value" id="docStartDate">-</div>
+                    </div>
+                    <div class="exam-row">
+                        <div class="exam-label">End Date</div>
+                        <div class="exam-value" id="docEndDate">-</div>
+                    </div>
+                </div>
+                <div class="exam-section-title" style="border-top: 1px solid #111;">Skills / Learning Outcome</div>
+                <div class="skills-box" id="docSkillsLearned">-</div>
+            </div>
+
+            <div class="declaration-box">
+                <div class="declaration-title">Declaration Statement</div>
+                <p>
+                    I, <strong id="docConsent" style="text-decoration: underline;"></strong>, declare that I have carefully checked all details entered in this form. The information provided by me is true and correct to the best of my knowledge. I consent to the use, verification, and storage of my personal and academic details for internship, training, certification, and official record purposes. If any information is found false or incorrect, I understand that my application/certificate may be cancelled by the organization/college authority.
+                </p>
+                <p style="margin-top: 2mm;">
+                    I also agree to follow the discipline, attendance, learning, assessment, and documentation rules applicable to the program.
+                </p>
+            </div>
+
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div>Date: <span id="docGeneratedDate"></span></div>
+                    <div>Place: Bihar</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <img id="docSignature" src="" alt="Student Signature" style="display: none;">
+                    </div>
+                    <div class="signature-label">Signature of Student</div>
+                </div>
+            </div>
+
+            <div class="doc-footer">
+                <span>Printed from Bihar Skill Intern</span>
+                <span>Printed On: <span id="docPrintedOn"></span></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('consentForm');
+        const formSection = document.getElementById('formSection');
+        const consentDocument = document.getElementById('consentDocument');
+        const successMessage = document.getElementById('successMessage');
+
+        function goBackFromConsent() {
+            const referrerPage = document.referrer ? document.referrer.split('/').pop().split('?')[0] : '';
+            const adminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+
+            if (referrerPage && referrerPage !== 'consent-form.html') {
+                window.history.back();
+                return;
+            }
+
+            window.location.href = adminLoggedIn ? 'admin-dashboard.html' : 'profile.html';
+        }
+
+        function normalizeRollNumber(value) {
+            return String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+        }
+
+        function getConsentRollFromUrl() {
+            return new URLSearchParams(window.location.search).get('roll') || '';
+        }
+
+        function isAdminConsentMode() {
+            return Boolean(getConsentRollFromUrl());
+        }
+
+        function clearStaleAdminConsentContext() {
+            if (isAdminConsentMode()) return;
+
+            [
+                'adminConsentStudentId',
+                'adminConsentRollNo',
+                'adminConsentActiveStudentId',
+                'adminConsentActiveRollNo'
+            ].forEach(key => localStorage.removeItem(key));
+        }
+
+        function syncStudentToConsentContext(student) {
+            if (!student || typeof student !== 'object') return;
+
+            const displayName = (student.name || student.fullName || '').trim()
+                || [student.firstName, student.lastName].filter(Boolean).join(' ').trim()
+                || student.email
+                || '';
+            const rollNo = student.rollno || student.rollNo || '';
+
+            if (isAdminConsentMode()) {
+                localStorage.setItem('adminConsentActiveStudentId', student.id || '');
+                localStorage.setItem('adminConsentActiveRollNo', rollNo);
+                return;
+            }
+
+            localStorage.setItem('currentStudentId', student.id || localStorage.getItem('currentStudentId') || '');
+            localStorage.setItem('userName', displayName);
+            localStorage.setItem('userEmail', student.email || '');
+            localStorage.setItem('userPhone', student.phone || '');
+            localStorage.setItem('userGender', student.gender || '');
+            localStorage.setItem('userGuardian', student.guardian || student.fatherName || '');
+            localStorage.setItem('userDOB', student.dob || '');
+            localStorage.setItem('userAddress', student.address || '');
+            localStorage.setItem('userState', student.state || 'Bihar');
+            localStorage.setItem('userDistrict', student.district || '');
+            localStorage.setItem('userCollege', student.college || '');
+            localStorage.setItem('userDepartment', student.department || '');
+            localStorage.setItem('userSession', student.session || '');
+            localStorage.setItem('userRollNo', rollNo);
+            localStorage.setItem('userSkill', student.skill || student.course || student.selectedSkill || student.userSkill || '');
+            syncRegistrationImages(student);
+        }
+
+        function findRegisteredStudentByRoll(rollNumber) {
+            const target = normalizeRollNumber(rollNumber);
+            if (!target) return null;
+
+            const readStudent = (studentId) => {
+                if (!studentId) return null;
+                try {
+                    const student = JSON.parse(localStorage.getItem(studentId) || 'null');
+                    return student ? { ...student, id: student.id || studentId } : null;
+                } catch (error) {
+                    return null;
+                }
+            };
+
+            const candidates = [];
+            const addCandidate = (student) => {
+                if (student && typeof student === 'object') candidates.push(student);
+            };
+
+            try {
+                const studentIds = JSON.parse(localStorage.getItem('allStudentIds') || '[]');
+                if (Array.isArray(studentIds)) studentIds.forEach(id => addCandidate(readStudent(id)));
+            } catch (error) {
+                console.warn('Unable to read student ids:', error.message);
+            }
+
+            for (let i = 0; i < localStorage.length; i += 1) {
+                const key = localStorage.key(i);
+                if (!key || !key.startsWith('student_')) continue;
+                addCandidate(readStudent(key));
+            }
+
+            return candidates.find(student => [student.rollno, student.rollNo, student.userRollNo]
+                .some(value => normalizeRollNumber(value) === target)) || null;
+        }
+
+        function getRegisteredStudentData() {
+            const requestedRollNo = getConsentRollFromUrl();
+            if (requestedRollNo) {
+                const rollStudent = findRegisteredStudentByRoll(requestedRollNo);
+                if (rollStudent) {
+                    syncStudentToConsentContext(rollStudent);
+                    return rollStudent;
+                }
+
+                return null;
+            }
+
+            const readStudent = (studentId) => {
+                if (!studentId) return null;
+                try {
+                    const student = JSON.parse(localStorage.getItem(studentId) || 'null');
+                    return student ? { ...student, id: student.id || studentId } : null;
+                } catch (error) {
+                    console.warn('Error reading registration data:', error);
+                    return null;
+                }
+            };
+
+            const directStudent = readStudent(localStorage.getItem('currentStudentId'));
+            if (directStudent) return directStudent;
+
+            const email = (localStorage.getItem('userEmail') || localStorage.getItem('userUsername') || '').toLowerCase();
+            let studentIds = [];
+            try {
+                studentIds = JSON.parse(localStorage.getItem('allStudentIds') || '[]');
+            } catch (error) {
+                studentIds = [];
+            }
+
+            for (const id of studentIds) {
+                const student = readStudent(id);
+                if (student && (!email || String(student.email || '').toLowerCase() === email)) {
+                    localStorage.setItem('currentStudentId', student.id || id);
+                    syncRegistrationImages(student);
+                    return student;
+                }
+            }
+
+            return null;
+        }
+
+        function getRegistrationValue(studentData, field, storageKey, fallback = '') {
+            return (studentData && studentData[field]) || localStorage.getItem(storageKey) || fallback;
+        }
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getCurrentTrainingDateRange() {
+            const end = new Date();
+            const start = new Date(end);
+            start.setDate(start.getDate() - 15);
+
+            return {
+                startDate: formatDateForInput(start),
+                endDate: formatDateForInput(end)
+            };
+        }
+
+        // Fetch student's enrolled course details and auto-fill
+        async function autoFillCourseDetails() {
+            try {
+                console.clear();
+                console.log('=== AUTO-FILL COURSE DETAILS DEBUG ===');
+                
+                // Get the student data
+                const studentData = getRegisteredStudentData();
+                const requestedRollNo = getConsentRollFromUrl();
+                console.log('Student Data Found:', !!studentData, studentData);
+
+                // ===== CHECK CERTIFICATE FIRST (HIGHEST PRIORITY) =====
+                const currentDateRange = getCurrentTrainingDateRange();
+                let courseName = '';
+                let startDate = currentDateRange.startDate;
+                let endDate = currentDateRange.endDate;
+                let skillsLearned = '';
+                let certificateLoaded = false;
+                
+                try {
+                    const certDataStr = localStorage.getItem('currentCertificateData');
+                    if (certDataStr) {
+                        const certData = JSON.parse(certDataStr);
+                        certificateLoaded = true;
+                        console.log('✅ Certificate Data Found:', certData);
+                        const certStudentId = String(certData.studentId || '');
+                        const activeStudentId = String((studentData && studentData.id) || localStorage.getItem('currentStudentId') || '');
+                        courseName = (!certStudentId || certStudentId === activeStudentId) ? (certData.courseName || '') : '';
+                    }
+                } catch (e) {
+                    console.log('Could not parse certificate data');
+                }
+
+                // If certificate data found, also try to get individual fields as backup
+                if (!courseName && !studentData) {
+                    courseName = localStorage.getItem('certCourseName') || 
+                                localStorage.getItem('courseForCertificate') || '';
+                }
+                // ===== FALLBACK: Try other sources if certificate data not found =====
+                console.log('Course Name Found:', courseName);
+                
+                if (!courseName) {
+                    courseName = localStorage.getItem('userSkill') || 
+                                localStorage.getItem('selectedCourse') || 
+                                localStorage.getItem('enrolledCourse') || '';
+                }
+                
+                if (studentData && !courseName) {
+                    courseName = studentData.skill || studentData.course || studentData.courseName || '';
+                }
+
+                if (requestedRollNo && studentData) {
+                    courseName = studentData.skill || studentData.course || studentData.selectedSkill || studentData.userSkill || courseName;
+                }
+
+                // ===== DATES =====
+                // Try to get enrollment/certificate data for dates
+                try {
+                    const coursesData = localStorage.getItem('enrolledCourses');
+                    if (coursesData) {
+                        const courses = JSON.parse(coursesData);
+                        if (courses && courses.length > 0) {
+                            const firstCourse = courses[0];
+                            if (firstCourse.courseName) courseName = courseName || firstCourse.courseName;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Could not parse enrolledCourses');
+                }
+
+                console.log('Generated Current Date Range:', { startDate, endDate });
+
+                // ===== SKILLS =====
+                if (studentData) {
+                    skillsLearned = studentData.skills || studentData.skillsLearned || 
+                                   studentData.description || '';
+                }
+
+                // Fallback: try to extract from common storage keys
+                if (!skillsLearned) {
+                    skillsLearned = localStorage.getItem('userSkillsDescription') || 
+                                   localStorage.getItem('courseDescription') || '';
+                }
+
+                console.log('Skills Learned:', skillsLearned);
+                console.log('Final Values:', { courseName, startDate, endDate, skillsLearned });
+
+                // Debug: Log all localStorage entries (certificate-related)
+                console.log('Certificate Storage Keys:');
+                const keys = ['currentCertificateData', 'certCourseName', 'certCourseStartDate', 
+                             'certCourseEndDate', 'courseForCertificate', 'userSkill'];
+                keys.forEach(key => {
+                    const val = localStorage.getItem(key);
+                    if (val) {
+                        console.log(`  ${key}: ${val.substring(0, 100)}`);
+                    }
+                });
+
+                // ===== POPULATE FORM FIELDS =====
+                const courseField = document.getElementById('courseName');
+                if (courseName) {
+                    // Always set course name if we have it
+                    courseField.value = courseName;
+                    courseField.setAttribute('readonly', 'readonly');
+                    courseField.style.backgroundColor = '#f0f9ff';
+                    courseField.style.borderColor = '#0284c7';
+                    courseField.title = 'Auto-filled from certificate';
+                    console.log('✓ Filled Course Name:', courseName);
+                }
+                
+                const startField = document.getElementById('startDate');
+                if (startDate) {
+                    startField.value = startDate;
+                    startField.setAttribute('readonly', 'readonly');
+                    startField.style.backgroundColor = '#f0f9ff';
+                    startField.style.borderColor = '#0284c7';
+                    startField.title = 'Auto-filled: 15 days before course end';
+                    console.log('✓ Filled Start Date:', startDate);
+                } else {
+                    console.log('✗ Start Date not filled');
+                }
+                
+                const endField = document.getElementById('endDate');
+                if (endDate) {
+                    endField.value = endDate;
+                    endField.setAttribute('readonly', 'readonly');
+                    endField.style.backgroundColor = '#f0f9ff';
+                    endField.style.borderColor = '#0284c7';
+                    endField.title = 'Auto-filled from certificate';
+                    console.log('✓ Filled End Date:', endDate);
+                } else {
+                    console.log('✗ End Date not filled');
+                }
+                
+                const skillsField = document.getElementById('skillsLearned');
+                if (skillsLearned && !skillsField.value) {
+                    skillsField.value = skillsLearned;
+                    skillsField.setAttribute('readonly', 'readonly');
+                    skillsField.style.backgroundColor = '#f0f9ff';
+                    skillsField.style.borderColor = '#0284c7';
+                    skillsField.title = 'Auto-filled from course details';
+                    console.log('✓ Filled Skills:', skillsLearned);
+                } else {
+                    console.log('✗ Skills not filled');
+                }
+
+                console.log('=== AUTO-FILL COMPLETE ===');
+
+            } catch (error) {
+                console.error('ERROR in autoFillCourseDetails:', error);
+            }
+        }
+
+        function applyStudentImagesToDocument(studentData = getRegisteredStudentData()) {
+            const adminConsent = isAdminConsentMode();
+            if (!adminConsent) syncRegistrationImages(studentData);
+            const profilePhoto = (studentData && (studentData.profilePhoto || studentData.profileImage)) || (adminConsent ? '' : localStorage.getItem('userProfileImage'));
+            const signature = (studentData && studentData.signature) || (adminConsent ? '' : localStorage.getItem('userSignatureImage'));
+
+            if (profilePhoto) {
+                document.getElementById('docPhoto').src = profilePhoto;
+                document.getElementById('docPhoto').style.display = 'block';
+                document.getElementById('noPhoto').style.display = 'none';
+            }
+
+            if (signature) {
+                document.getElementById('docSignature').src = signature;
+                document.getElementById('docSignature').style.display = 'block';
+            }
+        }
+
+        function syncRegistrationImages(studentData) {
+            if (!studentData) return;
+
+            if (studentData.profilePhoto || studentData.profileImage) {
+                localStorage.setItem('userProfileImage', studentData.profilePhoto || studentData.profileImage);
+            }
+
+            if (studentData.signature) {
+                localStorage.setItem('userSignatureImage', studentData.signature);
+            }
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearStaleAdminConsentContext();
+            const studentData = getRegisteredStudentData();
+
+            // Collect form data
+            const data = {
+                studentId: (studentData && studentData.id) || localStorage.getItem('currentStudentId') || '',
+                fullName: document.getElementById('fullName').value,
+                fatherName: document.getElementById('fatherName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                dob: document.getElementById('dob').value,
+                gender: document.getElementById('gender').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                pincode: document.getElementById('pincode').value,
+                courseName: document.getElementById('courseName').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                skillsLearned: document.getElementById('skillsLearned').value,
+                university: getRegistrationValue(studentData, 'university', 'userUniversity', 'Veer Kunwar Singh University, Ara (Bihar)'),
+                college: getRegistrationValue(studentData, 'college', 'userCollege', '-'),
+                rollNo: getRegistrationValue(studentData, 'rollno', 'userRollNo', '-'),
+                session: getRegistrationValue(studentData, 'session', 'userSession', '-')
+            };
+
+            // Save to localStorage
+            localStorage.setItem('consentFormData', JSON.stringify(data));
+
+            // Populate document
+            document.getElementById('docTopName').textContent = (data.fullName || 'Student Name').toUpperCase();
+            document.getElementById('docUniversity').textContent = data.university || 'Veer Kunwar Singh University, Ara (Bihar)';
+            document.getElementById('docFullName').textContent = data.fullName || '-';
+            document.getElementById('docFatherName').textContent = data.fatherName || '-';
+            document.getElementById('docEmail').textContent = data.email || '-';
+            document.getElementById('docPhone').textContent = data.phone || '-';
+            document.getElementById('docDOB').textContent = data.dob || '-';
+            document.getElementById('docGender').textContent = data.gender || '-';
+            document.getElementById('docAddress').textContent = data.address || '-';
+            document.getElementById('docCity').textContent = data.city || '-';
+            document.getElementById('docState').textContent = data.state || '-';
+            document.getElementById('docPincode').textContent = data.pincode || '-';
+            document.getElementById('docCourseName').textContent = data.courseName || '-';
+            document.getElementById('docCollege').textContent = data.college || '-';
+            document.getElementById('docRollNo').textContent = data.rollNo || '-';
+            document.getElementById('docSession').textContent = data.session || '-';
+            document.getElementById('docStartDate').textContent = data.startDate || '-';
+            document.getElementById('docEndDate').textContent = data.endDate || '-';
+            document.getElementById('docSkillsLearned').textContent = data.skillsLearned || '-';
+            document.getElementById('docConsent').textContent = data.fullName || 'Student';
+            
+            applyStudentImagesToDocument(studentData);
+            
+            const now = new Date();
+            document.getElementById('docDate').textContent = now.toLocaleDateString('en-IN');
+            document.getElementById('docGeneratedDate').textContent = now.toLocaleDateString('en-IN');
+            document.getElementById('docPrintedOn').textContent = now.toLocaleString('en-IN');
+
+            // Show success message and document
+            successMessage.style.display = 'block';
+            formSection.style.display = 'none';
+            consentDocument.style.display = 'block';
+
+            // Scroll to document
+            setTimeout(() => {
+                consentDocument.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        });
+
+        function printConsentFormA4() {
+            const formSection = document.getElementById('formSection');
+            const topNav = document.querySelector('.top-nav');
+            
+            const originalFormDisplay = formSection.style.display;
+            const originalNavDisplay = topNav.style.display;
+            
+            formSection.style.display = 'none';
+            topNav.style.display = 'none';
+            
+            window.print();
+            
+            setTimeout(() => {
+                formSection.style.display = originalFormDisplay;
+                topNav.style.display = originalNavDisplay;
+            }, 500);
+        }
+
+        // Load saved data if exists (from consent form or registration)
+        window.addEventListener('load', async function() {
+            console.log('📋 Consent Form Page Loaded - Starting initialization...');
+            
+            const studentData = getRegisteredStudentData();
+            clearStaleAdminConsentContext();
+            const currentStudentId = (studentData && studentData.id) || localStorage.getItem('currentStudentId') || '';
+            const requestedRollNo = normalizeRollNumber(getConsentRollFromUrl());
+            const saved = localStorage.getItem('consentFormData');
+            let savedData = null;
+            try {
+                savedData = saved ? JSON.parse(saved) : null;
+            } catch (error) {
+                console.warn('Ignoring unreadable consent form data:', error);
+            }
+
+            const savedMatchesCurrentStudent = savedData
+                && currentStudentId
+                && String(savedData.studentId || '') === String(currentStudentId)
+                && (!requestedRollNo || normalizeRollNumber(savedData.rollNo) === requestedRollNo);
+
+            if (savedMatchesCurrentStudent) {
+                // Load from saved consent form data
+                console.log('📌 Loading from previously saved consent form data');
+                const data = savedData;
+                document.getElementById('fullName').value = data.fullName || '';
+                document.getElementById('fatherName').value = data.fatherName || '';
+                document.getElementById('email').value = data.email || '';
+                document.getElementById('phone').value = data.phone || '';
+                document.getElementById('dob').value = data.dob || '';
+                document.getElementById('gender').value = data.gender || '';
+                document.getElementById('address').value = data.address || '';
+                document.getElementById('city').value = data.city || '';
+                document.getElementById('state').value = data.state || '';
+                document.getElementById('pincode').value = data.pincode || '';
+                document.getElementById('courseName').value = data.courseName || '';
+                document.getElementById('startDate').value = data.startDate || '';
+                document.getElementById('endDate').value = data.endDate || '';
+                document.getElementById('skillsLearned').value = data.skillsLearned || '';
+            } else {
+                // Load from registration data
+                console.log('📝 Loading from student registration data');
+                const registeredName = getRegistrationValue(studentData, 'name', 'userName')
+                    || [studentData?.firstName, studentData?.lastName].filter(Boolean).join(' ').trim();
+                document.getElementById('fullName').value = registeredName;
+                document.getElementById('fatherName').value = getRegistrationValue(studentData, 'guardian', 'userGuardian');
+                document.getElementById('email').value = getRegistrationValue(studentData, 'email', 'userEmail');
+                document.getElementById('phone').value = getRegistrationValue(studentData, 'phone', 'userPhone');
+                document.getElementById('dob').value = getRegistrationValue(studentData, 'dob', 'userDOB');
+                document.getElementById('gender').value = getRegistrationValue(studentData, 'gender', 'userGender');
+                document.getElementById('address').value = getRegistrationValue(studentData, 'address', 'userAddress');
+                document.getElementById('city').value = getRegistrationValue(studentData, 'district', 'userDistrict');
+                document.getElementById('state').value = getRegistrationValue(studentData, 'state', 'userState', 'Bihar');
+                document.getElementById('pincode').value = '';
+                document.getElementById('courseName').value = getRegistrationValue(studentData, 'skill', 'userSkill');
+                // Don't set empty values - let autoFillCourseDetails populate them
+            }
+            
+            // Auto-fill course details from database - ALWAYS CALL THIS
+            console.log('🔄 Starting auto-fill process for course details...');
+            await autoFillCourseDetails();
+
+            if (new URLSearchParams(window.location.search).get('auto') === '1') {
+                if (!studentData) {
+                    alert('Selected student record was not found. Please open the consent form again from the admin dashboard.');
+                    return;
+                }
+                document.getElementById('agreeTerms').checked = true;
+                form.requestSubmit();
+            }
+            
+            console.log('✅ Page initialization complete');
+        });
+    </script>
+</body>
+</html>

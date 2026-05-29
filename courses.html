@@ -1,0 +1,1389 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Bihar Skill Intern</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            background: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .nav-logo span {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .user-type {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        /* Social Links */
+        .social-icon {
+            color: #e4405f;
+            font-size: 1.5em;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .whatsapp-logo {
+            width: 36px;
+            height: 36px;
+            color: inherit !important;
+        }
+
+        .whatsapp-logo svg {
+            width: 36px;
+            height: 36px;
+            display: block;
+        }
+
+        /* Main Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .welcome-section h2 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .welcome-section p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-content h3 {
+            color: #666;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .stat-number {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .stat-icon {
+            font-size: 2.5em;
+            opacity: 0.8;
+        }
+
+        /* Courses Section */
+        .section-title {
+            font-size: 1.4em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .course-header {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .course-body {
+            padding: 20px;
+        }
+
+        .course-body h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .course-description {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .course-duration {
+            background: #f0f9ff;
+            color: #0c2d5c;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .course-skills {
+            margin: 15px 0;
+        }
+
+        .course-skills h4 {
+            color: #333;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .skill-tag {
+            background: #e0f2fe;
+            color: #0c2d5c;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .enroll-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .enroll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .enroll-btn.enrolled {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .badge-enrolled {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .badge-enrolled.show {
+            display: block;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: linear-gradient(135deg, #fef3c7, #fcd34d);
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            color: #92400e;
+            font-size: 0.95em;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .column-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .column-box h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .student-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .student-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                gap: 15px;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-section {
+                padding: 20px;
+            }
+
+            .top-nav {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="api-config.js"></script>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <div class="top-nav">
+        <div class="nav-logo">
+            🎓 Bihar Skill Intern
+            <span>Professional Internship Platform</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="courses.html" class="active">Dashboard</a></li>
+            <li><a href="profile.html">Profile</a></li>
+            <li><a href="courses.html">Course</a></li>
+            <li><a href="#" onclick="downloadCertificate(); return false;">Certificate</a></li>
+        </ul>
+        <div class="nav-right">
+            <a href="https://www.instagram.com/bihar_skill_interns?igsh=ZTl5dXN1OHEwa295" target="_blank" class="social-icon" title="Follow on Instagram">📷</a>
+            <a href="https://whatsapp.com/channel/0029VabLntu30LKRfOAXc50K" target="_blank" class="social-icon whatsapp-logo" title="Join WhatsApp Channel" aria-label="Join WhatsApp Channel"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="5" y="5" width="54" height="54" rx="13" fill="#050505"/><path d="M18.5 48.5l2.2-8.3a17.7 17.7 0 1 1 6.2 5.3l-8.4 3z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/><path d="M25 23.5c.5-1.4 1.4-1.8 2.4-1.8h1.6c.6 0 1 .3 1.3.9l1.7 4.1c.3.6.2 1.1-.2 1.6l-1.3 1.5c1.4 2.5 3.5 4.5 6.1 5.9l1.5-1.3c.5-.4 1.1-.5 1.7-.2l4.1 1.9c.6.3.9.8.8 1.5-.2 1.6-.8 2.9-1.8 4-1 1.1-2.3 1.4-3.9 1.1-8.3-1.7-15.1-8.4-16.8-16.6-.4-1.5-.1-2.9.8-4.6z" fill="#fff"/></svg></a>
+            <div class="user-profile">
+                <div class="user-avatar" id="userInitial">S</div>
+                <div>
+                    <div class="user-name" id="displayName">Student</div>
+                    <div class="user-type">Student</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h2>Welcome back, <span id="userName">Student</span>! 👋</h2>
+            <p id="userEmail">Track your internship progress and access your learning materials.</p>
+
+            <div class="action-buttons">
+                <button class="action-btn btn-primary" onclick="downloadCertificate()">📜 Download Certificate</button>
+                <button class="action-btn btn-success" onclick="goToCourses()">📚 View Courses</button>
+                <button class="action-btn btn-warning" onclick="downloadReport()">📋 Download Report</button>
+                <button class="action-btn btn-success" onclick="goToCourses()">📚 View Courses</button>
+                <button class="action-btn btn-info" onclick="viewProfile()">👤 View Profile</button>
+                <button class="action-btn btn-info" onclick="window.location.href='consent-form.html'" style="background: linear-gradient(135deg, #ec4899, #db2777);">📋 Consent Form</button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Courses Enrolled</h3>
+                    <div class="stat-number" id="enrolledCount">0</div>
+                </div>
+                <div class="stat-icon">📚</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Completion Status</h3>
+                    <div class="stat-number" id="completionStatus">0%</div>
+                </div>
+                <div class="stat-icon">✅</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Certificate Status</h3>
+                    <div class="stat-number" id="certStatus">Pending</div>
+                </div>
+                <div class="stat-icon">🎓</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Progress</h3>
+                    <div class="stat-number" id="progressStatus">0%</div>
+                </div>
+                <div class="stat-icon">⚡</div>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <strong>✨ Important Notice</strong>
+            Enroll in at least one course to generate your professional certificate!
+        </div>
+
+        <!-- Announcements Section -->
+        <h3 class="section-title">📢 Announcements</h3>
+        <div class="column-box" id="studentAnnouncements" style="margin-bottom: 30px; background: linear-gradient(135deg, #fef3c7, #fcd34d); border-left: 4px solid #f59e0b;">
+            <div style="padding: 15px;">
+                <h4 style="margin-bottom: 10px; color: #92400e;">🎓 Welcome to Bihar Skill Intern!</h4>
+                <p style="margin-bottom: 15px; color: #92400e;">Complete your courses, maintain perfect attendance, and earn your professional certificate.</p>
+                <div style="background: white; padding: 10px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <strong>💡 Tip:</strong> Enroll in courses to unlock learning materials and quizzes. Complete all modules to get certified!
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrolled Courses Section -->
+        <h3 class="section-title">📚 My Enrolled Courses</h3>
+        <div class="courses-grid" id="enrolledCoursesGrid">
+            <!-- Enrolled courses will be dynamically added here -->
+        </div>
+
+        <!-- Courses Section -->
+        <h3 class="section-title">📖 Available Courses</h3>
+        <div class="courses-grid" id="coursesGrid">
+            <!-- Courses will be dynamically added here -->
+        </div>
+
+        <!-- Two Column Section -->
+        <div class="two-column">
+            <div class="column-box">
+                <h3>🎯 Quick Actions</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="action-btn btn-primary" style="width: 100%;" onclick="goToCourses()">Continue Learning</button>
+                    <button class="action-btn btn-success" style="width: 100%;" onclick="viewAttendance()">📊 View Attendance</button>
+                    <button class="action-btn btn-success" style="width: 100%;" onclick="viewMarksheet()">📋 View Marksheet</button>
+                    <button class="action-btn btn-info" style="width: 100%;" onclick="generateReport()">📄 Generate Report</button>
+                </div>
+            </div>
+
+            <div class="column-box">
+                <h3>👤 Student Information</h3>
+                <div class="student-info-item">
+                    <span class="info-label">Name:</span>
+                    <span class="info-value" id="studentName">-</span>
+                </div>
+                <div class="student-info-item">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value" id="studentEmail">-</span>
+                </div>
+                <div class="student-info-item">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value" id="studentPhone">-</span>
+                </div>
+                <div class="student-info-item">
+                    <span class="info-label">Selected Skill:</span>
+                    <span class="info-value" id="studentSkill">-</span>
+                </div>
+                <div class="student-info-item">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value" id="studentStatus" style="color: #10b981;">Active</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Section -->
+        <h3 class="section-title">📋 Recent Activity</h3>
+        <div class="column-box" style="margin-bottom: 30px;">
+            <div id="recentActivity">
+                <div style="text-align: center; padding: 20px; color: #999;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📚</div>
+                    <p>No recent activity</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportContent" style="display:none; position:absolute; left:-9999px; top:-9999px; width:210mm; padding:20px; background:white;"></div>
+
+    <script>
+        // ============= LOCALSTORAGE UTILITY (FIX ALL GLITCHES) =============
+        const storageBackend = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+        const StorageManager = {
+            get: (key, defaultValue = null) => {
+                try {
+                    const value = storageBackend.getItem(key);
+                    if (value === null || value === '' || value === 'null' || value === 'undefined') return defaultValue;
+                    if (value === 'true') return true;
+                    if (value === 'false') return false;
+                    try {
+                        return JSON.parse(value);
+                    } catch (e) {
+                        return value;
+                    }
+                } catch (e) {
+                    console.error(`Error getting ${key}:`, e);
+                    return defaultValue;
+                }
+            },
+
+            set: (key, value) => {
+                try {
+                    if (value === null || value === undefined) {
+                        storageBackend.removeItem(key);
+                    } else if (typeof value === 'object') {
+                        storageBackend.setItem(key, JSON.stringify(value));
+                    } else if (typeof value === 'boolean') {
+                        storageBackend.setItem(key, value.toString());
+                    } else {
+                        storageBackend.setItem(key, String(value));
+                    }
+                    return true;
+                } catch (e) {
+                    console.error(`Error setting ${key}:`, e);
+                    return false;
+                }
+            },
+
+            remove: (key) => {
+                try {
+                    storageBackend.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.error(`Error removing ${key}:`, e);
+                    return false;
+                }
+            }
+        };
+
+        function getSafeUserName() {
+            let userName = StorageManager.get('userName');
+            if (typeof userName === 'string') {
+                userName = userName.trim();
+                if (['null', 'undefined'].includes(userName.toLowerCase())) {
+                    userName = '';
+                }
+            }
+            if (!userName) {
+                const firstName = (StorageManager.get('userFirstName') || '').trim();
+                const lastName = (StorageManager.get('userLastName') || '').trim();
+                const composed = [firstName, lastName].filter(Boolean).join(' ').trim();
+                if (composed) return composed;
+                let email = (StorageManager.get('userEmail') || StorageManager.get('userUsername') || '').trim();
+                if (['null', 'undefined'].includes(email.toLowerCase())) {
+                    email = '';
+                }
+                return email ? email.split('@')[0] : 'Student';
+            }
+            return userName;
+        }
+        // ===================================================================
+
+        // Function to get default admin courses
+        function getDefaultCourses() {
+            return [
+                { id: 1, name: "Skill Development", emoji: "🎯", description: "Comprehensive training to develop practical and technical skills for professional growth.", duration: "8 weeks", skills: ["Technical Skills", "Soft Skills", "Communication", "Leadership"] },
+                { id: 2, name: "Social Work", emoji: "🤝", description: "Learn social welfare, community development, and making positive impact in society.", duration: "10 weeks", skills: ["Community Service", "Counseling", "Program Management", "Social Issues"] },
+                { id: 3, name: "Population Study", emoji: "📊", description: "Study demographic trends, population dynamics, and social statistics.", duration: "8 weeks", skills: ["Data Analysis", "Statistics", "Demographics", "Research Methods"] },
+                { id: 4, name: "Disaster Management", emoji: "🚨", description: "Learn disaster prevention, emergency response, and crisis management.", duration: "50 days", skills: ["Risk Assessment", "Emergency Response", "Preparedness", "Recovery Planning", "Crisis Management"] },
+                { id: 5, name: "Digital Literacy", emoji: "💻", description: "Complete guide to digital skills, internet usage, online safety, and technology literacy.", duration: "50 days", skills: ["Computer Basics", "Internet", "Online Safety", "Digital Tools", "E-Governance"] },
+                { id: 6, name: "Web Development", emoji: "💻", description: "Learn HTML, CSS, JavaScript, frontend and backend basics, hosting, deployment, SEO, testing, and full stack web development foundations.", duration: "50 days", skills: ["HTML", "CSS", "JavaScript", "Responsive Design", "Frontend Basics", "Backend Basics", "Git and GitHub", "Web Hosting"] },
+                { id: 7, name: "Cyber Security", emoji: "🔒", description: "Learn cyber safety, threats, malware, passwords, phishing, network security, and protection practices.", duration: "50 days", skills: ["Cyber Safety", "Password Security", "Phishing Awareness", "Network Security", "Data Protection"] },
+                { id: 8, name: "Entrepreneurship", emoji: "💼", description: "Learn business ideas, planning, innovation, startup basics, marketing, finance, and entrepreneurial skills.", duration: "50 days", skills: ["Business Planning", "Innovation", "Marketing", "Finance Basics", "Startup Skills"] },
+                { id: 9, name: "Financial Literacy", emoji: "💰", description: "Learn budgeting, savings, banking, digital payments, investments, insurance, and smart money management.", duration: "50 days", skills: ["Budgeting", "Savings", "Banking", "Digital Payments", "Investment Basics"] }
+            ];
+        }
+        // Function to get courses from API
+        async function getAdminCourses() {
+            try {
+                const response = await APIService.request('/courses');
+                if (response.success && response.courses) {
+                    console.log('Courses loaded from API:', response.courses);
+                    return response.courses.map((course, index) => {
+                        const emojis = ["🎯", "🤝", "📊", "🚨"];
+                        return {
+                            id: course.id,
+                            name: course.name,
+                            emoji: course.emoji || emojis[index % emojis.length],
+                            description: course.description || getDefaultCourses()[index % 4].description,
+                            duration: course.duration ? course.duration + " days" : "30 days",
+                            skills: course.skills || ["Module 1", "Module 2", "Module 3", "Module 4"]
+                        };
+                    });
+                }
+            } catch (error) {
+                console.warn('API fetch failed, falling back to localStorage:', error.message);
+            }
+
+            // Fallback to localStorage
+            const coursesStr = StorageManager.get('adminCourses');
+            console.log('Raw localStorage data:', coursesStr);
+            const defaultCourses = getDefaultCourses();
+
+            if (!coursesStr || (Array.isArray(coursesStr) && coursesStr.length === 0)) {
+                console.log('No courses in localStorage, using defaults');
+                StorageManager.set('adminCourses', defaultCourses);
+                return defaultCourses;
+            }
+
+            let adminCourses = coursesStr;
+            if (!Array.isArray(adminCourses)) {
+                try {
+                    adminCourses = JSON.parse(coursesStr || 'null');
+                    console.log('Parsed courses from localStorage:', adminCourses);
+                } catch (error) {
+                    console.warn('adminCourses value is invalid JSON, resetting to defaults:', error.message);
+                    StorageManager.set('adminCourses', defaultCourses);
+                    return defaultCourses;
+                }
+            }
+
+            if (!Array.isArray(adminCourses) || adminCourses.length === 0) {
+                console.log('Parsed courses is not array or empty, using defaults');
+                StorageManager.set('adminCourses', defaultCourses);
+                return defaultCourses;
+            }
+
+            console.log('Final processed courses:', adminCourses);
+            return adminCourses.map((course, index) => {
+                const emojis = ["🎯", "🤝", "📊", "🚨"];
+                return {
+                    id: course.id,
+                    name: course.name,
+                    emoji: course.emoji || emojis[index % emojis.length],
+                    description: course.description || getDefaultCourses()[index % 4].description,
+                    duration: course.duration ? course.duration + " days" : "30 days",
+                    skills: course.skills || ["Module 1", "Module 2", "Module 3", "Module 4"]
+                };
+            });
+        }
+
+        function readStoredAdminCourses() {
+            const coursesValue = StorageManager.get('adminCourses');
+
+            if (!coursesValue) {
+                return [];
+            }
+
+            if (Array.isArray(coursesValue)) {
+                return coursesValue;
+            }
+
+            try {
+                const parsed = JSON.parse(coursesValue);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.warn('adminCourses value is invalid JSON:', error.message);
+                return [];
+            }
+        }
+
+        function normalizeCourse(course, index) {
+            const defaults = getDefaultCourses();
+            const fallback = defaults[index % defaults.length];
+            const emojis = ['📘', '📗', '📙', '📕', '💻', '🎓'];
+            const rawDuration = course.duration || fallback.duration || 30;
+            const durationText = typeof rawDuration === 'number' || /^\d+$/.test(String(rawDuration))
+                ? `${rawDuration} days`
+                : String(rawDuration);
+
+            return {
+                id: course.id || course.courseId || index + 1,
+                name: course.name || course.courseName || course.title || fallback.name,
+                emoji: course.emoji || fallback.emoji || emojis[index % emojis.length],
+                description: course.description || course.syllabus || fallback.description,
+                duration: durationText,
+                skills: Array.isArray(course.skills) && course.skills.length
+                    ? course.skills
+                    : ['Module 1', 'Module 2', 'Module 3', 'Module 4']
+            };
+        }
+
+        function mergeWithDefaultCourses(courseList) {
+            const byId = new Map();
+            [...getDefaultCourses(), ...(Array.isArray(courseList) ? courseList : [])].forEach((course, index) => {
+                const normalized = normalizeCourse(course, index);
+                byId.set(String(normalized.id), normalized);
+            });
+            return Array.from(byId.values()).filter(course => course.name);
+        }
+
+        async function getAdminCourses() {
+            const localCourses = readStoredAdminCourses();
+
+            try {
+                const response = await APIService.request('/courses');
+                if (response.success && response.courses) {
+                    const byId = new Map();
+                    [...getDefaultCourses(), ...response.courses, ...localCourses].forEach((course, index) => {
+                        const normalized = normalizeCourse(course, index);
+                        byId.set(String(normalized.id), normalized);
+                    });
+
+                    const mergedCourses = Array.from(byId.values()).filter(course => course.name);
+                    if (mergedCourses.length > 0) {
+                        return mergedCourses;
+                    }
+                }
+            } catch (error) {
+                console.warn('API fetch failed, falling back to localStorage:', error.message);
+            }
+
+            const defaultCourses = getDefaultCourses();
+            if (!Array.isArray(localCourses) || localCourses.length === 0) {
+                StorageManager.set('adminCourses', defaultCourses);
+                return defaultCourses;
+            }
+
+            const normalizedCourses = mergeWithDefaultCourses(localCourses);
+            return normalizedCourses.length > 0 ? normalizedCourses : defaultCourses;
+        }
+
+        let courses = [];
+
+        function ensureCoursesVisible() {
+            const coursesGrid = document.getElementById('coursesGrid');
+            const enrolledCoursesGrid = document.getElementById('enrolledCoursesGrid');
+            if (!coursesGrid || !enrolledCoursesGrid) return;
+
+            const gridsAreEmpty = coursesGrid.children.length === 0 && enrolledCoursesGrid.children.length === 0;
+            if (!gridsAreEmpty) return;
+
+            const storedCourses = readStoredAdminCourses();
+            courses = storedCourses.length > 0
+                ? mergeWithDefaultCourses(storedCourses)
+                : getDefaultCourses();
+
+            if (!Array.isArray(courses) || courses.length === 0) {
+                courses = getDefaultCourses();
+            }
+
+            renderCourses();
+            updateStats();
+        }
+
+        setTimeout(ensureCoursesVisible, 1000);
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function getEligibleCourseResults() {
+            const keys = new Set(Object.keys(localStorage));
+            if (typeof BSIAuthStorage !== 'undefined') {
+                const savedState = BSIAuthStorage.readWindowState();
+                Object.keys(savedState).forEach(k => keys.add(k));
+            }
+
+            return [...keys]
+                .filter(key => key.startsWith('courseResult_'))
+                .map(key => {
+                    const courseId = key.replace('courseResult_', '');
+                    try {
+                        const value = storageBackend.getItem(key);
+                        const result = JSON.parse(value || 'null');
+                        return { courseId, result };
+                    } catch (error) {
+                        return null;
+                    }
+                })
+                .filter(item => {
+                    if (!item || !item.result) return false;
+                    const resultCourseId = item.result.courseId ? String(item.result.courseId) : item.courseId;
+                    return StorageManager.get('course_' + item.courseId) === true &&
+                        String(resultCourseId) === String(item.courseId) &&
+                        item.result.passed &&
+                        Number(item.result.scorePercentage) >= 60;
+                })
+                .map(item => ({
+                    ...item.result,
+                    courseId: item.result.courseId || item.courseId
+                }));
+        }
+
+        function selectLatestEligibleResult() {
+            const results = getEligibleCourseResults();
+            if (results.length === 0) return null;
+
+            results.sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
+            const result = results[0];
+            StorageManager.set('selectedCourseId', result.courseId);
+            StorageManager.set('selectedCourseName', result.courseName);
+            StorageManager.set('courseForCertificate', result.courseName);
+            StorageManager.set('courseEmojiForCertificate', result.courseEmoji || '');
+            StorageManager.set('studentGrade', result.grade);
+            StorageManager.set('studentScore', result.scorePercentage);
+            StorageManager.set('scorePercentage', result.scorePercentage);
+            StorageManager.set('certificateNumber', result.certificateNumber || '');
+            return result;
+        }
+
+        function updateStudentSelectedCourse(course) {
+            if (!course) return;
+            StorageManager.set('userSkill', course.name);
+            StorageManager.set('selectedSkill', course.name);
+            StorageManager.set('selectedCourseId', course.id);
+            StorageManager.set('selectedCourseName', course.name);
+            StorageManager.set('courseForCertificate', course.name);
+            StorageManager.set('courseEmojiForCertificate', course.emoji || '');
+
+            const studentId = StorageManager.get('currentStudentId');
+            const userEmail = StorageManager.get('userEmail');
+            const updateRecord = (key) => {
+                const student = StorageManager.get(key);
+                if (!student || typeof student !== 'object') return;
+                if (userEmail && student.email && student.email !== userEmail) return;
+                student.skill = course.name;
+                student.course = course.name;
+                student.selectedSkill = course.name;
+                student.userSkill = course.name;
+                StorageManager.set(key, student);
+            };
+
+            if (studentId) updateRecord(studentId);
+            updateRecord('student');
+        }
+
+        function syncCompletedCourseSelection() {
+            const passedCourses = [];
+            courses.forEach(course => {
+                const result = StorageManager.get('courseResult_' + course.id);
+                if (!result || !result.passed || Number(result.scorePercentage) < 60) return;
+
+                StorageManager.set('course_' + course.id, true);
+                StorageManager.set('progress_' + course.id, 100);
+                passedCourses.push({
+                    course,
+                    completedAt: result.completedAt || result.lockedAt || ''
+                });
+            });
+
+            if (passedCourses.length === 0) return;
+
+            passedCourses.sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
+            updateStudentSelectedCourse(passedCourses[0].course);
+        }
+
+        function refreshSelectedSkillDisplay() {
+            const skillElement = document.getElementById('studentSkill');
+            if (skillElement) {
+                skillElement.textContent = StorageManager.get('userSkill') || 'Not selected';
+            }
+        }
+
+        // Activity logging
+        function logActivity(activity) {
+            const activities = StorageManager.get('studentActivities', []);
+            activities.unshift({
+                text: activity,
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleDateString('en-IN'),
+                time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            });
+            
+            // Keep only last 10 activities
+            if (activities.length > 10) activities.splice(10);
+            
+            StorageManager.set('studentActivities', activities);
+            updateRecentActivity();
+        }
+
+        function updateRecentActivity() {
+            const activities = StorageManager.get('studentActivities', []);
+            const activityDiv = document.getElementById('recentActivity');
+            
+            if (activities.length === 0) {
+                activityDiv.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #999;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">📚</div>
+                        <p>No recent activity</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            activityDiv.innerHTML = activities.map(activity => `
+                <div style="display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; color: #333;">${activity.text}</div>
+                        <div style="font-size: 0.8em; color: #999;">${activity.date} at ${activity.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAdminNotices() {
+            const announcementBox = document.getElementById('studentAnnouncements');
+            if (!announcementBox) return;
+            const now = Date.now();
+            const notices = StorageManager.get('adminNotices', [])
+                .filter(notice => !notice.expiresAt || new Date(notice.expiresAt).getTime() > now);
+            StorageManager.set('adminNotices', notices);
+            if (!Array.isArray(notices) || notices.length === 0) return;
+
+            announcementBox.innerHTML = `
+                <div style="padding: 15px;">
+                    ${notices.slice(0, 4).map(notice => `
+                        <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid ${notice.priority === 'warning' ? '#f59e0b' : notice.priority === 'success' ? '#10b981' : '#2563eb'}; margin-bottom: 10px;">
+                            <strong>${escapeHTML(notice.title)}</strong>
+                            <p style="margin-top: 6px; color: #555;">${escapeHTML(notice.message)}</p>
+                            <small style="color: #777;">${escapeHTML(notice.at || '')}</small>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        window.addEventListener('load', async () => {
+            const isLoggedIn = StorageManager.get('isLoggedIn');
+            if (!isLoggedIn || isLoggedIn === 'false') {
+                alert('Please login first!');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const paymentComplete = StorageManager.get('paymentStatus') === 'completed' || StorageManager.get('isRegistrationComplete') === true;
+            if (!paymentComplete) {
+                alert('Please complete your registration payment first.');
+                window.location.href = 'payment.html';
+                return;
+            }
+
+            const userName = getSafeUserName();
+            const userEmail = StorageManager.get('userEmail');
+            const userPhone = StorageManager.get('userPhone');
+            const userSkill = StorageManager.get('userSkill');
+
+            // Update header
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('displayName').textContent = userName;
+            document.getElementById('userEmail').textContent = 'Track your internship progress and access your learning materials.';
+            
+            // Get initials for avatar
+            const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            document.getElementById('userInitial').textContent = initials;
+
+            // Update student info
+            document.getElementById('studentName').textContent = userName;
+            document.getElementById('studentEmail').textContent = userEmail;
+            document.getElementById('studentPhone').textContent = userPhone || 'Not provided';
+            document.getElementById('studentSkill').textContent = userSkill || 'Not selected';
+
+            const storedCourses = readStoredAdminCourses();
+            courses = storedCourses.length > 0
+                ? mergeWithDefaultCourses(storedCourses)
+                : getDefaultCourses();
+
+            if (!Array.isArray(courses) || courses.length === 0) {
+                courses = getDefaultCourses();
+                StorageManager.set('adminCourses', courses);
+            }
+
+            syncCompletedCourseSelection();
+            refreshSelectedSkillDisplay();
+            renderCourses();
+            updateStats();
+            updateRecentActivity();
+            renderAdminNotices();
+
+            getAdminCourses()
+                .then((loadedCourses) => {
+                    if (Array.isArray(loadedCourses) && loadedCourses.length > 0) {
+                        courses = loadedCourses;
+                        syncCompletedCourseSelection();
+                        refreshSelectedSkillDisplay();
+                        renderCourses();
+                        updateStats();
+                    }
+                })
+                .catch((error) => {
+                    console.warn('Course refresh failed:', error.message);
+                });
+            
+            // Log login activity
+            logActivity('Logged into dashboard');
+        });
+
+        function renderCourses() {
+            const coursesGrid = document.getElementById('coursesGrid');
+            const enrolledCoursesGrid = document.getElementById('enrolledCoursesGrid');
+            coursesGrid.innerHTML = '';
+            enrolledCoursesGrid.innerHTML = '';
+
+            courses.forEach(course => {
+                const result = StorageManager.get('courseResult_' + course.id);
+                const completed = result && result.passed && Number(result.scorePercentage) >= 60;
+                const enrolled = StorageManager.get('course_' + course.id) === true || completed;
+                const progress = result && result.passed ? 100 : (StorageManager.get('progress_' + course.id) || 0);
+                
+                const courseCard = document.createElement('div');
+                courseCard.className = 'course-card';
+                
+                if (enrolled) {
+                    // Show in enrolled section with progress
+                    courseCard.innerHTML = `
+                        <div class="course-header">${course.emoji}</div>
+                        <div class="course-body">
+                            <h3>${escapeHTML(course.name)}</h3>
+                            <p class="course-description">${escapeHTML(course.description)}</p>
+                            <div class="course-duration">⏱️ ${course.duration}</div>
+                            ${result && result.passed ? `<div style="margin-top: 10px; color: #065f46; font-weight: 700;">Passed: ${result.scorePercentage}% | Grade ${escapeHTML(result.grade)}</div>` : ''}
+                            <div style="margin: 15px 0;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="font-size: 0.8em; color: #666;">Progress</span>
+                                    <span style="font-size: 0.8em; color: #2563eb; font-weight: 600;">${progress}%</span>
+                                </div>
+                                <div style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${progress}%; height: 100%; background: linear-gradient(135deg, #2563eb, #1e40af); border-radius: 4px; transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                            <button class="enroll-btn enrolled" onclick="${completed ? `viewCompletedCourse(${course.id})` : `continueCourse(${course.id})`}">
+                                ${completed ? 'View Marksheet' : '📖 Continue Learning'}
+                            </button>
+                        </div>
+                    `;
+                    enrolledCoursesGrid.appendChild(courseCard);
+                } else {
+                    // Show in available section
+                    courseCard.innerHTML = `
+                        <div class="course-header">${course.emoji}</div>
+                        <div class="course-body">
+                            <h3>${escapeHTML(course.name)}</h3>
+                            <p class="course-description">${escapeHTML(course.description)}</p>
+                            <div class="course-duration">⏱️ ${course.duration}</div>
+                            <div class="course-skills">
+                                <h4>Skills:</h4>
+                                <div class="skills-list">
+                                    ${course.skills.map(s => `<span class="skill-tag">${escapeHTML(s)}</span>`).join('')}
+                                </div>
+                            </div>
+                            <button class="enroll-btn" onclick="enrollCourse(${course.id})">
+                                📚 Enroll Now
+                            </button>
+                        </div>
+                    `;
+                    coursesGrid.appendChild(courseCard);
+                }
+            });
+
+            // Show message if no enrolled courses
+            if (enrolledCoursesGrid.children.length === 0) {
+                enrolledCoursesGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📖</div>
+                        <h3 style="color: #666; margin-bottom: 10px;">No Courses Enrolled Yet</h3>
+                        <p style="color: #999;">Enroll in a course below to start your learning journey!</p>
+                    </div>
+                `;
+            }
+
+            if (coursesGrid.children.length === 0) {
+                coursesGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📖</div>
+                        <h3 style="color: #666; margin-bottom: 10px;">No Available Courses</h3>
+                        <p style="color: #999;">Please refresh the page or contact an administrator to add available courses.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function enrollCourse(courseId) {
+            const course = courses.find(c => c.id == courseId);
+            if (!course) return;
+            const result = StorageManager.get('courseResult_' + courseId);
+            StorageManager.set('course_' + courseId, true);
+            StorageManager.set('progress_' + courseId, result && result.passed ? 100 : 0);
+            StorageManager.set('selectedCourseId', course.id);
+            StorageManager.set('selectedCourseName', course.name);
+            logActivity(`Enrolled in "${course.name}" course`);
+            alert('✓ Successfully enrolled in the course!');
+            renderCourses();
+            updateStats();
+        }
+
+        function continueCourse(courseId) {
+            window.location.href = 'course-learning.html?course=' + courseId;
+        }
+
+        function viewCompletedCourse(courseId) {
+            const course = courses.find(c => c.id == courseId);
+            if (course) updateStudentSelectedCourse(course);
+            window.location.href = 'marksheet.html';
+        }
+
+        function startCourse(courseId) {
+            // Legacy function, now using enrollCourse
+            enrollCourse(courseId);
+        }
+
+        function updateStats() {
+            let enrolledCount = 0;
+            let totalProgress = 0;
+            let completedCourses = 0;
+            
+            courses.forEach(course => {
+                if (StorageManager.get('course_' + course.id) === true) {
+                    enrolledCount++;
+                    const result = StorageManager.get('courseResult_' + course.id);
+                    const progress = result && result.passed ? 100 : (StorageManager.get('progress_' + course.id) || 0);
+                    totalProgress += progress;
+                    if (result && result.passed && Number(result.scorePercentage) >= 60) completedCourses++;
+                }
+            });
+            
+            const avgProgress = enrolledCount > 0 ? Math.round(totalProgress / enrolledCount) : 0;
+            
+            document.getElementById('enrolledCount').textContent = enrolledCount;
+            document.getElementById('completionStatus').textContent = enrolledCount > 0 ? `${avgProgress}%` : '0%';
+            document.getElementById('certStatus').textContent = completedCourses > 0 ? '✅ Ready' : 'Pending';
+            document.getElementById('progressStatus').textContent = `${avgProgress}%`;
+        }
+
+        function downloadCertificate() {
+            const result = selectLatestEligibleResult();
+            if (!result) {
+                alert('Certificate is available after you complete any enrolled course quiz with 60% or more.');
+                return;
+            }
+            logActivity(`Downloaded certificate for "${result.courseName}"`);
+            window.location.href = 'POSK.html';
+        }
+
+        function goToCourses() {
+            window.location.href = 'courses.html';
+        }
+
+        function viewAttendance() {
+            logActivity('Viewed attendance sheet');
+            // Redirect to attendance sheet
+            window.location.href = 'attendance.html';
+        }
+
+        function viewMarksheet() {
+            const result = selectLatestEligibleResult();
+            if (result) {
+                sessionStorage.setItem('quizCourseId', result.courseId);
+                sessionStorage.setItem('quizScore', result.scorePercentage);
+                sessionStorage.setItem('correctAnswers', result.correctAnswers);
+                sessionStorage.setItem('totalQuestions', result.totalQuestions);
+                sessionStorage.setItem('studentGrade', result.grade);
+            }
+            logActivity('Viewed marksheet');
+            window.location.href = 'marksheet.html';
+        }
+
+        function buildReportText(result) {
+            const studentName = StorageManager.get('userName') || 'Student';
+            const courseName = result.courseName || StorageManager.get('courseForCertificate') || 'Completed Course';
+            const department = StorageManager.get('userDepartment') || 'General';
+            const score = result.scorePercentage || 'N/A';
+            const grade = result.grade || 'N/A';
+            const certNumber = result.certificateNumber || StorageManager.get('certificateNumber') || 'Pending';
+            const issueDate = new Date().toLocaleDateString('en-IN');
+
+            return `INTERNSHIP COMPLETION REPORT\nGenerated: ${new Date().toLocaleDateString('en-IN')}\n\n========================================\nSTUDENT INFORMATION\n========================================\nStudent Name: ${studentName}\nCourse: ${courseName}\nSession: 2025-26\nStatus: In Progress\n\n========================================\nINTERNSHIP DETAILS\n========================================\nDuration: 15 Days\nHours: 120 Hours\nAttendance: 100% (15/15 Days Present)\nDepartment: ${department}\n\n========================================\nPERFORMANCE SUMMARY\n========================================\n✓ Course materials completed\n✓ Quiz assessment passed\n✓ Perfect attendance maintained\n✓ Ready for certification\n\n========================================\nCERTIFICATES & DOCUMENTS\n========================================\n- Internship Completion Certificate: Available\n- Attendance Sheet: 15 Days Present\n- Performance Grade: ${grade}\n\n========================================\nReport generated on: ${new Date().toLocaleString('en-IN')}\n========================================`;
+        }
+
+        function createAndDownloadReport(result) {
+            const reportArea = document.getElementById('reportContent');
+            const reportText = buildReportText(result);
+            reportArea.innerHTML = `<pre style="font-family: 'Courier New', Courier, monospace; font-size: 14px; white-space: pre-wrap; line-height: 1.35; color: #111;">${escapeHTML(reportText)}</pre>`;
+            reportArea.style.display = 'block';
+
+            const opt = {
+                margin: 10,
+                filename: `Internship_Report_${(StorageManager.get('userName') || 'Student').replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(reportArea).save().then(() => {
+                reportArea.style.display = 'none';
+            }).catch(() => {
+                reportArea.style.display = 'none';
+                alert('Unable to download the report PDF. Please try again.');
+            });
+        }
+
+        function downloadReport() {
+            const result = selectLatestEligibleResult();
+            if (!result) {
+                alert('Report is available after you complete and pass a course with 60% or more.');
+                return;
+            }
+            localStorage.setItem('courseForCertificate', result.courseName || StorageManager.get('courseForCertificate') || 'Completed Course');
+            localStorage.setItem('studentGrade', result.grade || StorageManager.get('studentGrade') || 'A');
+            localStorage.setItem('certificateNumber', result.certificateNumber || StorageManager.get('certificateNumber') || '');
+            logActivity('Opened 20 page internship report');
+            window.location.href = 'report.html';
+        }
+
+        function generateReport() {
+            const result = selectLatestEligibleResult();
+            if (!result) {
+                alert('Report is available after you complete and pass a course with 60% or more.');
+                return;
+            }
+            localStorage.setItem('courseForCertificate', result.courseName || StorageManager.get('courseForCertificate') || 'Completed Course');
+            localStorage.setItem('studentGrade', result.grade || StorageManager.get('studentGrade') || 'A');
+            localStorage.setItem('certificateNumber', result.certificateNumber || StorageManager.get('certificateNumber') || '');
+            logActivity('Opened printable 20 page internship report');
+            window.location.href = 'report.html';
+        }
+
+        function viewProfile() {
+            window.location.href = 'profile.html';
+        }
+
+        function logout() {
+            StorageManager.set('isLoggedIn', false);
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,2596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Learning - Bihar Skill Intern</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="api-config.js"></script>
+    <script src="assets/all-courses-data.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .top-nav {
+            background: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .course-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .course-header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .course-emoji {
+            font-size: 4em;
+        }
+
+        .course-header-info h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .course-header-info p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab-btn {
+            padding: 12px 25px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Notes Section */
+        .notes-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            line-height: 1.8;
+        }
+
+        .notes-container h3 {
+            color: #2563eb;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10px;
+        }
+
+        .notes-container p {
+            color: #333;
+            font-size: 1em;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .notes-container ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        .notes-container li {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .notes-container strong {
+            color: #1e40af;
+        }
+
+        .material-confirmation {
+            margin-top: 24px;
+            padding: 18px;
+            background: #f8fafc;
+            border: 2px solid #dbeafe;
+            border-radius: 8px;
+        }
+
+        .material-confirmation label {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            color: #1f2937;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .material-confirmation input {
+            margin-top: 4px;
+        }
+
+        .material-accept-btn {
+            margin-top: 14px;
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .material-accept-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .quiz-lock-notice {
+            padding: 18px;
+            margin-bottom: 20px;
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            border-radius: 8px;
+            color: #7c2d12;
+            font-weight: 600;
+        }
+
+        /* Quiz Section */
+        .quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .quiz-header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .question-box {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+        }
+
+        .question-number {
+            color: #2563eb;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 12px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            border-color: #2563eb;
+            background: #f0f9ff;
+        }
+
+        .option input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .option.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .submit-quiz-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .submit-quiz-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .submit-quiz-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .result-score {
+            font-size: 3em;
+            color: #2563eb;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .result-message {
+            font-size: 1.3em;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .enroll-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .enroll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .course-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .notes-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <div class="nav-logo">🎓 Bihar Skill Intern</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="logout-btn" style="background: #2563eb;" onclick="window.print()">🖨️ Print</button>
+            <button class="logout-btn" onclick="goBack()">← Back to Dashboard</button>
+        </div>
+    </div>
+
+    <div class="course-container">
+        <div class="course-header">
+            <div class="course-emoji" id="courseEmoji">🎯</div>
+            <div class="course-header-info">
+                <h2 id="courseName">Skill Development</h2>
+                <p id="courseDescription">Learn and complete this course</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                    Progress: <span id="progressText">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('notes')">📖 Course Material</button>
+            <button class="tab-btn" onclick="switchTab('quiz')">❓ Quiz</button>
+            <button class="tab-btn" onclick="switchTab('qa')">💡 Q&A</button>
+        </div>
+
+        <!-- Notes Tab -->
+        <div id="notes" class="tab-content active">
+            <div class="notes-container" id="notesContent">
+                <!-- Notes will be dynamically added -->
+            </div>
+            <div class="material-confirmation" id="materialConfirmation">
+                <label>
+                    <input type="checkbox" id="materialReadCheck" onchange="toggleMaterialAcceptButton()">
+                    <span>I confirm that I have read and understood the complete course material.</span>
+                </label>
+                <button type="button" class="material-accept-btn" id="materialAcceptBtn" onclick="acceptCourseMaterial()" disabled>Accept & Unlock Quiz</button>
+            </div>
+        </div>
+
+        <!-- Quiz Tab -->
+        <div id="quiz" class="tab-content">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h3>📝 Course Assessment Quiz</h3>
+                    <p>Answer all questions correctly to pass the course and get your certificate!</p>
+                </div>
+                <form id="quizForm" onsubmit="submitQuiz(event)">
+                    <div id="quizContent">
+                        <!-- Questions will be dynamically added -->
+                    </div>
+                    <button type="submit" class="submit-quiz-btn">Submit and Lock Quiz</button>
+                </form>
+                <div id="resultBox" class="result-box">
+                    <h3>Quiz Results</h3>
+                    <div class="result-score" id="scoreDisplay">0%</div>
+                    <div class="result-message" id="resultMessage">Result message here</div>
+                    <button class="enroll-btn" onclick="enrollCourse()">✓ View Marksheet & Unlock Certificate</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q&A Tab -->
+        <div id="qa" class="tab-content">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h3>💡 Question & Answers</h3>
+                    <p>Frequently asked questions and answers about this course</p>
+                </div>
+                <div id="qaContent">
+                    <!-- Q&A will be dynamically added -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============= LOCALSTORAGE UTILITY (FIX ALL GLITCHES) =============
+        const StorageManager = {
+            get: (key, defaultValue = null) => {
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value === null) return defaultValue;
+                    if (value === 'true') return true;
+                    if (value === 'false') return false;
+                    try {
+                        return JSON.parse(value);
+                    } catch (e) {
+                        return value;
+                    }
+                } catch (e) {
+                    console.error(`Error getting ${key}:`, e);
+                    return defaultValue;
+                }
+            },
+
+            set: (key, value) => {
+                try {
+                    if (value === null || value === undefined) {
+                        localStorage.removeItem(key);
+                    } else if (typeof value === 'object') {
+                        localStorage.setItem(key, JSON.stringify(value));
+                    } else if (typeof value === 'boolean') {
+                        localStorage.setItem(key, value.toString());
+                    } else {
+                        localStorage.setItem(key, String(value));
+                    }
+                    return true;
+                } catch (e) {
+                    console.error(`Error setting ${key}:`, e);
+                    return false;
+                }
+            }
+        };
+        // ===================================================================
+
+        let courseContent = {
+            1: {
+                name: "Skill Development",
+                emoji: "🎯",
+                description: "Comprehensive training on skill development for professional growth and employment.",
+                notes: `
+                    <h3>Skill Development – Comprehensive Report</h3>
+
+                    <h3>Introduction</h3>
+                    <p>Skill development has emerged as one of the most important pillars of individual growth and national development in the modern world. In an era marked by rapid technological change, globalization, and evolving job markets, the possession of relevant skills has become more important than mere academic qualifications.</p>
+                    
+                    <p>Skill development refers to the process of identifying, acquiring, improving, and applying abilities that enable individuals to perform tasks effectively and efficiently in their personal and professional lives. In developing countries like India, skill development plays a crucial role in addressing major challenges such as unemployment, poverty, inequality, and low productivity.</p>
+
+                    <h3>Meaning and Concept of Skill Development</h3>
+                    <p>Skill development can be defined as a continuous process through which individuals enhance their capabilities, knowledge, and competencies to perform specific tasks. Skills can be broadly categorized into:</p>
+                    <ul>
+                        <li><strong>Technical Skills:</strong> Job-specific abilities such as operating machinery, coding, accounting, or electrical work</li>
+                        <li><strong>Soft Skills:</strong> Communication, teamwork, leadership, problem-solving, and time management</li>
+                        <li><strong>Life Skills:</strong> Adaptability, emotional intelligence, decision-making, and self-awareness</li>
+                        <li><strong>Digital Skills:</strong> Computer literacy, data handling, and use of modern technologies</li>
+                    </ul>
+
+                    <p>Skill development is not limited to formal education. It includes vocational training, on-the-job learning, apprenticeships, internships, workshops, and self-learning. The goal is to make individuals employable, productive, confident, and capable of contributing meaningfully to society.</p>
+
+                    <h3>Importance of Skill Development</h3>
+                    <h4>1. Enhancing Employability</h4>
+                    <p>In today's competitive job market, employers seek candidates with practical skills along with theoretical knowledge. Skill development bridges the gap between education and employment by making individuals industry-ready.</p>
+
+                    <h4>2. Reducing Unemployment and Poverty</h4>
+                    <p>Skill development directly contributes to employment generation and income enhancement. Market-relevant skills enable individuals to secure jobs or become self-employed, helping reduce unemployment and poverty especially among youth, women, and marginalized communities.</p>
+
+                    <h4>3. Boosting Economic Growth</h4>
+                    <p>A skilled workforce increases productivity, efficiency, and innovation essential for economic growth. Countries with strong skill development systems tend to have higher industrial output and stronger global competitiveness.</p>
+
+                    <h4>4. Promoting Social Inclusion</h4>
+                    <p>Skill development empowers disadvantaged groups such as rural populations, women, persons with disabilities, and economically weaker sections, promoting social inclusion and reducing inequality.</p>
+
+                    <h3>Skill Development and Education</h3>
+                    <p>Traditional education systems focus heavily on theoretical knowledge and examinations while neglecting practical skill-building. This creates a mismatch between what students learn and what the job market demands.</p>
+                    
+                    <p>Integrating skill development into education systems is essential. Vocational education, skill-based courses, internships, project-based learning, and industry collaboration should be integral parts of school and college curricula.</p>
+
+                    <h3>Types of Skills Required in the Modern World</h3>
+                    <h4>1. Technical Skills</h4>
+                    <p>Job-specific abilities required to perform particular tasks. Examples include computer programming, machine operation, plumbing, electrical work, data analysis, and accounting.</p>
+
+                    <h4>2. Soft Skills</h4>
+                    <p>Interpersonal and behavioral abilities that determine how individuals interact with others. Communication, teamwork, leadership, adaptability, problem-solving, and work ethics are critical for career growth.</p>
+
+                    <h4>3. Digital Skills</h4>
+                    <p>Basic digital literacy is essential for almost every profession. Digital skills include using computers, smartphones, software applications, and online platforms. Advanced skills include AI, cybersecurity, and data science.</p>
+
+                    <h4>4. Life Skills</h4>
+                    <p>Help individuals manage personal and professional challenges effectively. These include emotional intelligence, stress management, decision-making, critical thinking, and self-discipline.</p>
+
+                    <h3>Role of Skill Development in Youth Empowerment</h3>
+                    <p>Youth form the backbone of any nation. Skill development empowers young people by providing opportunities for employment, entrepreneurship, and innovation. It helps youth discover their potential, build confidence, and develop a sense of purpose.</p>
+                    
+                    <p>Skill training reduces dependence on traditional white-collar jobs and encourages self-employment and entrepreneurship. A skilled youth population is more adaptable to technological changes and global trends.</p>
+
+                    <h3>Skill Development and Women Empowerment</h3>
+                    <p>Skill development plays a vital role in empowering women economically and socially. Skill training enables women to participate in the workforce, earn income, and achieve financial independence.</p>
+                    
+                    <p>Skills such as tailoring, handicrafts, digital literacy, healthcare services, and entrepreneurship open new opportunities for women, especially in rural areas. When women are skilled and employed, it leads to improved family welfare and community development.</p>
+
+                    <h3>Challenges in Skill Development</h3>
+                    <p>Despite its importance, skill development faces several challenges:</p>
+                    <ul>
+                        <li>Mismatch between training and industry needs</li>
+                        <li>Lack of quality training infrastructure</li>
+                        <li>Limited access in rural and remote areas</li>
+                        <li>Low awareness about skill programs</li>
+                        <li>Social preference for degrees over skills</li>
+                        <li>Insufficient trained instructors</li>
+                    </ul>
+
+                    <h3>Role of Government and Private Sector</h3>
+                    <p>Governments play a key role by formulating policies, funding training programs, and creating institutional frameworks. The private sector contributes by providing practical training, apprenticeships, internships, and employment opportunities.</p>
+                    
+                    <p>Public-private partnerships ensure that skill training aligns with industry requirements and remains relevant and updated.</p>
+
+                    <h3>Skill Development and Entrepreneurship</h3>
+                    <p>Skill development encourages entrepreneurship by equipping individuals with knowledge and abilities required to start and manage businesses. Entrepreneurial skills such as financial management, marketing, innovation, and risk-taking help individuals become job creators.</p>
+
+                    <h3>Skill Development in the Era of Technology</h3>
+                    <p>Technological advancements such as automation, artificial intelligence, and digitalization are transforming the nature of work. Continuous skill upgradation and lifelong learning are essential to remain relevant in the changing job market.</p>
+
+                    <h3>Future Scope of Skill Development</h3>
+                    <p>The future of skill development lies in innovation, technology integration, and personalized learning. Online learning platforms, virtual training, simulations, and digital certifications are making skill acquisition more accessible.</p>
+                    
+                    <p>Skill development will increasingly focus on emerging areas such as green skills, digital economy, healthcare services, renewable energy, and artificial intelligence. Building a culture of lifelong learning will be essential.</p>
+
+                    <h3>Conclusion</h3>
+                    <p>Skill development is the foundation of individual success and national progress. It enhances employability, reduces unemployment, promotes social inclusion, and drives economic growth. For India, investing in skill development is not an option but a necessity.</p>
+                    
+                    <p>A skilled nation is a strong nation, capable of facing global challenges and achieving sustainable development. Ultimately, skill development is about unlocking human potential, building self-confidence, and creating opportunities for a better future.</p>
+                `,
+                questions: [
+                    {
+                        q: "Skill development mainly refers to:",
+                        options: ["Academic education only", "Improving practical abilities", "Political awareness", "Social status"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development helps most in:",
+                        options: ["Increasing population", "Reducing unemployment", "Increasing inflation", "Political growth"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which of the following is a technical skill?",
+                        options: ["Communication", "Leadership", "Computer programming", "Teamwork"],
+                        correct: 2
+                    },
+                    {
+                        q: "Soft skills include:",
+                        options: ["Machine operation", "Coding", "Communication and teamwork", "Electrical work"],
+                        correct: 2
+                    },
+                    {
+                        q: "Skill development is important for:",
+                        options: ["Students only", "Workers only", "All individuals", "Teachers only"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which skill helps in workplace interaction?",
+                        options: ["Technical skill", "Soft skill", "Physical skill", "Mechanical skill"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development mainly improves:",
+                        options: ["Physical strength", "Employability", "Age", "Social class"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which of the following is a life skill?",
+                        options: ["Welding", "Data entry", "Decision making", "Typing"],
+                        correct: 2
+                    },
+                    {
+                        q: "Digital skills are related to:",
+                        options: ["Farming", "Computers and technology", "Sports", "Arts only"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development helps a person to become:",
+                        options: ["Dependent", "Self-reliant", "Unemployed", "Passive"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which sector benefits most from skill development?",
+                        options: ["Education only", "Industry and services", "Politics only", "Entertainment only"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development is linked with:",
+                        options: ["Poverty increase", "Economic growth", "Inflation rise", "Population growth"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which of the following is NOT a soft skill?",
+                        options: ["Leadership", "Communication", "Time management", "Plumbing"],
+                        correct: 3
+                    },
+                    {
+                        q: "Skill development helps youth by:",
+                        options: ["Increasing frustration", "Creating job opportunities", "Delaying careers", "Increasing dependence"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which skill is essential in the digital age?",
+                        options: ["Manual typing", "Digital literacy", "Handwriting", "Memorization"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development reduces:",
+                        options: ["Productivity", "Confidence", "Unemployment", "Learning"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which is an example of entrepreneurship skill?",
+                        options: ["Risk-taking", "Sleeping", "Memorizing facts", "Following orders only"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development encourages:",
+                        options: ["Job seekers only", "Job creators", "Dependency", "Illiteracy"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which group benefits greatly from skill development?",
+                        options: ["Marginalized communities", "Rich businessmen only", "Politicians only", "Celebrities"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development is important for women because it:",
+                        options: ["Increases workload", "Promotes empowerment", "Reduces education", "Limits opportunities"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development improves:",
+                        options: ["Confidence and productivity", "Stress only", "Inequality", "Social conflict"],
+                        correct: 0
+                    },
+                    {
+                        q: "Vocational training mainly focuses on:",
+                        options: ["Theory", "Practical skills", "Politics", "Philosophy"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which skill helps in adapting to change?",
+                        options: ["Rigidity", "Adaptability", "Laziness", "Ignorance"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development programs should be:",
+                        options: ["Industry-oriented", "Theory-oriented only", "Exam-oriented", "Book-oriented"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which factor creates a skill gap?",
+                        options: ["Industry demand", "Lack of practical training", "Technology", "Innovation"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development supports:",
+                        options: ["Sustainable development", "Social inequality", "Economic loss", "Unemployment"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which is an example of green skill?",
+                        options: ["Renewable energy work", "Gambling", "Luxury marketing", "Speculation"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development promotes:",
+                        options: ["Social exclusion", "Inclusive growth", "Discrimination", "Dependency"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which skill improves leadership?",
+                        options: ["Communication", "Silence", "Isolation", "Fear"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development is a:",
+                        options: ["One-time process", "Continuous process", "Temporary activity", "Seasonal activity"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which sector provides maximum employment through skills?",
+                        options: ["Service sector", "Gambling sector", "Luxury sector", "Political sector"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development reduces dependence on:",
+                        options: ["Government only", "Others for employment", "Education", "Technology"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which skill helps in stress management?",
+                        options: ["Emotional intelligence", "Coding", "Welding", "Accounting"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development leads to:",
+                        options: ["Low productivity", "High productivity", "Confusion", "Inefficiency"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which skill is needed for teamwork?",
+                        options: ["Cooperation", "Isolation", "Ego", "Competition only"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development programs should focus on:",
+                        options: ["Market demand", "Outdated skills", "Memorization", "Theory only"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development improves quality of:",
+                        options: ["Life and work", "Stress", "Inequality", "Conflict"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which skill is essential for entrepreneurs?",
+                        options: ["Risk management", "Avoiding decisions", "Fear of failure", "Dependence"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development helps in:",
+                        options: ["Personal growth", "Professional growth", "National development", "All of the above"],
+                        correct: 3
+                    },
+                    {
+                        q: "Which is a barrier to skill development?",
+                        options: ["Awareness", "Training infrastructure", "Innovation", "Technology"],
+                        correct: 1
+                    },
+                    {
+                        q: "Skill development enhances:",
+                        options: ["Confidence", "Dependency", "Inequality", "Frustration"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill-based education focuses on:",
+                        options: ["Practical learning", "Rote learning", "Memorization", "Exams only"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which skill helps in problem solving?",
+                        options: ["Critical thinking", "Laziness", "Fear", "Ignorance"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development supports:",
+                        options: ["Innovation", "Stagnation", "Unemployment", "Dependency"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which skill is important for time management?",
+                        options: ["Planning", "Delay", "Confusion", "Negligence"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development prepares individuals for:",
+                        options: ["Future challenges", "Past problems", "Inactivity", "Dependence"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development is linked with:",
+                        options: ["Self-confidence", "Fear", "Stress", "Confusion"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which skill helps in decision making?",
+                        options: ["Analytical skill", "Guesswork", "Avoidance", "Dependence"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development contributes to:",
+                        options: ["National strength", "Social conflict", "Economic loss", "Inequality"],
+                        correct: 0
+                    },
+                    {
+                        q: "Skill development is best described as:",
+                        options: ["Optional", "Essential for growth", "Useless", "Temporary"],
+                        correct: 1
+                    }
+                ]
+            },
+            2: {
+                name: "Social Work",
+                emoji: "🤝",
+                description: "Social Work Internship Project Report - Comprehensive community development experience.",
+                notes: `
+                    <h3>Social Work Internship Project Report</h3>
+                    <p><strong>University:</strong> Veer Kunwar Singh University, Ara<br>
+                    <strong>College:</strong> Durgavati College, Bichhiya, Dumri, Kaimur<br>
+                    <strong>Location:</strong> Kaimur District, Bihar</p>
+
+                    <h3>Acknowledgement</h3>
+                    <p>I express sincere gratitude to my supervising professor for guidance and support throughout the internship. I am grateful to the organization administration, staff members, community leaders, and beneficiaries who cooperated and helped in this learning experience.</p>
+
+                    <h3>Executive Summary</h3>
+                    <p>This report presents a detailed account of a three-month internship experience in social work. The internship was designed to integrate theoretical knowledge with practical field experience in a social welfare organization serving marginalized and underprivileged sections of society. Key responsibilities included community interaction, social surveys, registering beneficiaries, and organizing awareness programs.</p>
+
+                    <h3>Introduction</h3>
+                    <p>Social work is a professional discipline committed to solving social problems, promoting human welfare, and bringing about social change. In India, due to inequality, poverty, lack of education, and health-related issues, social work is extremely important. This internship provided an opportunity to understand real-life social problems and develop practical skills to address them.</p>
+
+                    <h3>Background of the Organization</h3>
+                    <p><strong>Vision:</strong> To create a society where all individuals have access to basic necessities (food, shelter, education, healthcare) and live a dignified life.</p>
+                    <p><strong>Mission:</strong> To empower poor and marginalized communities by making them educated, skilled, and self-reliant through economic development, social security, and political awareness.</p>
+                    
+                    <h4>Major Activities:</h4>
+                    <ul>
+                        <li>Education Programmes: Free education, digital literacy, skill training</li>
+                        <li>Health Services: Health awareness camps, maternal health, basic medical facilities</li>
+                        <li>Livelihood Development: Women self-help groups, agricultural improvement, enterprise training</li>
+                        <li>Legal Awareness: Rights awareness and legal service access</li>
+                        <li>Social Awareness: Campaigns against child marriage, dowry, gender discrimination</li>
+                    </ul>
+
+                    <h3>Objectives of the Internship</h3>
+                    <h4>General Objectives:</h4>
+                    <ul>
+                        <li>Apply theoretical knowledge of social work in practical field situations</li>
+                        <li>Understand social problems and develop problem-solving skills</li>
+                        <li>Understand community development process and develop leadership skills</li>
+                        <li>Gain experience in social work methods and tools</li>
+                    </ul>
+
+                    <h4>Specific Objectives:</h4>
+                    <ul>
+                        <li>Understand functioning and structure of social welfare organizations</li>
+                        <li>Develop skills in social survey, data collection, and analysis</li>
+                        <li>Understand importance of community participation and collective action</li>
+                        <li>Develop empathy, sensitivity, and cultural understanding</li>
+                        <li>Gain knowledge about government welfare schemes and implementation</li>
+                    </ul>
+
+                    <h3>Roles and Responsibilities</h3>
+                    <h4>First Month: Orientation and Assessment</h4>
+                    <ul>
+                        <li>Understanding organizational structure, policies, and programmes</li>
+                        <li>Visiting villages and understanding local conditions</li>
+                        <li>Assessing socio-economic conditions and community needs</li>
+                        <li>Conducting preliminary household surveys</li>
+                    </ul>
+
+                    <h4>Second Month: Field Work</h4>
+                    <ul>
+                        <li>Participating in detailed social surveys of 150 households</li>
+                        <li>Registering beneficiaries under government welfare schemes</li>
+                        <li>Participating in women self-help group meetings</li>
+                        <li>Organizing health awareness camps</li>
+                        <li>Conducting focus group discussions</li>
+                    </ul>
+
+                    <h4>Third Month: Analysis and Reporting</h4>
+                    <ul>
+                        <li>Analyzing collected data and presenting findings using tables and graphs</li>
+                        <li>Preparing project proposals based on survey data</li>
+                        <li>Organizing social awareness campaigns</li>
+                        <li>Preparing final internship report</li>
+                    </ul>
+
+                    <h3>Experiences and Activities</h3>
+                    <h4>Social Survey Campaign</h4>
+                    <p>Conducted interviews with 150 households to collect data on education, health, income, and living conditions.</p>
+                    <p><strong>Key Findings:</strong></p>
+                    <ul>
+                        <li>65% households living below poverty line</li>
+                        <li>12 cases of child labour identified</li>
+                        <li>40% women were illiterate</li>
+                        <li>Limited healthcare access</li>
+                    </ul>
+
+                    <h4>Women Empowerment Programmes</h4>
+                    <p>Worked with six women self-help groups involving 120 women. Activities included:</p>
+                    <ul>
+                        <li>Skill training (handicrafts, stitching, weaving)</li>
+                        <li>Awareness about savings and credit facilities</li>
+                        <li>Health and hygiene education</li>
+                        <li>Legal rights awareness</li>
+                    </ul>
+
+                    <h4>Health Camps and Awareness Programmes</h4>
+                    <p>Organized three health awareness camps with participation of 250+ people, focusing on maternal health, child nutrition, communicable diseases, and sanitation.</p>
+
+                    <h4>Education Programmes</h4>
+                    <p>Assisted in providing free education to 45 underprivileged children, including teaching, attendance monitoring, and identifying educational barriers.</p>
+
+                    <h3>Learning Outcomes</h3>
+                    <h4>Knowledge-Based Learning:</h4>
+                    <ul>
+                        <li>Understanding poverty, inequality, education, health issues in Indian society</li>
+                        <li>Knowledge of welfare schemes: Ayushman Bharat, PM-Kisan, MGNREGA</li>
+                        <li>Understanding community development approaches</li>
+                    </ul>
+
+                    <h4>Skill Development:</h4>
+                    <ul>
+                        <li>Communication skills in local languages</li>
+                        <li>Research and data collection skills</li>
+                        <li>Organizational and time management skills</li>
+                        <li>Leadership and teamwork skills</li>
+                        <li>Report-writing skills</li>
+                    </ul>
+
+                    <h4>Practical Learning:</h4>
+                    <ul>
+                        <li>Development of empathy and ethical values</li>
+                        <li>Problem-solving in resource-limited settings</li>
+                        <li>Team coordination with stakeholders</li>
+                    </ul>
+
+                    <h3>Challenges and Solutions</h3>
+                    <p><strong>Challenges:</strong> Language barriers, cultural sensitivity, lack of trust, limited resources, social resistance</p>
+                    <p><strong>Solutions:</strong> Support from staff, respecting cultural values, continuous interaction, using local resources, involving local influencers</p>
+
+                    <h3>Importance of Social Work in Indian Society</h3>
+                    <p>Social work plays a vital role in addressing social inequalities, poverty, illiteracy, unemployment, and health challenges. Social workers act as a bridge between government, NGOs, and communities. In rural regions like Kaimur, social work is significant as people lack awareness about rights, schemes, and available resources.</p>
+
+                    <h3>Role of Social Worker During Internship</h3>
+                    <p>The intern acted as facilitator, motivator, data collector, and awareness generator. Responsibilities included identifying social problems, assisting beneficiaries, motivating women and youth, and supporting community development initiatives while maintaining ethical standards.</p>
+
+                    <h3>Ethical Principles Followed</h3>
+                    <ul>
+                        <li>Respect for human dignity and equality</li>
+                        <li>Confidentiality of personal information</li>
+                        <li>Commitment to social justice and vulnerable protection</li>
+                        <li>Professional integrity and honest reporting</li>
+                        <li>Voluntary participation with informed consent</li>
+                    </ul>
+
+                    <h3>Impact of Internship on Community</h3>
+                    <p>Awareness programs helped people understand importance of education, health, and government schemes. Women self-help groups became more active, beneficiaries accessed welfare schemes, and community trust in the organization strengthened.</p>
+
+                    <h3>Personal and Professional Growth</h3>
+                    <p>The internship improved communication skills, confidence, and ability to work with diverse groups. Fieldwork enhanced problem-solving skills and deepened understanding of social challenges. It clarified career goals and strengthened commitment to social welfare.</p>
+
+                    <h3>Recommendations</h3>
+                    <h4>For the Organization:</h4>
+                    <ul>
+                        <li>Regular staff training programmes</li>
+                        <li>Increased use of digital tools</li>
+                        <li>Stronger community participation</li>
+                        <li>Development of volunteer networks</li>
+                        <li>Regular monitoring and evaluation</li>
+                    </ul>
+
+                    <h4>For Government:</h4>
+                    <ul>
+                        <li>Increased investment in rural development</li>
+                        <li>Effective implementation of welfare schemes</li>
+                        <li>Special women empowerment programmes</li>
+                        <li>Improvement in rural education quality</li>
+                    </ul>
+
+                    <h3>Scope of Social Work as a Career</h3>
+                    <p>Social work offers opportunities in government, NGOs, hospitals, schools, and international organizations. With increasing focus on social inclusion, mental health, women empowerment, and child protection, demand for trained social workers is growing.</p>
+
+                    <h3>Conclusion</h3>
+                    <p>This three-month internship was transformative, helping apply theoretical knowledge to real-life situations. It reinforced that sustainable social development requires collective efforts from government, NGOs, communities, and individuals. The experience will guide future academic and professional journey in social work, strengthening commitment to social welfare and justice.</p>
+                `,
+                questions: [
+                    {
+                        q: "Social work mainly focuses on:",
+                        options: ["Economic profit", "Social justice and human welfare", "Political power", "Industrial growth"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social work is considered as a:",
+                        options: ["Business activity", "Professional discipline", "Political movement", "Technical skill"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which group is the main focus of social work?",
+                        options: ["Rich people", "Government officials", "Marginalized and vulnerable groups", "Industrial workers only"],
+                        correct: 2
+                    },
+                    {
+                        q: "Social work acts as a bridge between:",
+                        options: ["Teacher and student", "Government, NGOs, and community", "Employer and employee", "Police and public"],
+                        correct: 1
+                    },
+                    {
+                        q: "Internship in social work helps to:",
+                        options: ["Earn money", "Gain theoretical knowledge only", "Apply theory into practice", "Prepare for exams only"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which is NOT a social problem?",
+                        options: ["Poverty", "Illiteracy", "Gender inequality", "Industrial profit"],
+                        correct: 3
+                    },
+                    {
+                        q: "The main objective of social work internship is to:",
+                        options: ["Collect funds", "Gain field experience", "Control society", "Promote politics"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social survey helps in:",
+                        options: ["Entertainment", "Data collection and analysis", "Advertising", "Fund raising"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which organization mainly works for social welfare?",
+                        options: ["NGO", "Private company", "Bank", "Court"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which principle is most important in social work?",
+                        options: ["Profit", "Confidentiality", "Competition", "Authority"],
+                        correct: 1
+                    },
+                    {
+                        q: "Respect for human dignity means:",
+                        options: ["Ignoring poor people", "Treating all individuals equally", "Giving preference to rich", "Avoiding community"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which skill is essential for a social worker?",
+                        options: ["Communication skill", "Driving skill", "Typing speed", "Cooking skill"],
+                        correct: 0
+                    },
+                    {
+                        q: "Social work promotes:",
+                        options: ["Discrimination", "Social justice", "Exploitation", "Violence"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which activity was part of the internship?",
+                        options: ["Online trading", "Social survey", "Industrial training", "Military drill"],
+                        correct: 1
+                    },
+                    {
+                        q: "Women self-help groups are formed to:",
+                        options: ["Increase dependency", "Promote women empowerment", "Encourage child labour", "Stop education"],
+                        correct: 1
+                    },
+                    {
+                        q: "Health awareness camps mainly focus on:",
+                        options: ["Entertainment", "Disease prevention and hygiene", "Business promotion", "Tourism"],
+                        correct: 1
+                    },
+                    {
+                        q: "Child labour is related to:",
+                        options: ["Education", "Social problem", "Economic growth", "Industrial policy"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which factor affects social development most?",
+                        options: ["Social inequality", "Technology", "Advertising", "Luxury lifestyle"],
+                        correct: 0
+                    },
+                    {
+                        q: "Community participation helps in:",
+                        options: ["Delaying development", "Sustainable development", "Increasing conflict", "Reducing trust"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which ethical principle ensures privacy of information?",
+                        options: ["Transparency", "Confidentiality", "Authority", "Leadership"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social work interns mainly act as:",
+                        options: ["Police officers", "Facilitators and motivators", "Business managers", "Judges"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social awareness programmes aim to:",
+                        options: ["Spread rumours", "Increase knowledge and awareness", "Promote politics", "Create fear"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which group needs special attention in social work?",
+                        options: ["Industrialists", "Politicians", "Women and children", "Celebrities"],
+                        correct: 2
+                    },
+                    {
+                        q: "Social work internship improves:",
+                        options: ["Only academic marks", "Personal and professional growth", "Political influence", "Financial income"],
+                        correct: 1
+                    },
+                    {
+                        q: "Cultural sensitivity means:",
+                        options: ["Ignoring culture", "Respecting local customs and values", "Changing traditions forcefully", "Avoiding interaction"],
+                        correct: 1
+                    },
+                    {
+                        q: "Lack of trust in community can be solved by:",
+                        options: ["Force", "Continuous interaction", "Legal action", "Punishment"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which value guides social work practice?",
+                        options: ["Human dignity", "Profit maximization", "Political power", "Competition"],
+                        correct: 0
+                    },
+                    {
+                        q: "Social work mainly works at which level?",
+                        options: ["Individual only", "Community and society", "Corporate level", "International trade"],
+                        correct: 1
+                    },
+                    {
+                        q: "Internship experience helps in:",
+                        options: ["Memorizing theory", "Practical problem-solving", "Ignoring field reality", "Avoiding responsibility"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which is an example of social injustice?",
+                        options: ["Equal education", "Gender discrimination", "Health services", "Employment"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social work profession requires:",
+                        options: ["Ethical commitment", "Political loyalty", "Financial investment", "Technical license"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which is a major social issue in rural areas?",
+                        options: ["Over-tourism", "Poverty", "Stock market loss", "Cyber crime only"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social work education helps in:",
+                        options: ["Developing empathy", "Increasing selfishness", "Promoting inequality", "Avoiding society"],
+                        correct: 0
+                    },
+                    {
+                        q: "Awareness about government schemes helps in:",
+                        options: ["Misuse of funds", "Social empowerment", "Confusion", "Delay in services"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which is a core value of social work?",
+                        options: ["Equality", "Competition", "Authority", "Profit"],
+                        correct: 0
+                    },
+                    {
+                        q: "Fieldwork experience teaches:",
+                        options: ["Only theory", "Real-life social conditions", "Office work only", "Exam preparation"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social work is important for:",
+                        options: ["Elite class only", "Marginalized sections", "Industrial growth", "Political campaigns"],
+                        correct: 1
+                    },
+                    {
+                        q: "Community trust is built through:",
+                        options: ["Force", "Respect and honesty", "Fear", "Punishment"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social work internship mainly focuses on:",
+                        options: ["Social change", "Entertainment", "Tourism", "Business promotion"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which activity improves women empowerment?",
+                        options: ["Child marriage", "Self-help groups", "Dowry system", "Illiteracy"],
+                        correct: 1
+                    },
+                    {
+                        q: "Ethical practice in social work ensures:",
+                        options: ["Exploitation", "Fairness and justice", "Personal benefit", "Political support"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social work profession is based on:",
+                        options: ["Humanitarian values", "Industrial rules", "Market demand", "Political ideology"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which factor improves community development?",
+                        options: ["Community participation", "Social conflict", "Discrimination", "Ignorance"],
+                        correct: 0
+                    },
+                    {
+                        q: "Internship helped in developing:",
+                        options: ["Communication skills", "Gambling skills", "Marketing skills only", "Gaming skills"],
+                        correct: 0
+                    },
+                    {
+                        q: "Social work aims to create:",
+                        options: ["Unequal society", "Exploitative system", "Inclusive society", "Political dominance"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which principle ensures voluntary participation?",
+                        options: ["Authority", "Consent", "Force", "Punishment"],
+                        correct: 1
+                    },
+                    {
+                        q: "Social work helps in:",
+                        options: ["Social exclusion", "Social empowerment", "Social conflict", "Social control"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which approach focuses on community involvement?",
+                        options: ["Authoritarian approach", "Participatory approach", "Business approach", "Legal approach"],
+                        correct: 1
+                    },
+                    {
+                        q: "Internship experience mainly prepares students for:",
+                        options: ["Social responsibility", "Political career", "Business leadership", "Entertainment industry"],
+                        correct: 0
+                    },
+                    {
+                        q: "Social work as a career is best described as:",
+                        options: ["Profit-oriented", "Service-oriented", "Power-oriented", "Exam-oriented"],
+                        correct: 1
+                    }
+                ]
+            },
+            3: {
+                name: "Population Study",
+                emoji: "📊",
+                description: "Study demographic trends, population dynamics, and social statistics.",
+                notes: `
+                    <h3>Essay on Demography</h3>
+
+                    <h3>Introduction</h3>
+                    <p>Demography is the scientific study of population. It deals with the size, structure, distribution, and changes in population over time. These changes occur due to births, deaths, migration, and ageing. Demography helps us understand how populations grow or decline and how demographic factors influence social, economic, and political development.</p>
+                    
+                    <p>In the modern world, demography has become an essential field of study because population trends directly affect employment, education, health, housing, and overall development. For countries like India, where population size and diversity are very large, demographic analysis is crucial for planning and policymaking.</p>
+
+                    <h3>Meaning and Definition of Demography</h3>
+                    <p>The word demography is derived from two Greek words:</p>
+                    <ul>
+                        <li><strong>Demos</strong> meaning people</li>
+                        <li><strong>Graphy</strong> meaning description or study</li>
+                    </ul>
+                    <p>Thus, demography means the study or description of human population. Demography studies:</p>
+                    <ul>
+                        <li>Population size</li>
+                        <li>Population growth</li>
+                        <li>Population distribution</li>
+                        <li>Population composition (age, sex, education, occupation, etc.)</li>
+                    </ul>
+                    <p>It is both a quantitative and analytical discipline that uses statistical data to understand population behavior.</p>
+
+                    <h3>Nature and Scope of Demography</h3>
+                    <p>The scope of demography is very wide and interdisciplinary. It is closely related to sociology, economics, geography, public health, and social work.</p>
+                    
+                    <h4>Scope of Demography:</h4>
+                    <ul>
+                        <li><strong>Fertility:</strong> Study of birth rates and factors affecting births</li>
+                        <li><strong>Mortality:</strong> Study of death rates and causes of death</li>
+                        <li><strong>Migration:</strong> Study of population movement</li>
+                        <li><strong>Population Distribution:</strong> Rural–urban distribution</li>
+                        <li><strong>Population Composition:</strong> Age, sex, education, religion, occupation</li>
+                        <li><strong>Population Projection:</strong> Estimation of future population</li>
+                        <li><strong>Population Policy:</strong> Planning and control measures</li>
+                    </ul>
+
+                    <h3>Components of Population Change</h3>
+                    <h4>1. Fertility</h4>
+                    <p>Fertility refers to the actual number of children born to women. High fertility leads to rapid population growth. Factors affecting fertility include education, income, age at marriage, cultural beliefs, and access to healthcare.</p>
+
+                    <h4>2. Mortality</h4>
+                    <p>Mortality refers to deaths in a population. Declining mortality due to medical advancement increases life expectancy and population size.</p>
+
+                    <h4>3. Migration</h4>
+                    <p>Migration involves the movement of people from one place to another. It can be internal or international. Migration affects population size, labor force, and urbanization.</p>
+
+                    <h3>Population Distribution</h3>
+                    <p>Population distribution refers to how people are spread across different geographical areas. Some regions are densely populated, while others are sparsely populated. Factors influencing distribution include climate, resources, employment opportunities, and infrastructure.</p>
+                    
+                    <p>In India, plains and river valleys are densely populated, while deserts, mountains, and forests are sparsely populated.</p>
+
+                    <h3>Population Composition</h3>
+                    <p>Population composition includes characteristics such as:</p>
+                    <ul>
+                        <li>Age structure</li>
+                        <li>Sex ratio</li>
+                        <li>Literacy level</li>
+                        <li>Occupational structure</li>
+                        <li>Religious and social composition</li>
+                    </ul>
+                    <p>These characteristics help in understanding the social and economic condition of a population.</p>
+
+                    <h3>Demographic Transition Theory</h3>
+                    <p>The demographic transition theory explains the stages of population growth as societies develop economically.</p>
+                    
+                    <h4>Four Stages:</h4>
+                    <ol>
+                        <li>High birth rate and high death rate</li>
+                        <li>High birth rate and declining death rate</li>
+                        <li>Declining birth rate and low death rate</li>
+                        <li>Low birth rate and low death rate</li>
+                    </ol>
+                    <p>India is currently in the third stage of demographic transition.</p>
+
+                    <h3>Importance of Demography</h3>
+                    <p>Demography is important for:</p>
+                    <ul>
+                        <li>Development planning</li>
+                        <li>Employment generation</li>
+                        <li>Health and education planning</li>
+                        <li>Poverty reduction</li>
+                        <li>Social welfare programmes</li>
+                        <li>Resource management</li>
+                    </ul>
+                    <p>Governments use demographic data to design policies and welfare schemes.</p>
+
+                    <h3>Demography and Economic Development</h3>
+                    <p>Population size and quality affect economic growth. A skilled and healthy population contributes to productivity, while overpopulation can lead to unemployment, poverty, and pressure on resources.</p>
+                    
+                    <p>The concept of <strong>demographic dividend</strong> refers to economic growth potential due to a large working-age population.</p>
+
+                    <h3>Demography and Social Issues</h3>
+                    <p>Demographic factors influence:</p>
+                    <ul>
+                        <li>Poverty</li>
+                        <li>Illiteracy</li>
+                        <li>Gender inequality</li>
+                        <li>Ageing population</li>
+                        <li>Urbanization</li>
+                    </ul>
+                    <p>Social workers use demographic data to identify vulnerable groups and plan interventions.</p>
+
+                    <h3>Population Problems in India</h3>
+                    <p>Major population problems include:</p>
+                    <ul>
+                        <li>Rapid population growth</li>
+                        <li>High population density</li>
+                        <li>Unemployment</li>
+                        <li>Urban slums</li>
+                        <li>Gender imbalance</li>
+                        <li>Ageing population</li>
+                    </ul>
+                    <p>Effective population policies are required to address these challenges.</p>
+
+                    <h3>Population Policy in India</h3>
+                    <p>India was the first country to introduce a national population policy. The focus is on:</p>
+                    <ul>
+                        <li>Family planning</li>
+                        <li>Maternal and child health</li>
+                        <li>Education and awareness</li>
+                        <li>Population stabilization</li>
+                    </ul>
+
+                    <h3>Role of Demography in Social Work</h3>
+                    <p>Demography helps social workers:</p>
+                    <ul>
+                        <li>Identify target populations</li>
+                        <li>Plan welfare programmes</li>
+                        <li>Evaluate social policies</li>
+                        <li>Address inequality and vulnerability</li>
+                    </ul>
+                    <p>Population data is essential for evidence-based social work practice.</p>
+
+                    <h3>Future Challenges in Demography</h3>
+                    <p>Future challenges include:</p>
+                    <ul>
+                        <li>Ageing population</li>
+                        <li>Urban overcrowding</li>
+                        <li>Migration pressure</li>
+                        <li>Climate change impacts</li>
+                        <li>Resource scarcity</li>
+                    </ul>
+                    <p>Sustainable development requires demographic planning.</p>
+
+                    <h3>Conclusion</h3>
+                    <p>Demography is a vital discipline that helps us understand population dynamics and their impact on society and development. It provides a scientific basis for planning, policymaking, and social welfare. For a developing country like India, demographic analysis is essential to achieve balanced and sustainable growth.</p>
+                    
+                    <p>Understanding demography helps governments, planners, and social workers to make informed decisions and improve the quality of life of people. Therefore, demography is not just the study of numbers but the study of human life and development.</p>
+                `,
+                questions: [
+                    {
+                        q: "Demography is the study of:",
+                        options: ["Culture", "Population", "Economy", "Society"],
+                        correct: 1
+                    },
+                    {
+                        q: "The word demography comes from:",
+                        options: ["Latin", "Greek", "English", "French"],
+                        correct: 1
+                    },
+                    {
+                        q: "'Demos' means:",
+                        options: ["Study", "People", "Population growth", "Statistics"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which is a component of population change?",
+                        options: ["Education", "Fertility", "Culture", "Religion"],
+                        correct: 1
+                    },
+                    {
+                        q: "Mortality refers to:",
+                        options: ["Birth rate", "Death rate", "Migration", "Literacy"],
+                        correct: 1
+                    },
+                    {
+                        q: "Migration means:",
+                        options: ["Births", "Deaths", "Movement of people", "Marriage"],
+                        correct: 2
+                    },
+                    {
+                        q: "Internal migration occurs:",
+                        options: ["Between countries", "Within a country", "Across continents", "Overseas"],
+                        correct: 1
+                    },
+                    {
+                        q: "Population distribution refers to:",
+                        options: ["Total population", "Spread of population", "Population growth", "Population quality"],
+                        correct: 1
+                    },
+                    {
+                        q: "Sex ratio means:",
+                        options: ["Ratio of children", "Ratio of males to females", "Ratio of adults", "Ratio of workers"],
+                        correct: 1
+                    },
+                    {
+                        q: "Population composition includes:",
+                        options: ["Age and sex", "Climate", "Soil", "Rainfall"],
+                        correct: 0
+                    },
+                    {
+                        q: "High fertility leads to:",
+                        options: ["Population decline", "Population growth", "Ageing population", "Migration"],
+                        correct: 1
+                    },
+                    {
+                        q: "Declining mortality increases:",
+                        options: ["Death rate", "Life expectancy", "Illiteracy", "Poverty"],
+                        correct: 1
+                    },
+                    {
+                        q: "Demographic transition theory explains:",
+                        options: ["Social change", "Population growth stages", "Economic cycles", "Migration laws"],
+                        correct: 1
+                    },
+                    {
+                        q: "India is in which stage of demographic transition?",
+                        options: ["First", "Second", "Third", "Fourth"],
+                        correct: 2
+                    },
+                    {
+                        q: "Demographic dividend refers to:",
+                        options: ["High birth rate", "High death rate", "Large working-age population", "Ageing population"],
+                        correct: 2
+                    },
+                    {
+                        q: "Population density means:",
+                        options: ["Population growth", "Population per unit area", "Sex ratio", "Literacy"],
+                        correct: 1
+                    },
+                    {
+                        q: "Census is conducted to collect:",
+                        options: ["Economic data", "Population data", "Agricultural data", "Industrial data"],
+                        correct: 1
+                    },
+                    {
+                        q: "Population policy aims at:",
+                        options: ["Increasing population", "Controlling population growth", "Promoting migration", "Increasing birth rate"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which factor affects fertility?",
+                        options: ["Education", "Climate", "Soil", "Longitude"],
+                        correct: 0
+                    },
+                    {
+                        q: "Urbanization is related to:",
+                        options: ["Rural population increase", "Movement to cities", "Agricultural growth", "Natural increase"],
+                        correct: 1
+                    },
+                    {
+                        q: "Ageing population means:",
+                        options: ["More children", "More elderly people", "More youth", "Equal age groups"],
+                        correct: 1
+                    },
+                    {
+                        q: "Population explosion leads to:",
+                        options: ["Economic balance", "Pressure on resources", "High employment", "Social stability"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which is a social issue related to demography?",
+                        options: ["Poverty", "Weather", "Climate", "Soil erosion"],
+                        correct: 0
+                    },
+                    {
+                        q: "Demography helps in:",
+                        options: ["Policy planning", "Entertainment", "Tourism", "Advertising"],
+                        correct: 0
+                    },
+                    {
+                        q: "Population projection means:",
+                        options: ["Past population", "Present population", "Future population estimation", "Migration record"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which is NOT a demographic variable?",
+                        options: ["Age", "Sex", "Income", "Literacy"],
+                        correct: 2
+                    },
+                    {
+                        q: "High population density creates:",
+                        options: ["Less pressure", "More employment", "Urban problems", "Economic growth only"],
+                        correct: 2
+                    },
+                    {
+                        q: "Family planning helps in:",
+                        options: ["Increasing births", "Population stabilization", "Increasing mortality", "Migration"],
+                        correct: 1
+                    },
+                    {
+                        q: "Migration affects:",
+                        options: ["Population size", "Distribution", "Labor force", "All of the above"],
+                        correct: 3
+                    },
+                    {
+                        q: "Which group is most affected by population pressure?",
+                        options: ["Rich", "Marginalized", "Industrialists", "Tourists"],
+                        correct: 1
+                    },
+                    {
+                        q: "Demography is useful for social workers because it:",
+                        options: ["Provides numbers", "Identifies target groups", "Reduces workload", "Avoids planning"],
+                        correct: 1
+                    },
+                    {
+                        q: "Population growth rate depends on:",
+                        options: ["Births, deaths, migration", "Education only", "Economy only", "Climate only"],
+                        correct: 0
+                    },
+                    {
+                        q: "Literacy rate is part of:",
+                        options: ["Population composition", "Migration", "Mortality", "Fertility"],
+                        correct: 0
+                    },
+                    {
+                        q: "Child population is defined as:",
+                        options: ["0–6 years", "0–14 years", "15–59 years", "60+ years"],
+                        correct: 1
+                    },
+                    {
+                        q: "Working-age population is usually:",
+                        options: ["0–14 years", "15–59 years", "60+ years", "All ages"],
+                        correct: 1
+                    },
+                    {
+                        q: "Overpopulation leads to:",
+                        options: ["Balanced development", "Resource scarcity", "High wages", "Social equality"],
+                        correct: 1
+                    },
+                    {
+                        q: "Sex ratio imbalance results in:",
+                        options: ["Social harmony", "Gender inequality", "Economic growth", "Stability"],
+                        correct: 1
+                    },
+                    {
+                        q: "Census in India is conducted every:",
+                        options: ["5 years", "10 years", "15 years", "20 years"],
+                        correct: 1
+                    },
+                    {
+                        q: "Demography is important for:",
+                        options: ["Planning health services", "Education planning", "Employment policy", "All of the above"],
+                        correct: 3
+                    },
+                    {
+                        q: "Population ageing creates demand for:",
+                        options: ["Schools", "Employment", "Healthcare services", "Childcare"],
+                        correct: 2
+                    },
+                    {
+                        q: "Fertility rate measures:",
+                        options: ["Number of deaths", "Number of births", "Migration", "Ageing"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which factor reduces fertility?",
+                        options: ["Early marriage", "Female education", "Poverty", "Illiteracy"],
+                        correct: 1
+                    },
+                    {
+                        q: "Migration is mostly caused by:",
+                        options: ["Push and pull factors", "Fertility", "Mortality", "Census"],
+                        correct: 0
+                    },
+                    {
+                        q: "Population stabilization means:",
+                        options: ["Increasing population", "Zero population growth", "High fertility", "High mortality"],
+                        correct: 1
+                    },
+                    {
+                        q: "Demographic data is collected mainly through:",
+                        options: ["Survey only", "Census and surveys", "Newspapers", "Interviews only"],
+                        correct: 1
+                    },
+                    {
+                        q: "Demography is related to:",
+                        options: ["Sociology", "Economics", "Geography", "All of the above"],
+                        correct: 3
+                    },
+                    {
+                        q: "Rapid urbanization leads to:",
+                        options: ["Better housing only", "Slum development", "Less migration", "Low population"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which population group is dependent?",
+                        options: ["15–59 years", "0–14 and 60+", "20–40 years", "30–50 years"],
+                        correct: 1
+                    },
+                    {
+                        q: "Population quality depends on:",
+                        options: ["Education and health", "Size only", "Density only", "Migration only"],
+                        correct: 0
+                    },
+                    {
+                        q: "Demography helps in achieving:",
+                        options: ["Sustainable development", "Population explosion", "Social inequality", "Resource waste"],
+                        correct: 0
+                    }
+                ]
+            },
+            4: {
+                name: "Disaster Management",
+                emoji: "🚨",
+                description: "Learn disaster prevention, emergency response, and crisis management - Comprehensive Internship Report.",
+                notes: `
+                    <h3>Disaster Management – Internship Report (English Version)</h3>
+                    
+                    <h3>Chapter 1: Introduction</h3>
+                    <p>Disaster Management is a multidimensional and systematic process that focuses on minimizing the impact of natural and human-made disasters through prediction, preparedness, response, and rehabilitation. Natural disasters include floods, earthquakes, cyclones, droughts, tsunamis, and volcanic eruptions, while human-induced disasters include industrial accidents, chemical leakage, nuclear hazards, terrorist attacks, and pandemics such as COVID-19.</p>
+                    
+                    <p>Disasters cause large-scale loss of life, property damage, and economic disruption. India is among the most disaster-prone countries due to its diverse climate, geography, and dense population. Events such as the 2001 Gujarat earthquake, the 2004 Indian Ocean tsunami, the 2013 Uttarakhand floods, and the 2023–24 Bihar floods highlight the need for effective disaster management.</p>
+                    
+                    <p>To address these challenges, the <strong>Disaster Management Act, 2005</strong> was enacted, leading to the establishment of the <strong>National Disaster Management Authority (NDMA)</strong>. This Act shifted the focus from relief-centric approaches to preparedness and risk reduction.</p>
+                    
+                    <p>The internship was conducted from 1 November to 15 December 2025 (120 hours) under organizations such as NDMA, SDRF, and Kaimur District Disaster Management Authority (DDMA). Activities included mock drills, community awareness programs, and use of the Disaster Management Information System (DMIS).</p>
+
+                    <h3>Chapter 2: Disaster Management Structure in India</h3>
+                    <p>India follows a multi-tier disaster management system at national, state, district, and local levels.</p>
+                    
+                    <h4>National Level</h4>
+                    <ul>
+                        <li><strong>NDMA:</strong> Policy formulation, guidelines, capacity building, and coordination.</li>
+                        <li><strong>NDRF:</strong> Specialized response force with trained personnel and modern equipment.</li>
+                        <li><strong>NIDM:</strong> Training, research, and awareness programs.</li>
+                        <li><strong>Central Ministries:</strong> Ministry of Home Affairs, Health, Agriculture, Environment, etc.</li>
+                    </ul>
+                    
+                    <h4>State Level</h4>
+                    <ul>
+                        <li><strong>SDMA:</strong> State-specific disaster management planning.</li>
+                        <li><strong>SDRF:</strong> State-level response force (Bihar SDRF plays a major role in flood rescue).</li>
+                    </ul>
+                    
+                    <h4>District Level</h4>
+                    <ul>
+                        <li><strong>DDMA:</strong> Headed by the District Magistrate; prepares District Disaster Management Plan (DDMP).</li>
+                    </ul>
+                    
+                    <h4>Local Level</h4>
+                    <ul>
+                        <li><strong>Panchayats, municipalities, NGOs</strong> – awareness, early response, and relief distribution.</li>
+                    </ul>
+                    
+                    <h3>Disaster Management Cycle</h3>
+                    <ol>
+                        <li><strong>Mitigation</strong> – Long-term risk reduction (building codes, afforestation).</li>
+                        <li><strong>Preparedness</strong> – Mock drills, early warning systems, training.</li>
+                        <li><strong>Response</strong> – Immediate rescue and relief operations.</li>
+                        <li><strong>Recovery</strong> – Rehabilitation, livelihood restoration, "Build Back Better".</li>
+                    </ol>
+
+                    <h3>Chapter 3: Internship Details</h3>
+                    <p>The internship was conducted at <strong>Kaimur DDMA</strong>, near Durgavati College, Bihar, from 1 June to 30 June 2025 (120 hours). The focus areas were:</p>
+                    <ul>
+                        <li>Flood management in the Ganga–Kosi basin</li>
+                        <li>Landslide risk assessment</li>
+                        <li>Community awareness in rural areas</li>
+                    </ul>
+                    
+                    <h4>Major Activities</h4>
+                    <ul>
+                        <li>Awareness camps in 15+ villages</li>
+                        <li>Pamphlet distribution (Hindi/Bhojpuri)</li>
+                        <li>Door-to-door surveys using QGIS and Google Earth</li>
+                        <li>Risk mapping (high/medium/low flood zones)</li>
+                        <li>Participation in SDRF mock drills</li>
+                    </ul>
+
+                    <h3>Chapter 4: Types of Disasters and Examples</h3>
+                    
+                    <h4>Natural Disasters</h4>
+                    <ul>
+                        <li><strong>Floods:</strong> Bihar floods (2024) affected 20 lakh people.</li>
+                        <li><strong>Earthquakes:</strong> Gujarat 2001 (20,000 deaths).</li>
+                        <li><strong>Cyclones:</strong> Odisha Super Cyclone 1999.</li>
+                        <li><strong>Droughts:</strong> Rajasthan–Maharashtra (2019).</li>
+                        <li><strong>Landslides:</strong> Uttarakhand 2013.</li>
+                        <li><strong>Tsunami:</strong> Indian Ocean Tsunami 2004.</li>
+                    </ul>
+                    
+                    <h4>Man-Made Disasters</h4>
+                    <ul>
+                        <li><strong>Industrial:</strong> Bhopal Gas Tragedy (1984).</li>
+                        <li><strong>Chemical/Nuclear:</strong> Gas leaks, nuclear accidents.</li>
+                        <li><strong>Transport Accidents:</strong> Train and air crashes.</li>
+                        <li><strong>Terrorism/Cyber Attacks:</strong> Mumbai 26/11.</li>
+                        <li><strong>Pandemics:</strong> COVID-19 (2020–22).</li>
+                    </ul>
+
+                    <h3>Chapter 5: Stages of Disaster Management</h3>
+                    <ol>
+                        <li><strong>Mitigation</strong> – Risk mapping, building codes, climate adaptation.</li>
+                        <li><strong>Preparedness</strong> – Drills, stockpiling, warning systems.</li>
+                        <li><strong>Response</strong> – Rescue, medical aid, relief camps.</li>
+                        <li><strong>Recovery</strong> – Infrastructure rebuilding, insurance, mental health support.</li>
+                    </ol>
+                    <p><em>Example: During the 2024 Bihar floods, SDRF rescued over 50,000 people.</em></p>
+
+                    <h3>Chapter 6: Measures Learned During Internship</h3>
+                    
+                    <h4>Community Awareness</h4>
+                    <ul>
+                        <li>Disaster kits distribution</li>
+                        <li>Women and children-focused training</li>
+                        <li>School-based disaster education</li>
+                    </ul>
+                    
+                    <h4>Use of Technology</h4>
+                    <ul>
+                        <li>GIS-based flood risk maps</li>
+                        <li>Mobile alert systems</li>
+                        <li>DMIS real-time tracking</li>
+                        <li>Drone surveys</li>
+                    </ul>
+                    
+                    <h4>Bihar-Specific Flood Measures</h4>
+                    <ul>
+                        <li>Boat rescue training</li>
+                        <li>Embankment monitoring</li>
+                        <li>Stockpiling at Panchayat level</li>
+                        <li>Post-flood health and insurance awareness</li>
+                    </ul>
+
+                    <h3>Importance of Disaster Management</h3>
+                    <p>Disaster Management plays a crucial role in protecting human life, property, and the environment. Effective disaster management reduces casualties, minimizes economic losses, and ensures rapid recovery of affected communities. It also helps governments and institutions to prepare strategies for disaster risk reduction and sustainable development. In developing countries like India, disaster management is essential because disasters frequently affect vulnerable populations, especially in rural and low-income areas.</p>
+
+                    <h3>Role of Government and NGOs in Disaster Management</h3>
+                    <p>The government plays a major role in disaster management through policy formulation, funding, rescue operations, and rehabilitation programs. Organizations such as NDMA, NDRF, SDMA, and DDMA work at different administrative levels to ensure preparedness and response.</p>
+                    
+                    <p>Non-Governmental Organizations (NGOs) like the Red Cross, Save the Children, and local voluntary groups provide humanitarian assistance, medical support, and community awareness programs. NGOs also help in post-disaster rehabilitation by providing food, shelter, and psychological support to affected people.</p>
+
+                    <h3>Challenges in Disaster Management in India</h3>
+                    <p>Despite improvements, India faces several challenges in disaster management:</p>
+                    <ol>
+                        <li>Lack of resources and modern equipment</li>
+                        <li>Poor infrastructure in rural areas</li>
+                        <li>Low awareness among people</li>
+                        <li>Communication problems during disasters</li>
+                        <li>Insufficient trained manpower</li>
+                        <li>Climate change increasing disaster frequency and intensity</li>
+                    </ol>
+                    <p>These challenges require strong policy implementation, technological integration, and public participation.</p>
+
+                    <h3>Future Scope of Disaster Management</h3>
+                    <p>The future of disaster management depends on technological advancements such as Artificial Intelligence, GIS mapping, satellite monitoring, drones, and early warning systems. Digital platforms and mobile applications can help in real-time disaster tracking and communication. Disaster education should be included in school and college curricula to build a disaster-resilient society. Community-based disaster management will play a key role in reducing vulnerability.</p>
+
+                    <h3>Chapter 7: Conclusion</h3>
+                    <p>In conclusion, disaster management is a continuous and systematic process that requires coordination between government agencies, local authorities, NGOs, and communities. The internship provided valuable insights into real-world disaster management practices and challenges. Strengthening preparedness, promoting community participation, and integrating technology are essential for building a disaster-resilient society. The knowledge gained from this internship will be beneficial for academic and professional growth.</p>
+
+                    <h3>Key References</h3>
+                    <ul>
+                        <li>NDMA (2009), National Disaster Management Policy</li>
+                        <li>Disaster Management Act, 2005</li>
+                        <li>DDMA Kaimur Plan (2025)</li>
+                        <li>NIDM Publications</li>
+                        <li>World Bank & UN Sendai Framework Reports</li>
+                    </ul>
+                `,
+                questions: [
+                    {
+                        q: "What is the main objective of disaster management?",
+                        options: ["Economic development", "Political control", "Minimizing loss of life and property", "Population control"],
+                        correct: 2
+                    },
+                    {
+                        q: "Disaster management mainly focuses on which four stages?",
+                        options: ["Planning, policy, law, control", "Mitigation, preparedness, response, recovery", "Relief, rescue, aid, insurance", "Prediction, warning, evacuation, relief"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which of the following is a natural disaster?",
+                        options: ["Industrial accident", "Chemical leakage", "Flood", "Nuclear explosion"],
+                        correct: 2
+                    },
+                    {
+                        q: "COVID-19 is classified as which type of disaster?",
+                        options: ["Natural", "Geological", "Man-made", "Biological"],
+                        correct: 3
+                    },
+                    {
+                        q: "India became more disaster-focused after which Act?",
+                        options: ["Environmental Act 1986", "Disaster Management Act 2005", "National Security Act", "Panchayati Raj Act"],
+                        correct: 1
+                    },
+                    {
+                        q: "NDMA stands for:",
+                        options: ["National Disaster Monitoring Authority", "National Disaster Management Authority", "National Development Management Agency", "National Disaster Mitigation Act"],
+                        correct: 1
+                    },
+                    {
+                        q: "Who is the Chairperson of NDMA?",
+                        options: ["President of India", "Home Minister", "Prime Minister", "Chief Justice"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which force is specially trained for disaster response?",
+                        options: ["CRPF", "BSF", "NDRF", "CISF"],
+                        correct: 2
+                    },
+                    {
+                        q: "SDRF works at which level?",
+                        options: ["National", "State", "District", "Village"],
+                        correct: 1
+                    },
+                    {
+                        q: "DDMA is headed by:",
+                        options: ["Chief Minister", "Block Development Officer", "District Magistrate", "Panchayat Head"],
+                        correct: 2
+                    },
+                    {
+                        q: "Floods in Bihar mainly occur due to:",
+                        options: ["Earthquakes", "Cyclones", "Ganga–Kosi rivers", "Tsunami"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which disaster affected Odisha in 1999?",
+                        options: ["Flood", "Earthquake", "Cyclone", "Tsunami"],
+                        correct: 2
+                    },
+                    {
+                        q: "The Bhopal Gas Tragedy occurred in:",
+                        options: ["1974", "1984", "1994", "2004"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which is NOT a man-made disaster?",
+                        options: ["Terrorist attack", "Industrial accident", "Earthquake", "Chemical leakage"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which tool is used for disaster risk mapping?",
+                        options: ["MS Word", "QGIS", "Photoshop", "Excel"],
+                        correct: 1
+                    },
+                    {
+                        q: "Disaster preparedness includes:",
+                        options: ["Rescue only", "Rehabilitation only", "Mock drills and training", "Compensation"],
+                        correct: 2
+                    },
+                    {
+                        q: "Early warning systems help in:",
+                        options: ["Increasing damage", "Delaying response", "Saving lives", "Reducing awareness"],
+                        correct: 2
+                    },
+                    {
+                        q: "'Build Back Better' is related to:",
+                        options: ["Preparedness", "Response", "Recovery", "Mitigation"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which technology helps in real-time disaster tracking?",
+                        options: ["Typewriter", "DMIS", "Calculator", "Printer"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which group is most vulnerable during disasters?",
+                        options: ["Government officers", "Tourists", "Women and children", "Media persons"],
+                        correct: 2
+                    },
+                    {
+                        q: "Landslides mainly occur in:",
+                        options: ["Desert areas", "Coastal plains", "Hilly regions", "Plateaus"],
+                        correct: 2
+                    },
+                    {
+                        q: "Tsunami is caused due to:",
+                        options: ["Heavy rainfall", "Earthquake under sea", "Cyclone", "Flood"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which ministry coordinates disaster management in India?",
+                        options: ["Defence Ministry", "Health Ministry", "Home Affairs Ministry", "Environment Ministry"],
+                        correct: 2
+                    },
+                    {
+                        q: "Mock drills are conducted under which stage?",
+                        options: ["Mitigation", "Preparedness", "Response", "Recovery"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which disaster affected Gujarat in 2001?",
+                        options: ["Flood", "Cyclone", "Earthquake", "Drought"],
+                        correct: 2
+                    },
+                    {
+                        q: "Community participation helps in:",
+                        options: ["Increasing confusion", "Faster response", "Delaying rescue", "Increasing losses"],
+                        correct: 1
+                    },
+                    {
+                        q: "Disaster mitigation mainly focuses on:",
+                        options: ["Relief", "Long-term risk reduction", "Evacuation", "Compensation"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which app is used for disaster alerts in Bihar?",
+                        options: ["Bihar DM App", "Paytm", "DigiLocker", "Aarogya Setu"],
+                        correct: 0
+                    },
+                    {
+                        q: "SDRF is trained mainly for:",
+                        options: ["War", "Election duty", "Disaster rescue", "VIP security"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which factor increases disaster frequency?",
+                        options: ["Education", "Climate change", "Technology", "Population control"],
+                        correct: 1
+                    },
+                    {
+                        q: "Disaster recovery includes:",
+                        options: ["Rescue only", "Compensation only", "Rehabilitation and livelihood restoration", "Warning systems"],
+                        correct: 2
+                    },
+                    {
+                        q: "Flood is a:",
+                        options: ["Geological disaster", "Biological disaster", "Hydrological disaster", "Industrial disaster"],
+                        correct: 2
+                    },
+                    {
+                        q: "The Sendai Framework is related to:",
+                        options: ["War", "Disaster risk reduction", "Education policy", "Climate finance"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which organization provides training in disaster management?",
+                        options: ["NIDM", "RBI", "ISRO", "SEBI"],
+                        correct: 0
+                    },
+                    {
+                        q: "Disaster awareness should be spread through:",
+                        options: ["Community programs", "Social media only", "Police force", "Courts"],
+                        correct: 0
+                    },
+                    {
+                        q: "Which disaster caused maximum loss in coastal areas?",
+                        options: ["Drought", "Earthquake", "Cyclone", "Landslide"],
+                        correct: 2
+                    },
+                    {
+                        q: "Disaster management is a:",
+                        options: ["One-time activity", "Cyclic process", "Political process", "Economic policy"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which body prepares District Disaster Management Plan?",
+                        options: ["NDMA", "SDMA", "DDMA", "NDRF"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which disaster spreads through infection?",
+                        options: ["Flood", "Earthquake", "Pandemic", "Cyclone"],
+                        correct: 2
+                    },
+                    {
+                        q: "Disaster kits generally include:",
+                        options: ["Gold", "Electronics", "Torch, medicine, dry food", "Books"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which disaster is sudden and unpredictable?",
+                        options: ["Drought", "Earthquake", "Flood", "Climate change"],
+                        correct: 1
+                    },
+                    {
+                        q: "NGOs mainly help in:",
+                        options: ["Military action", "Community support", "Policy making", "Tax collection"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which system is used for command and control?",
+                        options: ["ICS", "GPS", "GIS", "CCTV"],
+                        correct: 0
+                    },
+                    {
+                        q: "Disaster preparedness reduces:",
+                        options: ["Awareness", "Response time", "Training", "Coordination"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which area is most flood-prone in Bihar?",
+                        options: ["Southern plateau", "Ganga–Kosi basin", "Desert region", "Hill tops"],
+                        correct: 1
+                    },
+                    {
+                        q: "Which disaster mainly affects agriculture?",
+                        options: ["Cyclone", "Earthquake", "Drought", "Tsunami"],
+                        correct: 2
+                    },
+                    {
+                        q: "Disaster management education should start from:",
+                        options: ["College only", "Office level", "School level", "After disaster"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which disaster is caused by human negligence?",
+                        options: ["Flood", "Earthquake", "Industrial accident", "Landslide"],
+                        correct: 2
+                    },
+                    {
+                        q: "Which phase focuses on life-saving actions?",
+                        options: ["Mitigation", "Preparedness", "Response", "Recovery"],
+                        correct: 2
+                    },
+                    {
+                        q: "Effective disaster management helps in:",
+                        options: ["Increasing losses", "Social instability", "Sustainable development", "Political gain"],
+                        correct: 2
+                    }
+                ]
+            }
+        };
+
+        // Load custom courses from localStorage and merge with hardcoded ones
+        if (Array.isArray(window.ADDITIONAL_COURSES)) {
+            window.ADDITIONAL_COURSES.forEach(course => {
+                courseContent[course.id] = course;
+            });
+        }
+
+        const savedCourseContent = StorageManager.get('courseContent', {});
+        if (savedCourseContent && typeof savedCourseContent === 'object') {
+            courseContent = { ...courseContent, ...savedCourseContent };
+        }
+
+        let currentCourse = null;
+        let quizAnswers = {};
+
+        function calculateGrade(percentage) {
+            if (percentage >= 90) return 'A+';
+            if (percentage >= 80) return 'A';
+            if (percentage >= 70) return 'B+';
+            if (percentage >= 60) return 'B';
+            return 'C';
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function materialAcceptedKey(courseId = currentCourse) {
+            return 'courseMaterialAccepted_' + courseId;
+        }
+
+        function quizLockedKey(courseId = currentCourse) {
+            return 'courseQuizLocked_' + courseId;
+        }
+
+        function isMaterialAccepted(courseId = currentCourse) {
+            return StorageManager.get(materialAcceptedKey(courseId)) === true;
+        }
+
+        function getLockedCourseResult(courseId = currentCourse) {
+            return StorageManager.get('courseResult_' + courseId);
+        }
+
+        function toggleMaterialAcceptButton() {
+            const checkbox = document.getElementById('materialReadCheck');
+            const button = document.getElementById('materialAcceptBtn');
+            if (button && checkbox) {
+                button.disabled = !checkbox.checked;
+            }
+        }
+
+        function refreshMaterialConfirmation() {
+            const accepted = isMaterialAccepted();
+            const checkbox = document.getElementById('materialReadCheck');
+            const button = document.getElementById('materialAcceptBtn');
+            const panel = document.getElementById('materialConfirmation');
+
+            if (checkbox) {
+                checkbox.checked = accepted;
+                checkbox.disabled = accepted;
+            }
+            if (button) {
+                button.disabled = accepted;
+                button.textContent = accepted ? 'Course Material Accepted - Quiz Unlocked' : 'Accept & Unlock Quiz';
+            }
+            if (panel) {
+                panel.style.borderColor = accepted ? '#10b981' : '#dbeafe';
+                panel.style.background = accepted ? '#ecfdf5' : '#f8fafc';
+            }
+        }
+
+        function acceptCourseMaterial() {
+            const checkbox = document.getElementById('materialReadCheck');
+            if (!checkbox || !checkbox.checked) {
+                alert('Please tick the confirmation box first.');
+                return;
+            }
+
+            StorageManager.set(materialAcceptedKey(), true);
+            refreshMaterialConfirmation();
+            renderQuizState();
+            alert('Course material accepted. Quiz is now unlocked.');
+        }
+
+        window.addEventListener('load', () => {
+            const isLoggedIn = StorageManager.get('isLoggedIn');
+            if (!isLoggedIn || isLoggedIn === 'false') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const courseId = new URLSearchParams(window.location.search).get('course');
+            currentCourse = parseInt(courseId) || 1;
+            loadCourse(currentCourse);
+        });
+
+        async function loadCourse(courseId) {
+            let course = courseContent[courseId];
+            
+            if (!course) {
+                // Try to fetch from API
+                try {
+                    const response = await APIService.request(`/courses/${courseId}`);
+                    if (response.success && response.course) {
+                        const courseName = response.course.name || response.course.courseName || response.course.title || 'Course';
+                        const material = response.course.material || response.course.syllabus || '';
+                        const rawQuestions = response.course.questions || '[]';
+                        course = {
+                            id: response.course.id,
+                            name: courseName,
+                            emoji: '📚',
+                            description: response.course.description,
+                            notes: material ? `<h3>${courseName}</h3><p>${material.replace(/\n/g, '</p><p>')}</p>` : '',
+                            questions: typeof rawQuestions === 'string' ? JSON.parse(rawQuestions || '[]') : rawQuestions
+                        };
+                        // Cache it
+                        courseContent[courseId] = course;
+                        StorageManager.set('courseContent', courseContent);
+                    }
+                } catch (error) {
+                    console.warn('Failed to fetch course from API:', error);
+                }
+            }
+
+            if (!course) {
+                try {
+                    const adminCourses = StorageManager.get('adminCourses', []);
+                    const storedCourses = Array.isArray(adminCourses) ? adminCourses : JSON.parse(adminCourses || '[]');
+                    const storedCourse = storedCourses.find(item => String(item.id || item.courseId) === String(courseId));
+                    if (storedCourse) {
+                        course = {
+                            id: storedCourse.id || storedCourse.courseId,
+                            name: storedCourse.name || storedCourse.courseName || storedCourse.title || 'Course',
+                            emoji: storedCourse.emoji || '📘',
+                            description: storedCourse.description || 'Course material will be added by admin.',
+                            notes: storedCourse.material || storedCourse.syllabus || `<p>${escapeHTML(storedCourse.description || 'Course material will be added by admin.')}</p>`,
+                            questions: Array.isArray(storedCourse.questions) ? storedCourse.questions : []
+                        };
+                    }
+                } catch (error) {
+                    console.warn('Unable to load stored admin course:', error.message);
+                }
+            }
+             
+            if (!course) {
+                const firstCourseKey = Object.keys(courseContent)[0];
+                course = courseContent[firstCourseKey];
+            }
+            if (!course) {
+                window.location.href = 'courses.html';
+                return;
+            }
+
+            document.getElementById('courseEmoji').textContent = course.emoji;
+            document.getElementById('courseName').textContent = course.name;
+            document.getElementById('courseDescription').textContent = course.description;
+            
+            // Load materials from admin or use default course notes
+            loadCourseMaterials(course);
+
+            refreshMaterialConfirmation();
+            renderQuizState();
+        }
+
+        function renderQuizState() {
+            const course = courseContent[currentCourse];
+            const submitButton = document.querySelector('.submit-quiz-btn');
+            const lockedResult = getLockedCourseResult();
+            if (lockedResult && !isMaterialAccepted()) {
+                StorageManager.set(materialAcceptedKey(), true);
+                refreshMaterialConfirmation();
+            }
+            const accepted = isMaterialAccepted();
+
+            quizAnswers = {};
+            document.getElementById('resultBox').classList.remove('show');
+
+            if (submitButton) {
+                submitButton.textContent = lockedResult ? 'Quiz Locked' : 'Submit and Lock Quiz';
+                submitButton.disabled = Boolean(lockedResult) || !accepted;
+                submitButton.style.display = '';
+            }
+
+            if (lockedResult) {
+                renderLockedQuizResult(lockedResult);
+                return;
+            }
+
+            if (!accepted) {
+                document.getElementById('quizContent').innerHTML = `
+                    <div class="quiz-lock-notice">
+                        Please read the full course material and tick “I confirm” at the bottom of the material page before starting this quiz.
+                    </div>
+                `;
+                return;
+            }
+
+            // Load quiz questions
+            let quizHTML = '';
+            if (!Array.isArray(course.questions) || course.questions.length === 0) {
+                document.getElementById('quizContent').innerHTML = '<p style="text-align: center; color: #666;">Quiz questions are not added for this course yet.</p>';
+                if (submitButton) submitButton.style.display = 'none';
+                return;
+            }
+
+            if (submitButton) submitButton.style.display = '';
+
+            course.questions.forEach((q, index) => {
+                quizHTML += `
+                    <div class="question-box">
+                        <div class="question-number">Question ${index + 1} of ${course.questions.length}</div>
+                        <div class="question-text">${escapeHTML(q.q)}</div>
+                        <div class="options">
+                            ${q.options.map((opt, optIndex) => `
+                                <label class="option">
+                                    <input type="radio" name="q${index}" value="${optIndex}" onchange="recordAnswer(${index}, ${optIndex})">
+                                    ${escapeHTML(opt)}
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('quizContent').innerHTML = quizHTML;
+        }
+
+        function renderLockedQuizResult(result) {
+            const course = courseContent[currentCourse];
+            const correct = Number(result.correctAnswers || 0);
+            const total = Number(result.totalQuestions || (course.questions || []).length || 0);
+            const percentage = Number(result.scorePercentage || 0);
+            const passed = Boolean(result.passed) && percentage >= 60;
+
+            document.getElementById('quizContent').innerHTML = `
+                <div class="quiz-lock-notice">
+                    This quiz is already submitted and locked. Your locked score is ${percentage}% (${correct}/${total}).
+                </div>
+            `;
+            document.getElementById('scoreDisplay').textContent = percentage + '%';
+            document.getElementById('resultMessage').textContent = passed
+                ? `Locked result: You scored ${correct}/${total}. You have passed the course.`
+                : `Locked result: You scored ${correct}/${total}. You need 60% to pass.`;
+
+            const unlockButton = document.querySelector('#resultBox .enroll-btn');
+            if (unlockButton) unlockButton.style.display = passed ? 'block' : 'none';
+            document.getElementById('resultBox').classList.add('show');
+            document.getElementById('progressFill').style.width = '100%';
+            document.getElementById('progressText').textContent = '100%';
+        }
+
+        function loadCourseMaterials(course) {
+            // Check if admin has added custom materials
+            const allMaterials = StorageManager.get('adminCourseMaterials', {});
+            const customMaterials = (allMaterials[course.name] || []);
+
+            let notesHTML = '';
+
+            if (customMaterials.length > 0) {
+                // Use admin-added materials
+                notesHTML = customMaterials.map(material => `
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">${escapeHTML(material.title)}</h3>
+                        <p style="line-height: 1.8; color: #555;">${escapeHTML(material.content).replace(/\n/g, '<br>')}</p>
+                    </div>
+                `).join('');
+            } else {
+                // Use default course notes
+                notesHTML = course.notes;
+            }
+
+            document.getElementById('notesContent').innerHTML = notesHTML;
+        }
+
+        function recordAnswer(questionIndex, answerIndex) {
+            quizAnswers[questionIndex] = answerIndex;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const course = courseContent[currentCourse];
+            const answered = Object.keys(quizAnswers).length;
+            const total = course.questions.length;
+            const percentage = Math.round((answered / total) * 100);
+            
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = percentage + '%';
+        }
+
+        function submitQuiz(e) {
+            e.preventDefault();
+
+            const course = courseContent[currentCourse];
+            const lockedResult = getLockedCourseResult();
+            if (lockedResult) {
+                renderLockedQuizResult(lockedResult);
+                alert('This quiz is already submitted and locked.');
+                return;
+            }
+
+            if (!isMaterialAccepted()) {
+                alert('Please read and accept the course material before submitting the quiz.');
+                switchTab('notes');
+                return;
+            }
+
+            if (!Array.isArray(course.questions) || course.questions.length === 0) {
+                alert('Quiz questions are not available for this course yet.');
+                return;
+            }
+
+            if (Object.keys(quizAnswers).length < course.questions.length) {
+                alert('Please answer all questions before locking the quiz.');
+                return;
+            }
+
+            if (!confirm('Submit and lock this quiz? You cannot change your answers or score after submission.')) {
+                return;
+            }
+
+            let correct = 0;
+
+            course.questions.forEach((q, index) => {
+                if (quizAnswers[index] === q.correct) {
+                    correct++;
+                }
+            });
+
+            const percentage = Math.round((correct / course.questions.length) * 100);
+            const passed = percentage >= 60;
+            const grade = calculateGrade(percentage);
+
+            document.getElementById('scoreDisplay').textContent = percentage + '%';
+            document.getElementById('resultMessage').textContent = passed 
+                ? `Congratulations! You scored ${correct}/${course.questions.length}. You have passed the course!`
+                : `You scored ${correct}/${course.questions.length}. You need 60% to pass. This score is now locked.`;
+
+            saveCourseResult(course, correct, course.questions.length, percentage, grade);
+
+            if (passed) {
+                document.querySelector('.enroll-btn').style.display = 'block';
+            } else {
+                document.querySelector('.enroll-btn').style.display = 'none';
+            }
+
+            renderLockedQuizResult(getLockedCourseResult());
+            document.getElementById('resultBox').classList.add('show');
+            window.scrollTo(0, document.getElementById('resultBox').offsetTop - 100);
+        }
+
+        function updateSelectedCourseAfterPass(course) {
+            StorageManager.set('userSkill', course.name);
+            StorageManager.set('selectedSkill', course.name);
+
+            const studentId = StorageManager.get('currentStudentId');
+            const userEmail = StorageManager.get('userEmail');
+            const updateRecord = (key) => {
+                const student = StorageManager.get(key);
+                if (!student || typeof student !== 'object') return;
+                if (userEmail && student.email && student.email !== userEmail) return;
+                student.skill = course.name;
+                student.course = course.name;
+                student.selectedSkill = course.name;
+                student.userSkill = course.name;
+                StorageManager.set(key, student);
+            };
+
+            if (studentId) updateRecord(studentId);
+            updateRecord('student');
+        }
+
+        function saveCourseResult(course, correctAnswers, totalQuestions, scorePercentage, grade) {
+            const result = {
+                courseId: currentCourse,
+                courseName: course.name,
+                courseEmoji: course.emoji,
+                scorePercentage,
+                correctAnswers,
+                totalQuestions,
+                grade,
+                passed: scorePercentage >= 60,
+                locked: true,
+                lockedAt: new Date().toISOString(),
+                answers: { ...quizAnswers },
+                completedAt: new Date().toISOString(),
+                certificateNumber: 'BSI-' + new Date().getFullYear() + '-' + currentCourse + '-' + String(Date.now()).slice(-5)
+            };
+
+            StorageManager.set('courseResult_' + currentCourse, result);
+            StorageManager.set(quizLockedKey(), true);
+            StorageManager.set('selectedCourseId', currentCourse);
+            StorageManager.set('selectedCourseName', course.name);
+            StorageManager.set('selectedCourseEmoji', course.emoji);
+            StorageManager.set('courseForCertificate', course.name);
+            StorageManager.set('courseEmojiForCertificate', course.emoji);
+            StorageManager.set('studentScore', scorePercentage);
+            StorageManager.set('scorePercentage', scorePercentage);
+            StorageManager.set('studentGrade', grade);
+            StorageManager.set('correctAnswers', correctAnswers);
+            StorageManager.set('totalQuestions', totalQuestions);
+            StorageManager.set('certificateNumber', result.certificateNumber);
+            StorageManager.set('progress_' + currentCourse, 100);
+            StorageManager.set('course_' + currentCourse, true);
+            if (result.passed) {
+                updateSelectedCourseAfterPass(course);
+            }
+
+            sessionStorage.setItem('quizScore', scorePercentage);
+            sessionStorage.setItem('scorePercentage', scorePercentage);
+            sessionStorage.setItem('correctAnswers', correctAnswers);
+            sessionStorage.setItem('totalQuestions', totalQuestions);
+            sessionStorage.setItem('quizCourseId', currentCourse);
+            sessionStorage.setItem('selectedCourseName', course.name);
+            sessionStorage.setItem('selectedCourseEmoji', course.emoji);
+            sessionStorage.setItem('studentGrade', grade);
+        }
+
+        function enrollCourse() {
+            const course = courseContent[currentCourse];
+            const lockedResult = getLockedCourseResult();
+            if (lockedResult) {
+                if (!lockedResult.passed || Number(lockedResult.scorePercentage) < 60) {
+                    alert('You need at least 60% to unlock the marksheet and certificate.');
+                    return;
+                }
+                window.location.href = 'marksheet.html';
+                return;
+            }
+
+            const quizScore = parseInt(document.getElementById('scoreDisplay').textContent);
+            const resultText = document.getElementById('resultMessage').textContent;
+            
+            // Extract correct answers from "You scored X/Y" format
+            const scoreMatch = resultText.match(/scored\s+(\d+)\/(\d+)/);
+            const correctAnswers = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+            
+            console.log('Quiz Result:', resultText, 'Correct:', correctAnswers, 'Score:', quizScore);
+            
+            if (quizScore < 60) {
+                alert('You need at least 60% to unlock the marksheet and certificate.');
+                return;
+            }
+
+            saveCourseResult(course, correctAnswers, course.questions.length, quizScore, calculateGrade(quizScore));
+            
+            // Redirect to marksheet
+            window.location.href = 'marksheet.html';
+        }
+
+        function switchTab(tabName) {
+            if (tabName === 'quiz' && !isMaterialAccepted()) {
+                alert('Please read the full course material and accept it before opening the quiz.');
+                tabName = 'notes';
+            }
+
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            const activeButton = [...document.querySelectorAll('.tab-btn')]
+                .find(btn => btn.getAttribute('onclick')?.includes(`'${tabName}'`));
+            if (activeButton) activeButton.classList.add('active');
+
+            // Load Q&A if tab is qa
+            if (tabName === 'qa') {
+                loadCourseQA();
+            }
+        }
+
+        function loadCourseQA() {
+            const course = courseContent[currentCourse];
+            const qaContent = document.getElementById('qaContent');
+            
+            const allQA = StorageManager.get('adminQuestionAnswers', {});
+            const courseQA = allQA[course.name] || [];
+
+            if (courseQA.length === 0) {
+                qaContent.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No Q&A available for this course yet</p>';
+                return;
+            }
+
+            qaContent.innerHTML = courseQA.map((item, index) => `
+                <div style="background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #667eea; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                        <div style="background: #667eea; color: white; min-width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">Q${index + 1}</div>
+                        <div style="flex: 1;">
+                            <h4 style="color: #333; margin-bottom: 8px; font-size: 1.1em;">${escapeHTML(item.question)}</h4>
+                            <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                                <strong style="color: #10b981;">Answer:</strong> ${escapeHTML(item.answer)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function goBack() {
+            window.location.href = 'courses.html';
+        }
+    </script>
+</body>
+</html>

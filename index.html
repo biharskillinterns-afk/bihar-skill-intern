@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bihar Skill Intern - Internship Certification</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Check if user is logged in, otherwise redirect to registration
+        window.addEventListener('load', () => {
+            const userRegistered = localStorage.getItem('userName');
+            if (!userRegistered) {
+                // Redirect to registration page if not logged in
+                // Uncomment the line below to auto-redirect
+                // window.location.href = 'register.html';
+            }
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <img src="logo.png" alt="Bihar Skill Intern Logo" class="site-logo">
+            <h1>Bihar Skill Intern</h1>
+            <p class="tagline">Professional Internship Certification Program</p>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="POSK.html">Certificate</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li style="margin-left: auto;"><a href="login.html" class="nav-login">Login</a></li>
+            <li><a href="admin-login.html" class="nav-admin" title="Admin Panel">👨‍💼</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h2>Welcome to Bihar Skill Intern</h2>
+            <p>Your gateway to professional skill development and industry recognition</p>
+            <button onclick="window.location.href='register.html'" class="cta-button">Register Now</button>
+        </section>
+
+        <section id="about">
+            <h3>About The Program</h3>
+            <div class="about-content">
+                <div class="card">
+                    <h4>Industry-Focused Learning</h4>
+                    <p>Students can enroll in skill-based internship tracks designed to build practical knowledge and career confidence.</p>
+                </div>
+                <div class="card">
+                    <h4>Verified Student Journey</h4>
+                    <p>The portal supports registration, course progress, attendance, marksheet access, and certificate generation in one place.</p>
+                </div>
+                <div class="card">
+                    <h4>Admin Management</h4>
+                    <p>Administrators can review learners, manage courses, and monitor platform activity from the dashboard.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="contact" id="contact">
+            <h3>Get Started Today</h3>
+            <p>Join thousands of students building their careers with Bihar Skill Intern</p>
+            <button onclick="window.location.href = localStorage.getItem('isLoggedIn') === 'true' ? 'POSK.html' : 'register.html'" class="cta-button">Generate Certificate</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Bihar Skill Intern. All rights reserved.</p>
+    </footer>
+</body>
+</html>

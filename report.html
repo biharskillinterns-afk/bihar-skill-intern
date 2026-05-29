@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20 Page Internship Report - Bihar Skill Intern</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #eef1f5;
+            color: #111827;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 14px;
+            background: #ffffff;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .toolbar button {
+            border: 0;
+            border-radius: 6px;
+            padding: 10px 18px;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .print-btn {
+            background: #0f766e;
+        }
+
+        .back-btn {
+            background: #334155;
+        }
+
+        .report {
+            width: 210mm;
+            margin: 18px auto;
+        }
+
+        .page {
+            position: relative;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 18px;
+            padding: 18mm 18mm 16mm;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+            page-break-after: always;
+            overflow: hidden;
+        }
+
+        .page::before {
+            content: "";
+            position: absolute;
+            inset: 8mm;
+            border: 1.5px solid #1f2937;
+            pointer-events: none;
+        }
+
+        .page-content {
+            position: relative;
+            z-index: 1;
+            min-height: 248mm;
+        }
+
+        .page-footer {
+            position: absolute;
+            left: 18mm;
+            right: 18mm;
+            bottom: 10mm;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 5px;
+            font-size: 10px;
+            color: #475569;
+            z-index: 2;
+        }
+
+        h1, h2, h3 {
+            margin: 0;
+            color: #111827;
+        }
+
+        h1 {
+            font-size: 28px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #111827;
+            font-size: 21px;
+            text-transform: uppercase;
+        }
+
+        h3 {
+            margin: 16px 0 8px;
+            font-size: 15px;
+        }
+
+        p, li {
+            font-size: 13px;
+            line-height: 1.62;
+        }
+
+        ul {
+            margin: 8px 0 0 18px;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 12px;
+        }
+
+        th, td {
+            border: 1px solid #334155;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f1f5f9;
+            font-weight: 700;
+        }
+
+        .cover {
+            display: flex;
+            min-height: 248mm;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .logo {
+            width: 92px;
+            height: 92px;
+            object-fit: contain;
+            margin-bottom: 18px;
+        }
+
+        .cover-title {
+            margin: 20px 0 8px;
+            font-size: 30px;
+        }
+
+        .cover-subtitle {
+            margin-bottom: 26px;
+            font-size: 18px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .cover-box {
+            width: 100%;
+            margin-top: 18px;
+            border: 1.5px solid #111827;
+            padding: 18px;
+            text-align: left;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 18px;
+            margin-top: 12px;
+        }
+
+        .meta-item {
+            border-bottom: 1px solid #cbd5e1;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+
+        .meta-item strong {
+            display: inline-block;
+            min-width: 135px;
+        }
+
+        .box {
+            border: 1px solid #94a3b8;
+            padding: 14px;
+            margin: 12px 0;
+            background: #f8fafc;
+        }
+
+        .signature-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 34px;
+            margin-top: 52px;
+        }
+
+        .signature-line {
+            border-top: 1.5px solid #111827;
+            padding-top: 8px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .stamp {
+            display: block;
+            width: 86px;
+            height: 86px;
+            object-fit: contain;
+            margin: 8px auto 4px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .small {
+            font-size: 11px;
+            color: #475569;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 14px 0;
+        }
+
+        .stat {
+            border: 1px solid #334155;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat span {
+            display: block;
+            margin-top: 8px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.035;
+            font-size: 68px;
+            font-weight: 900;
+            transform: rotate(-28deg);
+            pointer-events: none;
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .report {
+                width: 210mm;
+                margin: 0;
+            }
+
+            .page {
+                width: 210mm;
+                height: 297mm;
+                min-height: 297mm;
+                margin: 0;
+                box-shadow: none;
+                border: 0;
+                page-break-after: always;
+                break-after: page;
+            }
+
+            .page:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
+
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+        <button class="back-btn" onclick="window.location.href='courses.html'">Back to Dashboard</button>
+    </div>
+
+    <main class="report">
+        <section class="page">
+            <div class="watermark">BIHAR SKILL INTERN</div>
+            <div class="page-content cover">
+                <img class="logo" src="assets/certificates/bihar-skill-intern-logo.png" alt="Bihar Skill Intern logo">
+                <div class="small">VEER KUNWAR SINGH UNIVERSITY</div>
+                <div class="small" data-field="college">College Name</div>
+                <h1 class="cover-title">Internship Report</h1>
+                <div class="cover-subtitle"><span data-field="courseName">Completed Course</span> Program</div>
+                <div class="cover-box">
+                    <div class="meta-item"><strong>Submitted By:</strong> <span data-field="studentName">Student</span></div>
+                    <div class="meta-item"><strong>Roll Number:</strong> <span data-field="rollNo">N/A</span></div>
+                    <div class="meta-item"><strong>Course:</strong> <span data-field="courseName">Completed Course</span></div>
+                    <div class="meta-item"><strong>Organization:</strong> Bihar Skill Intern</div>
+                    <div class="meta-item"><strong>Duration:</strong> 15 Days / 120 Hours</div>
+                    <div class="meta-item"><strong>Session:</strong> <span data-field="session">2025-26</span></div>
+                </div>
+            </div>
+            <div class="page-footer"><span>Internship Report</span><span>Page 1 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Student Profile</h2>
+                <p>This section records the basic academic and registration details of the student for whom this internship report has been prepared.</p>
+                <div class="meta-grid">
+                    <div class="meta-item"><strong>Name:</strong> <span data-field="studentName">Student</span></div>
+                    <div class="meta-item"><strong>Email:</strong> <span data-field="email">N/A</span></div>
+                    <div class="meta-item"><strong>Phone:</strong> <span data-field="phone">N/A</span></div>
+                    <div class="meta-item"><strong>Roll No:</strong> <span data-field="rollNo">N/A</span></div>
+                    <div class="meta-item"><strong>Department:</strong> <span data-field="department">General</span></div>
+                    <div class="meta-item"><strong>College:</strong> <span data-field="college">N/A</span></div>
+                    <div class="meta-item"><strong>Course:</strong> <span data-field="courseName">Completed Course</span></div>
+                    <div class="meta-item"><strong>Status:</strong> Completed</div>
+                </div>
+                <h3>Profile Summary</h3>
+                <p>The student participated in a structured internship program designed to develop practical understanding, workplace discipline, digital awareness, communication ability, and professional readiness. The report combines attendance, course learning, assessment, and completion details in one document.</p>
+            </div>
+            <div class="page-footer"><span>Student Profile</span><span>Page 2 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Declaration</h2>
+                <p>I hereby declare that this internship report is a record of the learning activities, attendance, assignments, and practical work completed during the internship program under Bihar Skill Intern.</p>
+                <p>The information presented in this report has been prepared for academic and training purposes. The details of attendance, course completion, assessment performance, and certification are generated from the student dashboard and related internship records.</p>
+                <div class="signature-row">
+                    <div class="signature-line">Student Signature</div>
+                    <div class="signature-line">Date</div>
+                </div>
+                <div class="box">
+                    <strong>Student Name:</strong> <span data-field="studentName">Student</span><br>
+                    <strong>Course:</strong> <span data-field="courseName">Completed Course</span><br>
+                    <strong>Report Date:</strong> <span data-field="reportDate">N/A</span>
+                </div>
+            </div>
+            <div class="page-footer"><span>Declaration</span><span>Page 3 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Acknowledgement</h2>
+                <p>I express my sincere gratitude to Bihar Skill Intern for providing an opportunity to participate in this internship program. The program helped me understand professional conduct, structured learning, skill practice, and the value of consistent attendance.</p>
+                <p>I am thankful to the academic institution, internship coordinators, trainers, and support staff for their guidance throughout the program. Their support helped in completing modules, attending sessions, submitting activities, and appearing for the final assessment.</p>
+                <p>This report is submitted as a formal record of the internship learning journey and the outcomes achieved during the training period.</p>
+            </div>
+            <div class="page-footer"><span>Acknowledgement</span><span>Page 4 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Organization Profile</h2>
+                <p>Bihar Skill Intern is a skill development and internship platform focused on supporting students with structured training, practical exposure, attendance tracking, assessment, and digital certification.</p>
+                <table>
+                    <tr><th>Organization Name</th><td>Bihar Skill Intern</td></tr>
+                    <tr><th>Program Type</th><td>Student Internship and Skill Development</td></tr>
+                    <tr><th>Training Mode</th><td>Online / Digital Learning Supported</td></tr>
+                    <tr><th>Key Documents</th><td>Attendance Record, Marksheet, Certificate, Consent Form, Internship Report</td></tr>
+                </table>
+                <h3>Role of Organization</h3>
+                <ul>
+                    <li>Provide a structured course and learning pathway.</li>
+                    <li>Maintain student progress and attendance records.</li>
+                    <li>Evaluate student performance through quizzes and tasks.</li>
+                    <li>Generate certificates and reports after successful completion.</li>
+                </ul>
+            </div>
+            <div class="page-footer"><span>Organization Profile</span><span>Page 5 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Internship Overview</h2>
+                <p>The internship was designed as a 15-day learning and practice program with a total duration of 120 hours. The objective was to help the student gain practical understanding of the selected skill area and build confidence for academic and professional development.</p>
+                <div class="stat-grid">
+                    <div class="stat">Total Days<span>15</span></div>
+                    <div class="stat">Total Hours<span>120</span></div>
+                    <div class="stat">Completion<span>100%</span></div>
+                </div>
+                <h3>Program Highlights</h3>
+                <ul>
+                    <li>Daily learning schedule and activity-based progress.</li>
+                    <li>Course content completion through dashboard modules.</li>
+                    <li>Attendance tracking with full participation record.</li>
+                    <li>Final assessment and certification readiness.</li>
+                </ul>
+            </div>
+            <div class="page-footer"><span>Internship Overview</span><span>Page 6 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Objectives of the Internship</h2>
+                <p>The internship was planned with clear academic and skill-based objectives so that the student could connect theoretical understanding with practical work habits.</p>
+                <ul>
+                    <li>To develop basic professional skills through structured training.</li>
+                    <li>To build discipline through regular attendance and task completion.</li>
+                    <li>To understand the selected course area in a practical manner.</li>
+                    <li>To improve communication, documentation, and digital learning habits.</li>
+                    <li>To prepare the student for certificate-based skill recognition.</li>
+                </ul>
+                <div class="box">
+                    <strong>Selected Course:</strong> <span data-field="courseName">Completed Course</span><br>
+                    <strong>Assessment Score:</strong> <span data-field="score">100</span>%<br>
+                    <strong>Grade:</strong> <span data-field="grade">A</span>
+                </div>
+            </div>
+            <div class="page-footer"><span>Objectives</span><span>Page 7 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Training Methodology</h2>
+                <p>The program followed a simple and student-friendly training method. The student completed course modules, reviewed learning material, participated in activities, and appeared for assessment after completing the required learning path.</p>
+                <table>
+                    <tr><th>Method</th><th>Description</th></tr>
+                    <tr><td>Module Study</td><td>Learning content was completed through structured course modules.</td></tr>
+                    <tr><td>Self Practice</td><td>The student practiced the concepts and reviewed examples.</td></tr>
+                    <tr><td>Attendance</td><td>Regular presence was maintained across the internship period.</td></tr>
+                    <tr><td>Assessment</td><td>Final performance was measured through course assessment.</td></tr>
+                    <tr><td>Documentation</td><td>Completion records were converted into marksheet, certificate, and report.</td></tr>
+                </table>
+            </div>
+            <div class="page-footer"><span>Training Methodology</span><span>Page 8 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Module 1: Orientation and Digital Readiness</h2>
+                <p>The first module introduced the student to the internship process, course structure, dashboard usage, attendance requirements, and final certificate conditions.</p>
+                <h3>Topics Covered</h3>
+                <ul>
+                    <li>Introduction to Bihar Skill Intern dashboard.</li>
+                    <li>Understanding internship rules and completion criteria.</li>
+                    <li>Importance of attendance and responsible participation.</li>
+                    <li>Basic digital learning and document handling.</li>
+                </ul>
+                <h3>Learning Outcome</h3>
+                <p>The student became familiar with the internship workflow and understood how course completion, assessment, and certificate generation are connected.</p>
+            </div>
+            <div class="page-footer"><span>Module 1</span><span>Page 9 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Module 2: Course Learning</h2>
+                <p>This module focused on the main course content selected by the student. The student studied the required learning material and completed the available modules through the dashboard.</p>
+                <h3>Course Name</h3>
+                <div class="box"><span data-field="courseName">Completed Course</span></div>
+                <h3>Activities Completed</h3>
+                <ul>
+                    <li>Read and reviewed course learning material.</li>
+                    <li>Completed structured lessons and practice tasks.</li>
+                    <li>Prepared for assessment based on the course content.</li>
+                    <li>Maintained progress until course completion.</li>
+                </ul>
+            </div>
+            <div class="page-footer"><span>Module 2</span><span>Page 10 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Module 3: Practical Understanding</h2>
+                <p>The practical understanding module helped the student connect course concepts with real workplace expectations. The focus was on applying concepts, observing good practices, and developing a disciplined work approach.</p>
+                <ul>
+                    <li>Understanding practical uses of the selected skill.</li>
+                    <li>Maintaining daily learning notes and progress.</li>
+                    <li>Improving problem-solving and observation skills.</li>
+                    <li>Developing professional punctuality and consistency.</li>
+                </ul>
+                <p>The student demonstrated regular participation and completed the program requirements within the expected duration.</p>
+            </div>
+            <div class="page-footer"><span>Module 3</span><span>Page 11 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Module 4: Assessment Preparation</h2>
+                <p>After completing the learning modules, the student prepared for the final assessment. The assessment measured understanding of the course, consistency of participation, and readiness for certification.</p>
+                <table>
+                    <tr><th>Assessment Area</th><th>Status</th></tr>
+                    <tr><td>Course Completion</td><td>Completed</td></tr>
+                    <tr><td>Attendance Requirement</td><td>Completed</td></tr>
+                    <tr><td>Quiz / Evaluation</td><td>Passed</td></tr>
+                    <tr><td>Certificate Eligibility</td><td>Eligible</td></tr>
+                </table>
+                <div class="box"><strong>Final Score:</strong> <span data-field="score">100</span>%</div>
+            </div>
+            <div class="page-footer"><span>Module 4</span><span>Page 12 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Tools and Learning Resources</h2>
+                <p>The internship used digital resources and dashboard-based documentation to support student learning and verification.</p>
+                <div class="two-col">
+                    <div class="box">
+                        <h3>Digital Tools</h3>
+                        <ul>
+                            <li>Student dashboard</li>
+                            <li>Course learning page</li>
+                            <li>Assessment and result records</li>
+                            <li>Printable certificate and documents</li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <h3>Documents</h3>
+                        <ul>
+                            <li>Attendance sheet</li>
+                            <li>Marksheet</li>
+                            <li>Completion certificate</li>
+                            <li>Internship report</li>
+                        </ul>
+                    </div>
+                </div>
+                <p>These resources helped the student complete the internship in a transparent and organized manner.</p>
+            </div>
+            <div class="page-footer"><span>Tools and Resources</span><span>Page 13 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Attendance Summary</h2>
+                <p>Attendance is an important part of internship completion. The student maintained full attendance during the scheduled internship period.</p>
+                <div class="stat-grid">
+                    <div class="stat">Total Days<span>15</span></div>
+                    <div class="stat">Days Present<span>15</span></div>
+                    <div class="stat">Attendance<span>100%</span></div>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat">Total Hours<span>120</span></div>
+                    <div class="stat">Hours Completed<span>120</span></div>
+                    <div class="stat">Completion<span>100%</span></div>
+                </div>
+                <p>The attendance record supports the student's eligibility for marksheet and certificate generation.</p>
+            </div>
+            <div class="page-footer"><span>Attendance Summary</span><span>Page 14 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Daily Work Log: Day 1 to Day 8</h2>
+                <table>
+                    <thead><tr><th>Day</th><th>Hours</th><th>Work Done</th></tr></thead>
+                    <tbody id="workLogOne"></tbody>
+                </table>
+            </div>
+            <div class="page-footer"><span>Daily Work Log</span><span>Page 15 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Daily Work Log: Day 9 to Day 15</h2>
+                <table>
+                    <thead><tr><th>Day</th><th>Hours</th><th>Work Done</th></tr></thead>
+                    <tbody id="workLogTwo"></tbody>
+                </table>
+                <p class="small">Daily work log is generated as a standard internship record for the completed 15-day program.</p>
+            </div>
+            <div class="page-footer"><span>Daily Work Log</span><span>Page 16 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Assessment and Marksheet Summary</h2>
+                <p>The student completed the final assessment after finishing the course learning requirements. The marksheet summary below records the overall result.</p>
+                <table>
+                    <tr><th>Student Name</th><td><span data-field="studentName">Student</span></td></tr>
+                    <tr><th>Course</th><td><span data-field="courseName">Completed Course</span></td></tr>
+                    <tr><th>Score</th><td><span data-field="score">100</span>%</td></tr>
+                    <tr><th>Grade</th><td><span data-field="grade">A</span></td></tr>
+                    <tr><th>Result</th><td>Pass</td></tr>
+                    <tr><th>Assessment Date</th><td><span data-field="reportDate">N/A</span></td></tr>
+                </table>
+                <p>The assessment result confirms that the student has met the minimum required performance standard for internship completion.</p>
+            </div>
+            <div class="page-footer"><span>Assessment</span><span>Page 17 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Skills Acquired</h2>
+                <p>During the internship, the student developed a set of academic, digital, and professional skills useful for future learning and employment readiness.</p>
+                <ul>
+                    <li>Digital dashboard usage and online learning discipline.</li>
+                    <li>Understanding of selected course concepts.</li>
+                    <li>Time management through daily attendance and completion targets.</li>
+                    <li>Documentation practice through report, attendance, marksheet, and certificate records.</li>
+                    <li>Assessment readiness and confidence in skill-based evaluation.</li>
+                    <li>Professional communication and task responsibility.</li>
+                </ul>
+                <div class="box">
+                    <strong>Overall Skill Development:</strong> Satisfactory and certificate-ready.
+                </div>
+            </div>
+            <div class="page-footer"><span>Skills Acquired</span><span>Page 18 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Conclusion</h2>
+                <p>The internship program provided a structured learning experience and helped the student complete the selected course with full attendance and successful assessment performance.</p>
+                <p>The student completed 15 days and 120 hours of internship activity. The course completion, attendance record, marksheet, and certificate details together confirm that the student has fulfilled the required conditions of the Bihar Skill Intern program.</p>
+                <p>This report may be used as a formal academic record of internship participation and completion.</p>
+                <div class="box">
+                    <strong>Final Status:</strong> Completed<br>
+                    <strong>Certificate Status:</strong> Ready / Issued<br>
+                    <strong>Report Generated On:</strong> <span data-field="reportDate">N/A</span>
+                </div>
+            </div>
+            <div class="page-footer"><span>Conclusion</span><span>Page 19 of 20</span></div>
+        </section>
+
+        <section class="page">
+            <div class="page-content">
+                <h2>Verification and Approval</h2>
+                <p>This page records the final verification details for the internship report. The report is generated from student dashboard records and is intended to support certificate, marksheet, and attendance documentation.</p>
+                <table>
+                    <tr><th>Certificate ID</th><td><span data-field="certificateNumber">BSI-0000</span></td></tr>
+                    <tr><th>Student Name</th><td><span data-field="studentName">Student</span></td></tr>
+                    <tr><th>Course</th><td><span data-field="courseName">Completed Course</span></td></tr>
+                    <tr><th>Attendance</th><td>100%</td></tr>
+                    <tr><th>Completion</th><td>100%</td></tr>
+                </table>
+                <div class="signature-row">
+                    <div>
+                        <img class="stamp" src="assets/certificates/iso-9001-transparent-stamp.png" alt="ISO 9001 stamp">
+                        <div class="signature-line">Quality Verification</div>
+                    </div>
+                    <div>
+                        <img class="stamp" src="assets/certificates/authorized-signature.png" alt="Authorized signature">
+                        <div class="signature-line">Authorized Signatory</div>
+                    </div>
+                </div>
+                <p class="center small">Bihar Skill Intern - Internship Completion Report</p>
+            </div>
+            <div class="page-footer"><span>Verification</span><span>Page 20 of 20</span></div>
+        </section>
+    </main>
+
+    <script>
+        function storageValue(key, fallback) {
+            const value = localStorage.getItem(key);
+            return value === null || value === undefined || value === '' ? fallback : value;
+        }
+
+        function readCurrentStudent() {
+            const studentId = localStorage.getItem('currentStudentId');
+            if (!studentId) return null;
+
+            try {
+                const student = JSON.parse(localStorage.getItem(studentId) || 'null');
+                return student && typeof student === 'object' ? student : null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function studentValue(student, field, storageKey, fallback) {
+            return (student && student[field]) || storageValue(storageKey, fallback);
+        }
+
+        function getLatestResult() {
+            const selectedId = localStorage.getItem('selectedCourseId') || sessionStorage.getItem('quizCourseId');
+            const candidates = [];
+            if (selectedId) {
+                candidates.push('courseResult_' + selectedId);
+            }
+            for (let i = 0; i < localStorage.length; i += 1) {
+                const key = localStorage.key(i);
+                if (key && key.indexOf('courseResult_') === 0 && !candidates.includes(key)) {
+                    candidates.push(key);
+                }
+            }
+            for (const key of candidates) {
+                const courseId = key.replace('courseResult_', '');
+                try {
+                    const result = JSON.parse(localStorage.getItem(key) || 'null');
+                    const resultCourseId = result && result.courseId ? String(result.courseId) : String(courseId);
+                    const enrolled = localStorage.getItem('course_' + courseId) === 'true';
+                    if (enrolled && result && String(resultCourseId) === String(courseId) && result.passed && Number(result.scorePercentage) >= 60) {
+                        return { ...result, courseId: result.courseId || courseId };
+                    }
+                } catch (error) {
+                    console.warn('Unable to read course result:', error.message);
+                }
+            }
+            return null;
+        }
+
+        function setField(name, value) {
+            document.querySelectorAll('[data-field="' + name + '"]').forEach((element) => {
+                element.textContent = value;
+            });
+        }
+
+        function gradeFromScore(score) {
+            const value = Number(score);
+            if (value >= 90) return 'A+';
+            if (value >= 80) return 'A';
+            if (value >= 70) return 'B+';
+            if (value >= 60) return 'B';
+            return 'C';
+        }
+
+        function fillWorkLogs(courseName) {
+            const tasks = [
+                'Internship orientation, dashboard access, and course introduction.',
+                'Review of course objectives and learning requirements.',
+                'Study of core concepts related to ' + courseName + '.',
+                'Practice activity and revision of module learning material.',
+                'Documentation of daily learning and progress update.',
+                'Practical understanding of selected skill area.',
+                'Self practice, doubt review, and task completion.',
+                'Mid-program revision and preparation for assessment.',
+                'Advanced module reading and activity-based learning.',
+                'Review of examples and workplace application of concepts.',
+                'Completion of remaining course content and notes.',
+                'Assessment preparation and final revision.',
+                'Final quiz / evaluation participation.',
+                'Marksheet, attendance, and certificate details review.',
+                'Report preparation and internship completion documentation.'
+            ];
+            const rows = tasks.map((task, index) => '<tr><td>Day ' + (index + 1) + '</td><td>8 Hours</td><td>' + task + '</td></tr>');
+            document.getElementById('workLogOne').innerHTML = rows.slice(0, 8).join('');
+            document.getElementById('workLogTwo').innerHTML = rows.slice(8).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const result = getLatestResult();
+            if (!result) {
+                alert('Report is available after you enroll in a course and pass its quiz.');
+                window.location.href = 'courses.html';
+                return;
+            }
+            const today = new Date().toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+            const score = result.scorePercentage || result.score || 100;
+            const courseName = result.courseName || storageValue('courseForCertificate', 'Completed Course');
+            const grade = result.grade || gradeFromScore(score);
+            const certificateNumber = result.certificateNumber || storageValue('certificateNumber', 'BSI-0000');
+            const student = readCurrentStudent();
+            const studentName = studentValue(student, 'name', 'userName', 'Student') ||
+                [student?.firstName, student?.lastName].filter(Boolean).join(' ').trim() ||
+                'Student';
+
+            setField('studentName', studentName);
+            setField('email', studentValue(student, 'email', 'userEmail', 'N/A'));
+            setField('phone', studentValue(student, 'phone', 'userPhone', 'N/A'));
+            setField('rollNo', (student && (student.rollno || student.rollNo || student.userRollNo)) || storageValue('userRollNo', 'N/A'));
+            setField('department', studentValue(student, 'department', 'userDepartment', 'General'));
+            setField('college', studentValue(student, 'college', 'userCollege', 'N/A'));
+            setField('session', studentValue(student, 'session', 'userSession', '2025-26'));
+            setField('courseName', courseName);
+            setField('score', score);
+            setField('grade', grade);
+            setField('certificateNumber', certificateNumber);
+            setField('reportDate', today);
+            fillWorkLogs(courseName);
+        });
+    </script>
+</body>
+</html>

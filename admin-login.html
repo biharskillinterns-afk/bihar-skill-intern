@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Bihar Skill Intern</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .login-body {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+            background-color: #f8f9ff;
+        }
+
+        .form-group input::placeholder {
+            color: #999;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+            display: block;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            display: block;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .admin-info {
+            background: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.85em;
+            color: #1e40af;
+        }
+
+        .admin-info strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .login-header h1 {
+                font-size: 1.8em;
+            }
+
+            .login-body {
+                padding: 30px 20px;
+            }
+        }
+
+        /* Course Management Styles */
+        .course-management-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #14b8a6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .course-management-btn:hover {
+            background: #0d9488;
+            transform: translateY(-2px);
+        }
+
+        .course-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .course-panel.show {
+            display: flex;
+        }
+
+        .course-panel-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .course-panel-header {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .course-panel-header h2 {
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .close-course-panel {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .course-panel-body {
+            padding: 30px;
+        }
+
+        .course-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .course-tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .course-tab-btn.active {
+            color: #14b8a6;
+            border-bottom-color: #14b8a6;
+        }
+
+        .course-tab-content {
+            display: none;
+        }
+
+        .course-tab-content.active {
+            display: block;
+        }
+
+        .course-item {
+            background: #f9fafb;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #14b8a6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .course-item-info {
+            flex: 1;
+        }
+
+        .course-item-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .course-item-desc {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .course-delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .course-delete-btn:hover {
+            background: #dc2626;
+        }
+
+        .course-form {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #14b8a6;
+            box-shadow: 0 0 8px rgba(20, 184, 166, 0.2);
+        }
+
+        .form-submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #14b8a6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .form-submit-btn:hover {
+            background: #0d9488;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+
+        .empty-message-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>👨‍💼 Admin Panel</h1>
+            <p>Bihar Skill Intern</p>
+        </div>
+
+        <div class="login-body">
+            <div id="messageBox" class="message"></div>
+
+            <form onsubmit="handleAdminLogin(event)">
+                <div class="form-group">
+                    <label for="adminId">Admin ID / Email</label>
+                    <input 
+                        type="email" 
+                        id="adminId" 
+                        placeholder="Enter admin email" 
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input 
+                        type="password" 
+                        id="adminPassword" 
+                        placeholder="Enter password" 
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe" style="margin: 0; font-weight: 400;">Remember me</label>
+                </div>
+
+                <button type="submit" class="login-btn">🔓 Login as Admin</button>
+            </form>
+
+            <div class="back-link">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Management Panel -->
+    <div id="coursePanel" class="course-panel">
+        <div class="course-panel-content">
+            <div class="course-panel-header">
+                <h2>📚 Course Management</h2>
+                <button class="close-course-panel" onclick="closeCoursePanel()">&times;</button>
+            </div>
+            <div class="course-panel-body">
+                <div class="course-tabs">
+                    <button class="course-tab-btn active" onclick="switchCourseTab('view')">View Courses</button>
+                    <button class="course-tab-btn" onclick="switchCourseTab('add')">Add New Course</button>
+                </div>
+
+                <!-- View Courses Tab -->
+                <div id="viewTab" class="course-tab-content active">
+                    <div id="coursesList"></div>
+                </div>
+
+                <!-- Add Course Tab -->
+                <div id="addTab" class="course-tab-content">
+                    <div class="course-form">
+                        <label>Course Name: <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="newCourseName" class="form-input" placeholder="e.g., Data Science, Python Programming">
+
+                        <label>Description: <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="newCourseDesc" class="form-input" placeholder="Brief description">
+
+                        <label>Duration (days): <span style="color: #ef4444;">*</span></label>
+                        <input type="number" id="newCourseDuration" class="form-input" placeholder="e.g., 30">
+
+                        <button class="form-submit-btn" onclick="addNewCourse()">✅ Add Course</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="api-config.js"></script>
+    <script>
+        const STATIC_ADMIN_EMAIL = 'admin@bihar.com';
+        const STATIC_ADMIN_PASSWORD = 'Admin@123';
+
+        function completeAdminLogin(adminId, rememberMe, messageBox) {
+            localStorage.setItem('isAdminLoggedIn', 'true');
+            localStorage.setItem('adminEmail', adminId);
+            localStorage.setItem('adminName', 'Admin');
+            localStorage.setItem('adminRemember', rememberMe ? 'true' : 'false');
+            messageBox.textContent = 'Admin login successful! Redirecting...';
+            messageBox.className = 'message success';
+            setTimeout(() => {
+                window.location.href = 'admin-dashboard.html';
+            }, 900);
+        }
+
+        function isLocalDemoMode() {
+            const isLocalHost = window.location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+            return isLocalHost && localStorage.getItem('bsiEnableAdminDemo') === 'true';
+        }
+
+        function isLocalHost() {
+            return window.location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+        }
+
+        function getDemoAdminCredentials() {
+            return {
+                email: localStorage.getItem('bsiDemoAdminEmail') || STATIC_ADMIN_EMAIL,
+                password: localStorage.getItem('bsiDemoAdminPassword') || STATIC_ADMIN_PASSWORD
+            };
+        }
+
+        window.addEventListener('load', () => {
+            if (localStorage.getItem('adminRemember') === 'true') {
+                document.getElementById('adminId').value = localStorage.getItem('adminEmail') || '';
+                document.getElementById('rememberMe').checked = true;
+            }
+
+            const loginButton = document.querySelector('.login-btn');
+            if (loginButton) {
+                loginButton.textContent = 'Login as Admin';
+            }
+
+            const backLink = document.querySelector('.back-link a');
+            if (backLink) {
+                backLink.textContent = 'Back to Home';
+            }
+
+            const panelTitle = document.querySelector('.course-panel-header h2');
+            if (panelTitle) {
+                panelTitle.textContent = 'Course Management';
+            }
+
+            const addCourseButton = document.querySelector('.form-submit-btn');
+            if (addCourseButton) {
+                addCourseButton.textContent = 'Add Course';
+            }
+        });
+
+        async function handleLegacyAdminLogin(event) {
+            event.preventDefault();
+
+            const adminId = document.getElementById('adminId').value.trim();
+            const adminPassword = document.getElementById('adminPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const messageBox = document.getElementById('messageBox');
+            const submitButton = event.target.querySelector('button[type="submit"]');
+
+            messageBox.className = 'message';
+            submitButton.disabled = true;
+            submitButton.textContent = 'Signing in...';
+
+            const demoCredentials = getDemoAdminCredentials();
+            if (adminId === demoCredentials.email && adminPassword === demoCredentials.password) {
+                completeAdminLogin(adminId, rememberMe, messageBox);
+            } else {
+                messageBox.textContent = '✗ Invalid admin ID or password!';
+                messageBox.className = 'message error';
+            }
+        }
+
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+
+            const adminId = document.getElementById('adminId').value.trim();
+            const adminPassword = document.getElementById('adminPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const messageBox = document.getElementById('messageBox');
+            const submitButton = event.target.querySelector('button[type="submit"]');
+
+            messageBox.className = 'message';
+            submitButton.disabled = true;
+            submitButton.textContent = 'Signing in...';
+
+            try {
+                if (typeof APIService !== 'undefined') {
+                    const response = await APIService.loginAdmin(adminId, adminPassword);
+                    if (response && response.success) {
+                        localStorage.setItem('isAdminLoggedIn', 'true');
+                        localStorage.setItem('adminEmail', response.admin.email);
+                        localStorage.setItem('adminName', response.admin.fullName || 'Admin');
+                        localStorage.setItem('adminRemember', rememberMe ? 'true' : 'false');
+
+                        messageBox.textContent = 'Admin login successful! Redirecting...';
+                        messageBox.className = 'message success';
+
+                        setTimeout(() => {
+                            window.location.href = 'admin-dashboard.html';
+                        }, 1200);
+                        return;
+                    }
+                }
+            } catch (apiError) {
+                console.warn('Backend admin login failed:', apiError.message);
+            }
+
+            const demoCredentials = getDemoAdminCredentials();
+            if (adminId === demoCredentials.email && adminPassword === demoCredentials.password) {
+                completeAdminLogin(adminId, rememberMe, messageBox);
+            } else {
+                messageBox.textContent = 'Invalid admin ID or password!';
+                messageBox.className = 'message error';
+            }
+
+            submitButton.disabled = false;
+            submitButton.textContent = 'Login as Admin';
+        }
+
+        // ========== COURSE MANAGEMENT FUNCTIONS ==========
+        function openCoursePanel() {
+            document.getElementById('coursePanel').classList.add('show');
+            loadCourses();
+        }
+
+        function closeCoursePanel() {
+            document.getElementById('coursePanel').classList.remove('show');
+        }
+
+        function switchCourseTab(tab) {
+            // Hide all tabs
+            document.getElementById('viewTab').classList.remove('active');
+            document.getElementById('addTab').classList.remove('active');
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.course-tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            if (tab === 'view') {
+                document.getElementById('viewTab').classList.add('active');
+                document.querySelectorAll('.course-tab-btn')[0].classList.add('active');
+                loadCourses();
+            } else if (tab === 'add') {
+                document.getElementById('addTab').classList.add('active');
+                document.querySelectorAll('.course-tab-btn')[1].classList.add('active');
+            }
+        }
+
+        function getCourses() {
+            const coursesStr = localStorage.getItem('adminCourses');
+            const defaultCourses = [
+                { id: 1, name: 'Skill Development', description: 'Learn professional skills', duration: 30 },
+                { id: 2, name: 'Social Work', description: 'Community service training', duration: 30 },
+                { id: 3, name: 'Population Study', description: 'Demographic research', duration: 30 },
+                { id: 4, name: 'Disaster Management', description: 'Emergency response training', duration: 30 },
+                { id: 5, name: 'Digital Literacy', description: 'Complete guide to digital skills', duration: 50 }
+            ];
+
+            if (!coursesStr) {
+                localStorage.setItem('adminCourses', JSON.stringify(defaultCourses));
+                return defaultCourses;
+            }
+
+            try {
+                const parsedCourses = JSON.parse(coursesStr);
+                if (!Array.isArray(parsedCourses) || parsedCourses.length === 0) {
+                    localStorage.setItem('adminCourses', JSON.stringify(defaultCourses));
+                    return defaultCourses;
+                }
+                return parsedCourses;
+            } catch (e) {
+                localStorage.setItem('adminCourses', JSON.stringify(defaultCourses));
+                return defaultCourses;
+            }
+        }
+
+        function loadCourses() {
+            const courses = getCourses();
+            const coursesList = document.getElementById('coursesList');
+            
+            if (courses.length === 0) {
+                coursesList.innerHTML = `
+                    <div class="empty-message">
+                        <div class="empty-message-icon">📚</div>
+                        <p>No courses available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            coursesList.innerHTML = courses.map(course => `
+                <div class="course-item">
+                    <div class="course-item-info">
+                        <div class="course-item-name">${course.name}</div>
+                        <div class="course-item-desc">${course.description} • ${course.duration} days</div>
+                    </div>
+                    <button class="course-delete-btn" onclick="deleteCourseItem(${course.id})">🗑️ Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteCourseItem(courseId) {
+            if (confirm('Are you sure you want to delete this course?')) {
+                let courses = getCourses();
+                courses = courses.filter(c => c.id !== courseId);
+                localStorage.setItem('adminCourses', JSON.stringify(courses));
+                alert('✓ Course deleted successfully!');
+                loadCourses();
+            }
+        }
+
+        function addNewCourse() {
+            const name = document.getElementById('newCourseName').value.trim();
+            const description = document.getElementById('newCourseDesc').value.trim();
+            const duration = parseInt(document.getElementById('newCourseDuration').value);
+
+            if (!name) {
+                alert('Please enter course name!');
+                return;
+            }
+
+            if (!description) {
+                alert('Please enter course description!');
+                return;
+            }
+
+            if (!duration || duration < 1) {
+                alert('Please enter a valid duration!');
+                return;
+            }
+
+            const courses = getCourses();
+            const newId = Math.max(...courses.map(c => c.id), 0) + 1;
+
+            const newCourse = {
+                id: newId,
+                name: name,
+                description: description,
+                duration: duration
+            };
+
+            courses.push(newCourse);
+            localStorage.setItem('adminCourses', JSON.stringify(courses));
+
+            // Clear form
+            document.getElementById('newCourseName').value = '';
+            document.getElementById('newCourseDesc').value = '';
+            document.getElementById('newCourseDuration').value = '';
+
+            alert('✓ Course added successfully!');
+            switchCourseTab('view');
+        }
+
+        // Close panel on outside click
+        document.addEventListener('click', (event) => {
+            const panel = document.getElementById('coursePanel');
+            const panelContent = document.querySelector('.course-panel-content');
+            if (panel && event.target === panel) {
+                closeCoursePanel();
+            }
+        });
+    </script>
+</body>
+</html>

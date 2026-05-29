@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Bihar Skill Interns</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f6fb;
+            font-family: Arial, sans-serif;
+            color: #111827;
+            padding: 20px;
+        }
+
+        .payment-box {
+            width: min(460px, 100%);
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 16px 45px rgba(15, 23, 42, 0.14);
+            padding: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .brand img {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+        }
+
+        h1 {
+            font-size: 1.45rem;
+            margin: 0;
+        }
+
+        .summary {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 18px 0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 9px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .row:last-child {
+            border-bottom: 0;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #2563eb;
+        }
+
+        .pay-btn,
+        .back-btn {
+            width: 100%;
+            border: 0;
+            border-radius: 7px;
+            padding: 13px 16px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .pay-btn {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .pay-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .status {
+            display: none;
+            margin-top: 14px;
+            padding: 11px 12px;
+            border-radius: 7px;
+            font-size: 0.92rem;
+        }
+
+        .status.error {
+            display: block;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .status.success {
+            display: block;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+    <main class="payment-box">
+        <div class="brand">
+            <img src="logo.png" alt="Bihar Skill Interns logo">
+            <div>
+                <h1>Complete Registration Payment</h1>
+                <p style="margin: 5px 0 0; color: #6b7280;">Bihar Skill Interns</p>
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="row">
+                <span>Student</span>
+                <strong id="studentName">Student</strong>
+            </div>
+            <div class="row">
+                <span>Email</span>
+                <strong id="studentEmail">-</strong>
+            </div>
+            <div class="row">
+                <span>Registration Fee</span>
+                <strong id="paymentAmount">₹299</strong>
+            </div>
+        </div>
+
+        <button id="payButton" class="pay-btn" onclick="startPayment()">Pay Securely</button>
+        <button class="back-btn" onclick="window.location.href='register.html'">Back to Registration</button>
+        <div id="paymentStatus" class="status"></div>
+    </main>
+
+    <script src="api-config.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const DEFAULT_REGISTRATION_AMOUNT = 299;
+        let activeCheckout = null;
+        let checkoutLoadTimer = null;
+
+        function getStorage() {
+            return typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+        }
+
+        function getStoredValue(key, fallback = '') {
+            const value = getStorage().getItem(key);
+            return value === null || value === undefined || value === '' ? fallback : value;
+        }
+
+        function setStoredValue(key, value) {
+            getStorage().setItem(key, value);
+        }
+
+        function getPaymentAmount() {
+            const amount = Number(getStoredValue('bsiPaymentAmount', DEFAULT_REGISTRATION_AMOUNT));
+            return Number.isFinite(amount) && amount > 0 ? Math.round(amount) : DEFAULT_REGISTRATION_AMOUNT;
+        }
+
+        function setStatus(message, type = 'error') {
+            const status = document.getElementById('paymentStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function resetPayButton(message) {
+            const payButton = document.getElementById('payButton');
+            document.querySelectorAll('.razorpay-container').forEach(container => container.remove());
+            payButton.disabled = false;
+            payButton.textContent = 'Pay Securely';
+            if (message) setStatus(message);
+        }
+
+        function generateOrderId() {
+            const existing = getStoredValue('orderId', '');
+            if (existing) return existing;
+            const orderId = 'BSI' + Date.now().toString().slice(-9);
+            setStoredValue('orderId', orderId);
+            return orderId;
+        }
+
+        window.addEventListener('load', () => {
+            const userName = getStoredValue('userName', 'Student');
+            const userEmail = getStoredValue('userEmail', '-');
+            document.getElementById('studentName').textContent = userName;
+            document.getElementById('studentEmail').textContent = userEmail;
+            document.getElementById('paymentAmount').textContent = `₹${getPaymentAmount()}`;
+
+            if (!getStoredValue('userRegistered', '')) {
+                setStatus('Please complete registration first.');
+                document.getElementById('payButton').disabled = true;
+            }
+        });
+
+        async function startPayment() {
+            const payButton = document.getElementById('payButton');
+            payButton.disabled = true;
+            payButton.textContent = 'Opening payment...';
+
+            try {
+                if (typeof Razorpay !== 'function') {
+                    throw new Error('Razorpay checkout load nahi hua. Internet connection check karein.');
+                }
+                if (typeof APIService === 'undefined') {
+                    throw new Error('Payment API config load nahi hua.');
+                }
+                if (!getStoredValue('authToken', '')) {
+                    throw new Error('Backend registration complete nahi hai. Back to Registration par click karke form dobara submit karein.');
+                }
+
+                const amount = getPaymentAmount();
+                const order = await APIService.createRegistrationPaymentOrder(amount, {
+                    studentName: getStoredValue('userName', ''),
+                    studentEmail: getStoredValue('userEmail', ''),
+                    studentPhone: getStoredValue('userPhone', getStoredValue('userMobile', '')),
+                    localOrderId: generateOrderId()
+                });
+
+                if (!order || !order.success || !order.razorpayOrderId) {
+                    throw new Error(order?.message || 'Payment order create nahi ho paya.');
+                }
+
+                openRazorpay(order, payButton);
+            } catch (error) {
+                payButton.disabled = false;
+                payButton.textContent = 'Pay Securely';
+                setStatus(error.message || 'Payment start nahi ho paya.');
+            }
+        }
+
+        function openRazorpay(order, payButton) {
+            const amount = Number(order.amount || getPaymentAmount());
+            const options = {
+                key: order.razorpayKey,
+                amount: amount * 100,
+                currency: 'INR',
+                name: 'Bihar Skill Interns',
+                description: 'Registration Fee',
+                order_id: order.razorpayOrderId,
+                prefill: {
+                    name: getStoredValue('userName', ''),
+                    email: getStoredValue('userEmail', ''),
+                    contact: getStoredValue('userPhone', getStoredValue('userMobile', ''))
+                },
+                notes: {
+                    local_order_id: getStoredValue('orderId', ''),
+                    student_email: getStoredValue('userEmail', '')
+                },
+                theme: {
+                    color: '#2563eb'
+                },
+                handler: async function (response) {
+                    if (checkoutLoadTimer) clearTimeout(checkoutLoadTimer);
+                    await verifyPayment(response, order, payButton);
+                },
+                modal: {
+                    ondismiss: function () {
+                        if (checkoutLoadTimer) clearTimeout(checkoutLoadTimer);
+                        payButton.disabled = false;
+                        payButton.textContent = 'Pay Securely';
+                    }
+                }
+            };
+
+            const checkout = new Razorpay(options);
+            activeCheckout = checkout;
+            checkout.on('payment.failed', function (response) {
+                if (checkoutLoadTimer) clearTimeout(checkoutLoadTimer);
+                payButton.disabled = false;
+                payButton.textContent = 'Pay Securely';
+                setStatus(response?.error?.description || 'Payment failed. Please try again.');
+            });
+            checkout.open();
+            payButton.textContent = 'Complete payment in popup';
+
+            checkoutLoadTimer = setTimeout(() => {
+                const hasCheckoutFrame = document.querySelector('.razorpay-checkout-frame');
+                if (!hasCheckoutFrame) return;
+                try {
+                    if (activeCheckout && typeof activeCheckout.close === 'function') {
+                        activeCheckout.close();
+                    }
+                } catch (error) {
+                    console.warn('Unable to close Razorpay checkout:', error.message);
+                }
+                resetPayButton('Razorpay popup load nahi hua. Page refresh karke dobara try karein, ya Chrome/Edge browser me localhost:3000 open karein.');
+            }, 20000);
+        }
+
+        async function verifyPayment(response, order, payButton) {
+            try {
+                const verified = await APIService.verifyRegistrationPayment(
+                    response.razorpay_payment_id,
+                    response.razorpay_order_id,
+                    response.razorpay_signature,
+                    {
+                        amount: order.amount || getPaymentAmount(),
+                        studentEmail: getStoredValue('userEmail', ''),
+                        localOrderId: getStoredValue('orderId', '')
+                    }
+                );
+
+                if (!verified || !verified.success) {
+                    throw new Error(verified?.message || 'Payment verification failed.');
+                }
+
+                setStoredValue('paymentStatus', 'completed');
+                setStoredValue('paymentDate', new Date().toLocaleString());
+                setStoredValue('paymentAmount', String(order.amount || getPaymentAmount()));
+                setStoredValue('paymentMethod', 'razorpay');
+                setStoredValue('paymentGateway', 'razorpay');
+                setStoredValue('razorpayPaymentId', response.razorpay_payment_id);
+                setStoredValue('razorpayOrderId', response.razorpay_order_id || order.razorpayOrderId);
+                setStoredValue('razorpaySignature', response.razorpay_signature);
+                setStoredValue('paymentVerified', 'true');
+                setStoredValue('isRegistrationComplete', 'true');
+                setStoredValue('isLoggedIn', 'false');
+
+                setStatus('Payment successful. Redirecting to login...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 900);
+            } catch (error) {
+                payButton.disabled = false;
+                payButton.textContent = 'Pay Securely';
+                setStatus(error.message || 'Payment verify nahi ho paya.');
+            }
+        }
+    </script>
+</body>
+</html>

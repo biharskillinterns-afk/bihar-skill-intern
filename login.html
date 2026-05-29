@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Bihar Skill Intern</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 20px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-top: 5px solid #2563eb;
+        }
+
+        .login-box h2 {
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .login-box .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.2);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            color: #666;
+        }
+
+        .remember-me input {
+            margin-right: 8px;
+            width: auto;
+            cursor: pointer;
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .forgot-password a {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .signup-link a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 30px 20px;
+            }
+
+            .login-box h2 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="POSK.html">Certificate</a></li>
+            <li><a href="index.html#about">About</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+            <li style="margin-left: auto;"><a href="login.html" class="nav-login">Login</a></li>
+        </ul>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Student Login</h2>
+            <p class="subtitle">Bihar Skill Intern Portal</p>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Username (Email)</label>
+                    <input type="email" id="email" name="email" placeholder="your.email@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember" style="margin: 0; font-weight: normal;">Remember me</label>
+                </div>
+
+                <button type="submit">Login</button>
+            </form>
+
+            <div class="forgot-password">
+                <a href="forgot-password.html">Forgot Password?</a>
+            </div>
+
+            <div class="signup-link">
+                Don't have an account? <a href="register.html">Sign up here</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="api-config.js"></script>
+    <script>
+        async function hashPassword(password) {
+            if (!window.crypto || !window.crypto.subtle) {
+                return btoa(unescape(encodeURIComponent(password)));
+            }
+
+            const data = new TextEncoder().encode(password);
+            const digest = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(digest))
+                .map(byte => byte.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const submitButton = event.target.querySelector('button[type="submit"]');
+
+            // Reset messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            // Basic validation
+            if (!username || !password) {
+                errorMessage.textContent = 'Please fill in all fields';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Logging in...';
+
+            try {
+                if (typeof APIService !== 'undefined') {
+                    const response = await APIService.loginStudent(username, password);
+                    if (response && response.success) {
+                        const fullName = [response.student.firstName, response.student.lastName]
+                            .filter(Boolean)
+                            .join(' ')
+                            .trim() || response.student.name || response.student.email || 'Student';
+                        localStorage.setItem('userName', fullName);
+                        localStorage.setItem('userFirstName', response.student.firstName || fullName.split(' ')[0] || 'Student');
+                        localStorage.setItem('userLastName', response.student.lastName || fullName.split(' ').slice(1).join(' ') || '');
+                        localStorage.setItem('userEmail', response.student.email);
+                        localStorage.setItem('userUsername', response.student.email);
+                        localStorage.setItem('userPhone', response.student.phone || '');
+                        localStorage.setItem('userRegistered', 'true');
+                        const paymentStatus = response.student.paymentStatus || localStorage.getItem('paymentStatus') || 'pending';
+                        localStorage.setItem('paymentStatus', paymentStatus);
+                        localStorage.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
+                        if (paymentStatus !== 'completed') {
+                            errorMessage.textContent = 'Please complete registration payment first.';
+                            errorMessage.style.display = 'block';
+                            setTimeout(() => {
+                                window.location.href = 'payment.html';
+                            }, 900);
+                            return;
+                        }
+                        localStorage.setItem('isLoggedIn', 'true');
+
+                        if (remember) {
+                            localStorage.setItem('rememberUsername', username);
+                        } else {
+                            localStorage.removeItem('rememberUsername');
+                        }
+
+                        successMessage.textContent = 'Login successful! Welcome ' + fullName + '!';
+                        successMessage.style.display = 'block';
+
+                        setTimeout(() => {
+                            window.location.href = 'courses.html';
+                        }, 1200);
+                        return;
+                    }
+                }
+            } catch (apiError) {
+                console.warn('Backend login failed:', apiError.message);
+            }
+
+            restoreStudentFromList(username);
+
+            const storage = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+            const userRegistered = storage.getItem('userRegistered');
+            const storedUsername = storage.getItem('userUsername');
+            const storedPasswordHash = storage.getItem('userPasswordHash');
+            const legacyPassword = storage.getItem('userPassword');
+            const inputPasswordHash = await hashPassword(password);
+
+            if (!userRegistered || userRegistered === 'false') {
+                errorMessage.textContent = 'No account found. Please register first!';
+                errorMessage.style.display = 'block';
+            } else if (storage.getItem('paymentStatus') !== 'completed') {
+                errorMessage.textContent = 'Please complete registration payment first.';
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = 'payment.html';
+                }, 900);
+            } else if (username === storedUsername && storedPasswordHash && inputPasswordHash === storedPasswordHash) {
+                completeLocalLogin(username, remember, successMessage);
+                return;
+            } else if (username === storedUsername && legacyPassword && password === legacyPassword) {
+                storage.setItem('userPasswordHash', inputPasswordHash);
+                storage.removeItem('userPassword');
+                completeLocalLogin(username, remember, successMessage);
+                return;
+            } else {
+                errorMessage.textContent = 'Invalid username or password.';
+                errorMessage.style.display = 'block';
+            }
+
+            submitButton.disabled = false;
+            submitButton.textContent = 'Login';
+        }
+
+        function completeLocalLogin(username, remember, successMessage) {
+            const storage = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+            const rawName = (storage.getItem('userName') || '').trim();
+            const storedUsername = (storage.getItem('userUsername') || storage.getItem('userEmail') || username || '').trim();
+            const safeUsername = storedUsername.split('@')[0] || 'Student';
+            const userName = rawName || safeUsername;
+            const nameParts = userName.split(/\s+/).filter(Boolean);
+            const userFirstName = (storage.getItem('userFirstName') || '').trim() || nameParts[0] || 'Student';
+            const userLastName = (storage.getItem('userLastName') || '').trim() || nameParts.slice(1).join(' ') || '';
+
+            successMessage.textContent = 'Login successful! Welcome ' + userName + '!';
+            successMessage.style.display = 'block';
+            storage.setItem('userName', userName);
+            storage.setItem('userFirstName', userFirstName);
+            storage.setItem('userLastName', userLastName);
+            if (!storage.getItem('userEmail')) {
+                storage.setItem('userEmail', storedUsername);
+            }
+            if (!storage.getItem('userUsername')) {
+                storage.setItem('userUsername', storedUsername);
+            }
+            storage.setItem('isLoggedIn', 'true');
+            storage.setItem('isRegistrationComplete', 'true');
+
+            if (remember) {
+                storage.setItem('rememberUsername', username);
+            } else {
+                storage.removeItem('rememberUsername');
+            }
+
+            setTimeout(() => {
+                window.location.href = 'courses.html';
+            }, 1200);
+        }
+
+        function restoreStudentFromList(username) {
+            if (typeof BSIAuthStorage !== 'undefined' && BSIAuthStorage.restoreStudentByEmail(username)) {
+                return;
+            }
+
+            const studentIdsRaw = localStorage.getItem('allStudentIds');
+            if (!studentIdsRaw) return;
+
+            try {
+                const studentIds = JSON.parse(studentIdsRaw);
+                const studentId = studentIds.find(id => {
+                    const student = JSON.parse(localStorage.getItem(id) || 'null');
+                    return student && student.email === username;
+                });
+
+                if (!studentId) return;
+
+                const student = JSON.parse(localStorage.getItem(studentId));
+                const storedName = student.name || `${student.firstName || ''} ${student.lastName || ''}`.trim() || student.email || 'Student';
+                if (typeof BSIAuthStorage !== 'undefined') {
+                    BSIAuthStorage.saveStudent({ ...student, id: student.id || studentId }, student.passwordHash);
+                    return;
+                }
+
+                localStorage.setItem('currentStudentId', student.id || studentId);
+                localStorage.setItem('userName', storedName);
+                localStorage.setItem('userFirstName', student.firstName || storedName.split(' ')[0] || 'Student');
+                localStorage.setItem('userLastName', student.lastName || storedName.split(' ').slice(1).join(' ') || '');
+                localStorage.setItem('userEmail', student.email);
+                localStorage.setItem('userUsername', student.email);
+                localStorage.setItem('userPhone', student.phone || '');
+                localStorage.setItem('userRollNo', student.rollno || student.rollNo || student.userRollNo || '');
+                localStorage.setItem('userSkill', student.skill || student.course || student.selectedSkill || 'Skill Development');
+                localStorage.setItem('userRegistered', 'true');
+                localStorage.setItem('isRegistrationComplete', 'true');
+                if (student.passwordHash) {
+                    localStorage.setItem('userPasswordHash', student.passwordHash);
+                }
+            } catch (error) {
+                console.warn('Unable to restore student from saved list:', error.message);
+            }
+        }
+
+        function handleForgotPassword(event) {
+            event.preventDefault();
+            const storedUsername = localStorage.getItem('userUsername');
+            if (storedUsername) {
+                alert('Your registered username (email) is: ' + storedUsername);
+            } else {
+                alert('No account found. Please register first!');
+            }
+        }
+
+        // Check if user was remembered
+        window.addEventListener('load', () => {
+            const savedUsername = localStorage.getItem('rememberUsername');
+            if (savedUsername) {
+                document.getElementById('email').value = savedUsername;
+                document.getElementById('remember').checked = true;
+            }
+        });
+    </script>
+</body>
+</html>

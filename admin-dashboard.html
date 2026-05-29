@@ -1,0 +1,3218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Bihar Skill Intern</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Top Navigation */
+        .admin-nav {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .admin-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .admin-logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-nav-menu {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .admin-nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .admin-nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .admin-nav-menu a.active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .admin-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Social Links */
+        .social-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.3em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .social-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .whatsapp-logo {
+            width: 40px;
+            height: 40px;
+            padding: 0 !important;
+            background: transparent !important;
+            border-radius: 12px;
+            overflow: visible;
+        }
+
+        .whatsapp-logo svg {
+            width: 40px;
+            height: 40px;
+            display: block;
+        }
+
+        /* Main Container */
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Header */
+        .admin-header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .admin-header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .admin-header p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-content h3 {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-icon {
+            font-size: 2.5em;
+            opacity: 0.7;
+        }
+
+        /* Students Table */
+        .students-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-btn {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .search-btn:hover {
+            background: #764ba2;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table thead {
+            background: #f8f9fa;
+        }
+
+        table th {
+            padding: 15px;
+            text-align: left;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            color: #333;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .student-email {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .course-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 5px;
+        }
+
+        .action-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .action-btn-danger {
+            background: #ef4444;
+        }
+
+        .action-btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-row label {
+            color: #666;
+            font-weight: 600;
+            display: block;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .info-row span {
+            color: #333;
+            font-size: 1em;
+        }
+
+        .info-row select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            margin-top: 5px;
+        }
+
+        .info-row select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-save {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal-btn-save:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .modal-btn-cancel {
+            background: #e5e7eb;
+            color: #333;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #d1d5db;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .no-data p {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .admin-panel {
+            background: white;
+            padding: 24px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .admin-panel h3 {
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 14px;
+        }
+
+        .mini-table {
+            width: 100%;
+            margin-top: 8px;
+            font-size: 0.92em;
+        }
+
+        .mini-table th,
+        .mini-table td {
+            padding: 10px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 0.82em;
+            font-weight: 700;
+        }
+
+        .status-pill.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-pill.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-pill.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-pill.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 9px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #2563eb);
+            border-radius: inherit;
+        }
+
+        .quick-report-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .notice-item,
+        .activity-item,
+        .pending-item {
+            padding: 12px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+        }
+
+        .notice-form {
+            display: grid;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .notice-form input,
+        .notice-form textarea,
+        .notice-form select,
+        .certificate-search input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        .student-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .detail-box {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .detail-box strong {
+            display: block;
+            color: #475569;
+            font-size: 0.82em;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-nav {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+
+            .admin-nav-left,
+            .admin-nav-right {
+                width: 100%;
+            }
+
+            .admin-nav-menu {
+                flex-wrap: wrap;
+            }
+
+            .table-wrapper {
+                font-size: 0.85em;
+            }
+
+            table th,
+            table td {
+                padding: 10px;
+            }
+
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="admin-nav">
+        <div class="admin-nav-left">
+            <div class="admin-logo">
+                👨‍💼 Admin Panel
+            </div>
+        </div>
+        <div class="admin-nav-right">
+            <div class="social-links">
+                <a href="https://www.instagram.com/bihar_skill_interns?igsh=ZTl5dXN1OHEwa295" target="_blank" title="Follow on Instagram">📷</a>
+                <a href="https://whatsapp.com/channel/0029VabLntu30LKRfOAXc50K" target="_blank" class="whatsapp-logo" title="Join WhatsApp Channel" aria-label="Join WhatsApp Channel"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="5" y="5" width="54" height="54" rx="13" fill="#050505"/><path d="M18.5 48.5l2.2-8.3a17.7 17.7 0 1 1 6.2 5.3l-8.4 3z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/><path d="M25 23.5c.5-1.4 1.4-1.8 2.4-1.8h1.6c.6 0 1 .3 1.3.9l1.7 4.1c.3.6.2 1.1-.2 1.6l-1.3 1.5c1.4 2.5 3.5 4.5 6.1 5.9l1.5-1.3c.5-.4 1.1-.5 1.7-.2l4.1 1.9c.6.3.9.8.8 1.5-.2 1.6-.8 2.9-1.8 4-1 1.1-2.3 1.4-3.9 1.1-8.3-1.7-15.1-8.4-16.8-16.6-.4-1.5-.1-2.9.8-4.6z" fill="#fff"/></svg></a>
+            </div>
+            <div class="admin-user">
+                <div class="admin-avatar">👤</div>
+                <span id="adminEmailDisplay">Admin</span>
+            </div>
+            <button class="logout-btn" style="background: #14b8a6; margin-right: 10px;" onclick="openDashboardCoursePanel()">📚 Manage Courses</button>
+            <button class="logout-btn" onclick="logoutAdmin()">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <h1>🎓 Admin Dashboard</h1>
+            <p>Manage all students and their course enrollments</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Total Students</h3>
+                    <div class="stat-number" id="totalStudents">0</div>
+                </div>
+                <div class="stat-icon">👥</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Registered Today</h3>
+                    <div class="stat-number" id="todayStudents">0</div>
+                </div>
+                <div class="stat-icon">📝</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Total Courses</h3>
+                    <div class="stat-number" id="totalCourses">0</div>
+                </div>
+                <div class="stat-icon">📚</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Active Enrollments</h3>
+                    <div class="stat-number" id="activeEnrollments">0</div>
+                </div>
+                <div class="stat-icon">✅</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div style="margin-bottom: 30px;">
+            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-left-color: white; align-items: stretch; gap: 18px; flex-wrap: wrap;">
+                <div class="stat-content" style="flex: 1 1 260px;">
+                    <h3 style="color: rgba(255,255,255,0.9);">Student Consent Form</h3>
+                    <p style="color: white; font-size: 0.9em; margin-top: 8px;">Enter roll number to generate any student's printable consent form</p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex: 1 1 340px; flex-wrap: wrap;">
+                    <input id="consentRollInput" type="text" placeholder="Enter roll number" style="flex: 1 1 190px; padding: 12px; border: 0; border-radius: 6px; font-size: 1em;">
+                    <button onclick="openConsentByRoll()" style="background: white; color: #5b4fc7; padding: 12px 18px; border-radius: 6px; font-weight: 800;">Open</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="students-section" style="margin-bottom: 30px;">
+            <h2 class="section-title">Payment Amount Manager</h2>
+            <div class="admin-panel">
+                <div style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
+                    <div style="flex: 1 1 220px;">
+                        <label for="paymentAmountInput" style="display: block; font-weight: 700; color: #374151; margin-bottom: 8px;">Registration payment amount</label>
+                        <input id="paymentAmountInput" type="number" min="1" step="1" placeholder="299" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1em;">
+                    </div>
+                    <button class="search-btn" style="background: #10b981;" onclick="savePaymentAmount()">Save Amount</button>
+                    <button class="search-btn" style="background: #6b7280;" onclick="resetPaymentAmount()">Reset ₹299</button>
+                </div>
+                <p id="paymentAmountStatus" style="margin-top: 12px; color: #4b5563;">Current payment amount: ₹299</p>
+            </div>
+        </div>
+
+        <!-- Course Management Section -->
+        <div class="students-section" style="margin-bottom: 30px;">
+            <h2 class="section-title">🎓 Course Management</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 8px; cursor: pointer;" onclick="openCourseModal()">
+                    <div style="font-size: 2em; margin-bottom: 10px;">➕</div>
+                    <div style="font-weight: 600; font-size: 1.1em;">Add New Course</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Create a new course for students</div>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 20px; border-radius: 8px; cursor: pointer;" onclick="openBulkAssignModal()">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📚</div>
+                    <div style="font-weight: 600; font-size: 1.1em;">Bulk Assign Course</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Assign same course to multiple students</div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 20px; border-radius: 8px; cursor: pointer;" onclick="openViewCoursesModal()">
+                    <div style="font-size: 2em; margin-bottom: 10px;">👁️</div>
+                    <div style="font-weight: 600; font-size: 1.1em;">View All Courses</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">See all available courses</div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white; padding: 20px; border-radius: 8px; cursor: pointer;" onclick="openQAManagementModal()">
+                    <div style="font-size: 2em; margin-bottom: 10px;">❓</div>
+                    <div style="font-weight: 600; font-size: 1.1em;">Q&A Management</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Add questions and answers to courses</div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 20px; border-radius: 8px; cursor: pointer;" onclick="openMaterialManagementModal()">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📚</div>
+                    <div style="font-weight: 600; font-size: 1.1em;">Course Material</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Add notes and materials to courses</div>
+                </div>
+            </div>
+
+            <div id="coursesListContainer" style="background: #f8f9fa; padding: 20px; border-radius: 8px; display: none;">
+                <h3 style="margin-bottom: 15px;">📌 Current Courses</h3>
+                <div id="coursesList"></div>
+            </div>
+        </div>
+
+        <div class="students-section" style="margin-bottom: 30px;">
+            <h2 class="section-title">Notice / Announcement Manager</h2>
+            <div class="admin-panel">
+                <div id="noticeListPanel"></div>
+                <div class="notice-form">
+                    <input id="noticeTitleInput" type="text" placeholder="Notice title">
+                    <textarea id="noticeMessageInput" rows="3" placeholder="Notice message"></textarea>
+                    <select id="noticePriorityInput">
+                        <option value="info">Info</option>
+                        <option value="warning">Important</option>
+                        <option value="success">Success</option>
+                    </select>
+                    <select id="noticeDurationInput">
+                        <option value="7">Show for 7 days</option>
+                        <option value="1">Show for 1 day</option>
+                        <option value="15">Show for 15 days</option>
+                        <option value="30">Show for 30 days</option>
+                        <option value="0">Keep until deleted</option>
+                    </select>
+                    <button class="search-btn" style="background: #14b8a6;" onclick="addAdminNotice()">Publish Notice</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Students Section -->
+        <div class="students-section">
+            <h2 class="section-title">📋 Student List</h2>
+
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search by name, email, district, or college..."
+                    oninput="searchStudents()"
+                >
+                <select id="districtFilter" onchange="updateCollegeFilterFromDistrict(); searchStudents();">
+                    <option value="">All Districts</option>
+                </select>
+                <select id="collegeFilter" onchange="searchStudents();">
+                    <option value="">All Colleges</option>
+                </select>
+                <button class="search-btn" onclick="searchStudents()">🔍 Search</button>
+                <button class="search-btn" style="background: #10b981; margin-left: 10px;" onclick="downloadExcel()">📊 Download Excel</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>District</th>
+                            <th>College</th>
+                            <th>Current Course</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <div class="no-data">
+                                    <p>No students registered yet</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Admin Intelligence Section -->
+        <div class="students-section" style="margin-top: 30px; margin-bottom: 30px;">
+            <h2 class="section-title">Admin Control Center</h2>
+
+            <div class="quick-report-row" style="margin-bottom: 20px;">
+                <button class="search-btn" onclick="downloadReportCSV('students')">Export Students CSV</button>
+                <button class="search-btn" style="background: #10b981;" onclick="downloadReportCSV('progress')">Export Progress CSV</button>
+                <button class="search-btn" style="background: #f59e0b;" onclick="downloadReportCSV('quiz')">Export Quiz CSV</button>
+                <button class="search-btn" style="background: #8b5cf6;" onclick="downloadReportCSV('certificates')">Export Certificates CSV</button>
+            </div>
+
+            <div class="admin-grid">
+                <div class="admin-panel">
+                    <h3>Student Progress Tracker</h3>
+                    <div id="progressTrackerPanel"></div>
+                </div>
+
+                <div class="admin-panel">
+                    <h3>Quiz Attempt Report</h3>
+                    <div id="quizReportPanel"></div>
+                </div>
+
+                <div class="admin-panel">
+                    <h3>Certificate Verification</h3>
+                    <div class="certificate-search">
+                        <input id="certificateSearchInput" type="text" placeholder="Search certificate no., student, or course" oninput="renderCertificatePanel()">
+                    </div>
+                    <div id="certificatePanel" style="margin-top: 12px;"></div>
+                </div>
+            </div>
+
+            <div class="admin-grid">
+                <div class="admin-panel">
+                    <h3>Course Completion Analytics</h3>
+                    <div id="courseAnalyticsPanel"></div>
+                </div>
+
+                <div class="admin-panel">
+                    <h3>Pending Actions</h3>
+                    <div id="pendingActionsPanel"></div>
+                </div>
+
+                <div class="admin-panel">
+                    <h3>Admin Activity Log</h3>
+                    <div id="activityLogPanel"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Edit Student Course</span>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-row">
+                    <label>Student Name:</label>
+                    <span id="modalStudentName"></span>
+                </div>
+                <div class="info-row">
+                    <label>Email:</label>
+                    <span id="modalStudentEmail"></span>
+                </div>
+                <div class="info-row">
+                    <label>District:</label>
+                    <span id="modalDistrict"></span>
+                </div>
+                <div class="info-row">
+                    <label>College:</label>
+                    <span id="modalCollege"></span>
+                </div>
+                <div class="info-row">
+                    <label>Current Course:</label>
+                    <span id="modalCurrentCourse"></span>
+                </div>
+                <div class="info-row">
+                    <label>Change Course To: <span style="color: #ef4444;">*</span></label>
+                    <select id="newCourse">
+                        <option value="">Select New Course</option>
+                        <option value="Skill Development">Skill Development</option>
+                        <option value="Social Work">Social Work</option>
+                        <option value="Population Study">Population Study</option>
+                        <option value="Disaster Management">Disaster Management</option>
+                        <option value="Web Development">Web Development</option>
+                        <option value="Cyber Security">Cyber Security</option>
+                        <option value="Entrepreneurship">Entrepreneurship</option>
+                        <option value="Financial Literacy">Financial Literacy</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-save" onclick="saveChanges()">Save Changes</button>
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Detail Modal -->
+    <div id="studentDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <span>Student Detail & Certificate Control</span>
+                <button class="close-btn" onclick="closeStudentDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="studentDetailBody"></div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeStudentDetailModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Course Modal -->
+    <div id="courseModal" class="modal">
+        <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <span>📚 Create Complete Course</span>
+                <button class="close-btn" onclick="closeCourseModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Basic Info -->
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2563eb;">
+                    <h4 style="margin-bottom: 15px; color: #1e40af;">Step 1: Course Details</h4>
+                    
+                    <div class="info-row">
+                        <label>Course Name: <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="courseName" placeholder="e.g., Digital Marketing, Web Development" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                    </div>
+                    
+                    <div class="info-row">
+                        <label>Description: <span style="color: #ef4444;">*</span></label>
+                        <textarea id="courseDescription" placeholder="Brief description of the course" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em; min-height: 80px;"></textarea>
+                    </div>
+                    
+                    <div class="info-row">
+                        <label>Duration (in days):</label>
+                        <input type="number" id="courseDuration" placeholder="e.g., 30" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                    </div>
+                </div>
+
+                <!-- Step 2: Course Material -->
+                <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10b981;">
+                    <h4 style="margin-bottom: 15px; color: #15803d;">Step 2: Course Material (Notes)</h4>
+                    
+                    <div class="info-row">
+                        <label>Course Notes/Material: <span style="color: #ef4444;">*</span></label>
+                        <textarea id="courseMaterial" placeholder="Write detailed course notes here. You can include headings, paragraphs, etc." style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em; min-height: 120px; font-family: monospace;"></textarea>
+                    </div>
+                    <small style="color: #666;">Tip: You can use text with headings and paragraphs. Use line breaks for formatting.</small>
+                </div>
+
+                <!-- Step 3: Quiz Questions -->
+                <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+                    <h4 style="margin-bottom: 15px; color: #92400e;">Step 3: Add Quiz Questions</h4>
+                    
+                    <div id="quizQuestionsContainer" style="background: white; padding: 15px; border-radius: 6px; border: 2px dashed #f59e0b;">
+                        <div id="questionsListPreview" style="margin-bottom: 15px;">
+                            <p style="color: #999; text-align: center;">No questions added yet</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 6px; margin-top: 15px; border: 1px solid #ddd;">
+                        <h5 style="margin-bottom: 15px;">Add a Question:</h5>
+                        
+                        <div class="info-row">
+                            <label>Question Text: <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="newQuestion" placeholder="Enter question" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="info-row">
+                                <label>Option 1: <span style="color: #ef4444;">*</span></label>
+                                <input type="text" id="option1" placeholder="Option 1" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                            </div>
+                            <div class="info-row">
+                                <label>Option 2: <span style="color: #ef4444;">*</span></label>
+                                <input type="text" id="option2" placeholder="Option 2" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                            </div>
+                            <div class="info-row">
+                                <label>Option 3: <span style="color: #ef4444;">*</span></label>
+                                <input type="text" id="option3" placeholder="Option 3" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                            </div>
+                            <div class="info-row">
+                                <label>Option 4: <span style="color: #ef4444;">*</span></label>
+                                <input type="text" id="option4" placeholder="Option 4" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <label>Correct Answer: <span style="color: #ef4444;">*</span></label>
+                            <select id="correctAnswer" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                                <option value="">-- Select correct option --</option>
+                                <option value="0">Option 1</option>
+                                <option value="1">Option 2</option>
+                                <option value="2">Option 3</option>
+                                <option value="3">Option 4</option>
+                            </select>
+                        </div>
+                        
+                        <button class="action-btn" style="width: 100%; background: #f59e0b; color: white; padding: 10px; margin-top: 10px;" onclick="addQuizQuestion()">➕ Add Question</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-save" onclick="saveNewCompleteCourd()">✓ Create Complete Course</button>
+                <button class="modal-btn modal-btn-cancel" onclick="closeCourseModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Assign Course Modal -->
+    <div id="bulkAssignModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Bulk Assign Course to Students</span>
+                <button class="close-btn" onclick="closeBulkAssignModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-row">
+                    <label>Select Course: <span style="color: #ef4444;">*</span></label>
+                    <select id="bulkCourseSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                        <option value="">-- Select Course --</option>
+                        <option value="Skill Development">Skill Development</option>
+                        <option value="Social Work">Social Work</option>
+                        <option value="Population Study">Population Study</option>
+                        <option value="Disaster Management">Disaster Management</option>
+                        <option value="Web Development">Web Development</option>
+                        <option value="Cyber Security">Cyber Security</option>
+                        <option value="Entrepreneurship">Entrepreneurship</option>
+                        <option value="Financial Literacy">Financial Literacy</option>
+                    </select>
+                </div>
+                <div class="info-row">
+                    <label>Select Students: <span style="color: #ef4444;">*</span></label>
+                    <div id="studentsList" style="max-height: 300px; overflow-y: auto; border: 2px solid #ddd; border-radius: 6px; padding: 10px;"></div>
+                </div>
+                <div class="info-row" style="background: #e0f2fe; padding: 12px; border-radius: 6px; border-left: 4px solid #0284c7;">
+                    <small style="color: #0c4a6e;"><strong>Selected:</strong> <span id="selectedCount">0</span> students</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-save" onclick="saveBulkAssign()">✓ Assign to Selected</button>
+                <button class="modal-btn modal-btn-cancel" onclick="closeBulkAssignModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View All Courses Modal -->
+    <div id="viewCoursesModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <span>All Available Courses</span>
+                <button class="close-btn" onclick="closeViewCoursesModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="allCoursesList"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeViewCoursesModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Q&A Management Modal -->
+    <div id="qaManagementModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <span>📚 Q&A Management</span>
+                <button class="close-btn" onclick="closeQAManagementModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-row">
+                    <label>Select Course: <span style="color: #ef4444;">*</span></label>
+                    <select id="qaSelectCourse" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;" onchange="loadCourseQA()">
+                        <option value="">-- Select Course --</option>
+                    </select>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Add New Question & Answer</h4>
+                    
+                    <div class="info-row">
+                        <label>Question: <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="qaQuestion" placeholder="Enter the question" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                    </div>
+
+                    <div class="info-row">
+                        <label>Answer: <span style="color: #ef4444;">*</span></label>
+                        <textarea id="qaAnswer" placeholder="Enter the answer" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em; min-height: 100px;"></textarea>
+                    </div>
+
+                    <button class="action-btn" style="width: 100%; background: #2563eb; color: white; padding: 12px;" onclick="addQuestionAnswer()">➕ Add Q&A</button>
+                </div>
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Questions & Answers for Selected Course</h4>
+                    <div id="qaList" style="max-height: 400px; overflow-y: auto;">
+                        <p style="text-align: center; color: #999;">Select a course to view Q&A</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeQAManagementModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Material Management Modal -->
+    <div id="materialManagementModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <span>📚 Course Material Management</span>
+                <button class="close-btn" onclick="closeMaterialManagementModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-row">
+                    <label>Select Course: <span style="color: #ef4444;">*</span></label>
+                    <select id="materialSelectCourse" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;" onchange="loadCourseMaterial()">
+                        <option value="">-- Select Course --</option>
+                    </select>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Add New Material Section</h4>
+                    
+                    <div class="info-row">
+                        <label>Section Title: <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="materialTitle" placeholder="e.g., Introduction, Chapter 1, Module 2" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em;">
+                    </div>
+
+                    <div class="info-row">
+                        <label>Material Content: <span style="color: #ef4444;">*</span></label>
+                        <textarea id="materialContent" placeholder="Enter the course material/notes content here..." style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em; min-height: 150px;"></textarea>
+                    </div>
+
+                    <button class="action-btn" style="width: 100%; background: #14b8a6; color: white; padding: 12px;" onclick="addCourseMaterial()">➕ Add Material</button>
+                </div>
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Course Materials for Selected Course</h4>
+                    <div id="materialList" style="max-height: 400px; overflow-y: auto;">
+                        <p style="text-align: center; color: #999;">Select a course to view materials</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeMaterialManagementModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="api-config.js"></script>
+    <script>
+        // ============= LOCALSTORAGE UTILITY (FIX ALL GLITCHES) =============
+        const StorageManager = {
+            readWindowState: () => {
+                try {
+                    if (!window.name) return {};
+                    const state = JSON.parse(window.name);
+                    return state && typeof state === 'object' ? state : {};
+                } catch (e) {
+                    return {};
+                }
+            },
+
+            writeWindowState: (nextState) => {
+                try {
+                    window.name = JSON.stringify({
+                        ...StorageManager.readWindowState(),
+                        ...nextState
+                    });
+                } catch (e) {
+                    console.warn('Unable to write admin storage backup:', e.message);
+                }
+            },
+
+            // Safe get with default value
+            get: (key, defaultValue = null) => {
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value === null) {
+                        const backupValue = StorageManager.readWindowState()[key];
+                        if (backupValue === undefined || backupValue === null) return defaultValue;
+                        if (backupValue === 'true') return true;
+                        if (backupValue === 'false') return false;
+                        try {
+                            return typeof backupValue === 'string' ? JSON.parse(backupValue) : backupValue;
+                        } catch (e) {
+                            return backupValue;
+                        }
+                    }
+                    if (value === 'true') return true;
+                    if (value === 'false') return false;
+                    try {
+                        return JSON.parse(value);
+                    } catch (e) {
+                        return value;
+                    }
+                } catch (e) {
+                    console.error(`Error getting ${key}:`, e);
+                    return defaultValue;
+                }
+            },
+
+            // Safe set with type detection
+            set: (key, value) => {
+                try {
+                    if (value === null || value === undefined) {
+                        localStorage.removeItem(key);
+                    } else if (typeof value === 'object') {
+                        localStorage.setItem(key, JSON.stringify(value));
+                    } else if (typeof value === 'boolean') {
+                        localStorage.setItem(key, value.toString());
+                    } else {
+                        localStorage.setItem(key, String(value));
+                    }
+                    StorageManager.writeWindowState({
+                        [key]: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                    });
+                    return true;
+                } catch (e) {
+                    console.error(`Error setting ${key}:`, e);
+                    // If quota exceeded, clear old data
+                    if (e.name === 'QuotaExceededError') {
+                        console.warn('LocalStorage quota exceeded! Clearing non-essential data...');
+                        try {
+                            localStorage.removeItem('tempData');
+                            localStorage.setItem(key, JSON.stringify(value));
+                        } catch (e2) {
+                            console.error('Still failed after cleanup:', e2);
+                        }
+                    }
+                    return false;
+                }
+            },
+
+            // Safe remove
+            remove: (key) => {
+                try {
+                    localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.error(`Error removing ${key}:`, e);
+                    return false;
+                }
+            },
+
+            // Get all data for a key pattern (useful for debugging)
+            getAllByPattern: (pattern) => {
+                const result = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.includes(pattern)) {
+                        result[key] = StorageManager.get(key);
+                    }
+                }
+                return result;
+            },
+
+            // Validate data integrity
+            validate: (key, type) => {
+                const value = StorageManager.get(key);
+                if (value === null) return false;
+                if (type === 'object') return typeof value === 'object';
+                if (type === 'array') return Array.isArray(value);
+                if (type === 'string') return typeof value === 'string';
+                return true;
+            }
+        };
+
+        // ===================================================================
+
+        let allStudents = [];
+        let currentEditingStudent = null;
+        let courseContent = StorageManager.get('courseContent', {});
+        const DEFAULT_PAYMENT_AMOUNT = 299;
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function normalizeRollNumber(value) {
+            return String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+        }
+
+        function findStudentByRollNumber(rollNumber) {
+            const target = normalizeRollNumber(rollNumber);
+            if (!target) return null;
+
+            const candidates = [...allStudents];
+            const seenIds = new Set(candidates.map(student => String(student.id)));
+            for (let i = 0; i < localStorage.length; i += 1) {
+                const key = localStorage.key(i);
+                if (!key || !key.startsWith('student_')) continue;
+                const student = StorageManager.get(key);
+                if (!student || typeof student !== 'object') continue;
+                const normalized = normalizeStudentRecord(student);
+                if (!seenIds.has(String(normalized.id))) {
+                    candidates.push(normalized);
+                    seenIds.add(String(normalized.id));
+                }
+            }
+
+            return candidates.find(student => {
+                const raw = student.fullData || student;
+                return [student.rollno, raw.rollno, raw.rollNo, raw.userRollNo]
+                    .some(value => normalizeRollNumber(value) === target);
+            }) || null;
+        }
+
+        function openConsentByRoll() {
+            const input = document.getElementById('consentRollInput');
+            const rollNumber = input ? input.value.trim() : '';
+            if (!rollNumber) {
+                alert('Please enter roll number.');
+                input?.focus();
+                return;
+            }
+
+            const student = findStudentByRollNumber(rollNumber);
+            if (!student) {
+                alert('No student found with this roll number.');
+                input?.focus();
+                return;
+            }
+
+            const sourceStudent = student.fullData || student;
+            const consentStudent = {
+                ...sourceStudent,
+                id: student.id || sourceStudent.id,
+                name: student.name || getStudentDisplayName(sourceStudent),
+                email: student.email || sourceStudent.email || '',
+                phone: student.phone || sourceStudent.phone || sourceStudent.mobile || '',
+                district: student.district || sourceStudent.district || sourceStudent.userDistrict || '',
+                college: student.college || sourceStudent.college || sourceStudent.userCollege || '',
+                course: student.course || sourceStudent.course || sourceStudent.skill || sourceStudent.selectedSkill || sourceStudent.userSkill || '',
+                rollno: student.rollno || sourceStudent.rollno || sourceStudent.rollNo || sourceStudent.userRollNo || rollNumber,
+                department: student.department || sourceStudent.department || sourceStudent.userDepartment || ''
+            };
+
+            let studentIds = StorageManager.get('allStudentIds', []);
+            if (!Array.isArray(studentIds)) studentIds = [];
+            if (consentStudent.id && !studentIds.map(String).includes(String(consentStudent.id))) {
+                studentIds.push(consentStudent.id);
+                StorageManager.set('allStudentIds', studentIds);
+            }
+
+            if (consentStudent.id) {
+                StorageManager.set(consentStudent.id, consentStudent);
+            }
+            StorageManager.set('adminConsentStudentId', student.id);
+            StorageManager.set('adminConsentRollNo', consentStudent.rollno);
+            window.location.href = 'consent-form.html?auto=1&roll=' + encodeURIComponent(consentStudent.rollno || rollNumber);
+        }
+
+        function isLocalAdminHost() {
+            return window.location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+        }
+
+        function isAdminDemoModeEnabled() {
+            return isLocalAdminHost() && StorageManager.get('bsiEnableAdminDemo') === 'true';
+        }
+
+        function getStudentDisplayName(student) {
+            return (student.name || '').trim()
+                || [student.firstName, student.lastName].filter(Boolean).join(' ').trim()
+                || student.email
+                || 'N/A';
+        }
+
+        function normalizeStudentRecord(student) {
+            const course = student.course || student.skill || student.selectedSkill || student.userSkill || 'Not Selected';
+            return {
+                id: student.id || student.studentId || student.rollno || student.email || `student_${Date.now()}`,
+                name: getStudentDisplayName(student),
+                email: student.email || student.userEmail || 'N/A',
+                phone: student.phone || student.mobile || student.userPhone || 'N/A',
+                district: student.district || student.userDistrict || 'N/A',
+                college: student.college || student.userCollege || 'N/A',
+                course,
+                dob: student.dob || student.userDOB || 'N/A',
+                rollno: student.rollno || student.rollNo || student.userRollNo || 'N/A',
+                department: student.department || student.userDepartment || 'N/A',
+                fullData: student
+            };
+        }
+
+        function getStoredArray(key) {
+            const value = StorageManager.get(key, []);
+            return Array.isArray(value) ? value : [];
+        }
+
+        function getStoredObject(key) {
+            const value = StorageManager.get(key, {});
+            return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+        }
+
+        function addActivityLog(message) {
+            const logs = getStoredArray('adminActivityLog');
+            logs.unshift({
+                message,
+                at: new Date().toLocaleString('en-IN')
+            });
+            StorageManager.set('adminActivityLog', logs.slice(0, 30));
+            renderActivityLog();
+        }
+
+        function getCourseIdByName(courseName) {
+            const normalized = String(courseName || '').trim().toLowerCase();
+            const course = getCourses().find(item => String(item.name || '').trim().toLowerCase() === normalized);
+            return course ? String(course.id) : '';
+        }
+
+        function getCourseNameById(courseId) {
+            const course = getCourses().find(item => String(item.id) === String(courseId));
+            return course ? course.name : `Course ${courseId}`;
+        }
+
+        function getCourseResult(courseId) {
+            return StorageManager.get('courseResult_' + courseId);
+        }
+
+        function getCourseProgress(courseId) {
+            const result = getCourseResult(courseId);
+            if (result && result.passed) return 100;
+            return Number(StorageManager.get('progress_' + courseId) || 0);
+        }
+
+        function isCourseMaterialAccepted(courseId) {
+            return StorageManager.get('courseMaterialAccepted_' + courseId) === true;
+        }
+
+        function isCourseQuizLocked(courseId) {
+            return StorageManager.get('courseQuizLocked_' + courseId) === true || Boolean(getCourseResult(courseId)?.locked);
+        }
+
+        function getCertificateOverride(studentId, courseId) {
+            const overrides = getStoredObject('adminCertificateOverrides');
+            return overrides[`${studentId}_${courseId}`] || 'auto';
+        }
+
+        function setCertificateOverride(studentId, courseId, status) {
+            const overrides = getStoredObject('adminCertificateOverrides');
+            overrides[`${studentId}_${courseId}`] = status;
+            StorageManager.set('adminCertificateOverrides', overrides);
+            addActivityLog(`Certificate status set to ${status} for ${getCourseNameById(courseId)}`);
+            renderAdminExtras();
+            const index = allStudents.findIndex(student => String(student.id) === String(studentId));
+            if (index >= 0) openStudentDetailModal(index);
+        }
+
+        function setCertificateOverrideByIndex(index, status) {
+            const student = allStudents[index];
+            if (!student) return;
+            const courseId = getCourseIdByName(student.course);
+            if (!courseId) {
+                alert('Please assign a course first.');
+                return;
+            }
+            setCertificateOverride(student.id, courseId, status);
+        }
+
+        function getStudentCourseSummary(student) {
+            const courseId = getCourseIdByName(student.course);
+            if (!courseId) {
+                return {
+                    courseId: '',
+                    progress: 0,
+                    materialAccepted: false,
+                    quizLocked: false,
+                    result: null,
+                    certificateStatus: 'No course'
+                };
+            }
+
+            const result = getCourseResult(courseId);
+            const override = getCertificateOverride(student.id, courseId);
+            let certificateStatus = 'Pending';
+            if (override === 'approved') certificateStatus = 'Approved by admin';
+            if (override === 'blocked') certificateStatus = 'Blocked by admin';
+            if (override === 'auto' && result?.passed) certificateStatus = 'Auto approved';
+
+            return {
+                courseId,
+                progress: getCourseProgress(courseId),
+                materialAccepted: isCourseMaterialAccepted(courseId),
+                quizLocked: isCourseQuizLocked(courseId),
+                result,
+                certificateStatus
+            };
+        }
+
+        function getAllCourseResults() {
+            const results = [];
+            for (let i = 0; i < localStorage.length; i += 1) {
+                const key = localStorage.key(i);
+                if (!key || !key.startsWith('courseResult_')) continue;
+                const courseId = key.replace('courseResult_', '');
+                const result = StorageManager.get(key);
+                if (result && typeof result === 'object') {
+                    results.push({
+                        courseId,
+                        courseName: result.courseName || getCourseNameById(courseId),
+                        ...result
+                    });
+                }
+            }
+            return results;
+        }
+
+        function getLatestPassedCourseName() {
+            const passed = getAllCourseResults()
+                .filter(result => result.passed && Number(result.scorePercentage) >= 60)
+                .sort((a, b) => new Date(b.completedAt || b.lockedAt || 0) - new Date(a.completedAt || a.lockedAt || 0));
+            return passed[0]?.courseName || '';
+        }
+
+        function statusClass(status) {
+            if (/approved|pass|complete|locked/i.test(status)) return 'success';
+            if (/block|fail|pending/i.test(status)) return /block|fail/i.test(status) ? 'danger' : 'warning';
+            return 'info';
+        }
+
+        function renderAdminExtras() {
+            renderPaymentAmountSettings();
+            renderProgressTracker();
+            renderQuizReport();
+            renderCertificatePanel();
+            renderCourseAnalytics();
+            renderPendingActions();
+            renderNoticePanel();
+            renderActivityLog();
+        }
+
+        function getConfiguredPaymentAmount() {
+            const amount = Number(StorageManager.get('bsiPaymentAmount', DEFAULT_PAYMENT_AMOUNT));
+            return Number.isFinite(amount) && amount > 0 ? Math.round(amount) : DEFAULT_PAYMENT_AMOUNT;
+        }
+
+        function renderPaymentAmountSettings() {
+            const input = document.getElementById('paymentAmountInput');
+            const status = document.getElementById('paymentAmountStatus');
+            const amount = getConfiguredPaymentAmount();
+            if (input) input.value = amount;
+            if (status) status.textContent = `Current payment amount: ₹${amount}`;
+        }
+
+        function savePaymentAmount() {
+            const input = document.getElementById('paymentAmountInput');
+            const amount = Number(input?.value);
+            if (!Number.isFinite(amount) || amount < 1) {
+                alert('Please enter a valid amount. Minimum ₹1 allowed.');
+                return;
+            }
+
+            const roundedAmount = Math.round(amount);
+            StorageManager.set('bsiPaymentAmount', roundedAmount);
+            addActivityLog(`Payment amount changed to ₹${roundedAmount}`);
+            renderPaymentAmountSettings();
+            renderActivityLog();
+            alert(`Payment amount ₹${roundedAmount} set ho gaya.`);
+        }
+
+        function resetPaymentAmount() {
+            StorageManager.set('bsiPaymentAmount', DEFAULT_PAYMENT_AMOUNT);
+            addActivityLog(`Payment amount reset to ₹${DEFAULT_PAYMENT_AMOUNT}`);
+            renderPaymentAmountSettings();
+            renderActivityLog();
+        }
+
+        function renderProgressTracker() {
+            const panel = document.getElementById('progressTrackerPanel');
+            if (!panel) return;
+            if (allStudents.length === 0) {
+                panel.innerHTML = '<p style="color:#777;">No students registered yet.</p>';
+                return;
+            }
+
+            panel.innerHTML = `
+                <table class="mini-table">
+                    <thead><tr><th>Student</th><th>Course</th><th>Progress</th></tr></thead>
+                    <tbody>
+                        ${allStudents.slice(0, 8).map(student => {
+                            const summary = getStudentCourseSummary(student);
+                            return `
+                                <tr>
+                                    <td>${escapeHTML(student.name)}</td>
+                                    <td>${escapeHTML(student.course)}</td>
+                                    <td>
+                                        <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(summary.progress, 100)}%;"></div></div>
+                                        <small>${summary.progress}%</small>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderQuizReport() {
+            const panel = document.getElementById('quizReportPanel');
+            if (!panel) return;
+            const results = getAllCourseResults();
+            if (results.length === 0) {
+                panel.innerHTML = '<p style="color:#777;">No quiz submitted yet.</p>';
+                return;
+            }
+
+            panel.innerHTML = `
+                <table class="mini-table">
+                    <thead><tr><th>Course</th><th>Score</th><th>Status</th></tr></thead>
+                    <tbody>
+                        ${results.slice(0, 8).map(result => `
+                            <tr>
+                                <td>${escapeHTML(result.courseName)}</td>
+                                <td>${escapeHTML(result.scorePercentage ?? 0)}%</td>
+                                <td><span class="status-pill ${result.passed ? 'success' : 'danger'}">${result.passed ? 'Passed' : 'Failed'}${result.locked ? ' / Locked' : ''}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderCertificatePanel() {
+            const panel = document.getElementById('certificatePanel');
+            if (!panel) return;
+            const search = (document.getElementById('certificateSearchInput')?.value || '').toLowerCase();
+            const rows = allStudents.map(student => {
+                const summary = getStudentCourseSummary(student);
+                return { student, summary };
+            }).filter(row => {
+                const result = row.summary.result || {};
+                return !search || [
+                    row.student.name,
+                    row.student.email,
+                    row.student.course,
+                    result.certificateNumber,
+                    row.summary.certificateStatus
+                ].some(value => String(value || '').toLowerCase().includes(search));
+            });
+
+            if (rows.length === 0) {
+                panel.innerHTML = '<p style="color:#777;">No matching certificate data.</p>';
+                return;
+            }
+
+            panel.innerHTML = rows.slice(0, 8).map(({ student, summary }) => `
+                <div class="pending-item">
+                    <strong>${escapeHTML(student.name)}</strong>
+                    <div style="font-size:0.9em;color:#555;">${escapeHTML(student.course)} - ${escapeHTML(summary.result?.certificateNumber || 'Not generated')}</div>
+                    <span class="status-pill ${statusClass(summary.certificateStatus)}">${escapeHTML(summary.certificateStatus)}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderCourseAnalytics() {
+            const panel = document.getElementById('courseAnalyticsPanel');
+            if (!panel) return;
+            const courses = getCourses();
+            const results = getAllCourseResults();
+            panel.innerHTML = courses.slice(0, 9).map(course => {
+                const enrolled = allStudents.filter(student => student.course === course.name).length;
+                const passed = results.filter(result => String(result.courseId) === String(course.id) && result.passed).length;
+                const percent = enrolled ? Math.round((passed / enrolled) * 100) : 0;
+                return `
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;gap:10px;">
+                            <strong>${escapeHTML(course.name)}</strong>
+                            <span>${passed}/${enrolled} complete</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${percent}%;"></div></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPendingActions() {
+            const panel = document.getElementById('pendingActionsPanel');
+            if (!panel) return;
+            const pending = [];
+            allStudents.forEach(student => {
+                const summary = getStudentCourseSummary(student);
+                if (!summary.courseId) pending.push(`${student.name}: course not assigned`);
+                else if (!summary.materialAccepted) pending.push(`${student.name}: material acceptance pending`);
+                else if (!summary.quizLocked) pending.push(`${student.name}: quiz not locked yet`);
+                else if (!summary.result?.passed) pending.push(`${student.name}: certificate pending because quiz not passed`);
+            });
+
+            if (pending.length === 0) {
+                panel.innerHTML = '<span class="status-pill success">All visible actions clear</span>';
+                return;
+            }
+
+            panel.innerHTML = pending.slice(0, 8).map(item => `<div class="pending-item">${escapeHTML(item)}</div>`).join('');
+        }
+
+        function renderNoticePanel() {
+            const panel = document.getElementById('noticeListPanel');
+            if (!panel) return;
+            const now = Date.now();
+            const notices = getStoredArray('adminNotices').filter(notice => !notice.expiresAt || new Date(notice.expiresAt).getTime() > now);
+            StorageManager.set('adminNotices', notices);
+            if (notices.length === 0) {
+                panel.innerHTML = '<p style="color:#777;">No notices published yet.</p>';
+                return;
+            }
+
+            panel.innerHTML = notices.slice(0, 6).map((notice, index) => `
+                <div class="notice-item">
+                    <div style="display:flex;justify-content:space-between;gap:12px;">
+                        <div>
+                            <strong>${escapeHTML(notice.title)}</strong>
+                            <p style="margin-top:5px;color:#555;">${escapeHTML(notice.message)}</p>
+                            <small>${escapeHTML(notice.at)}${notice.expiresAt ? ' | Expires: ' + escapeHTML(new Date(notice.expiresAt).toLocaleDateString('en-IN')) : ' | No expiry'}</small>
+                        </div>
+                        <button class="action-btn action-btn-danger" onclick="deleteAdminNotice(${index})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addAdminNotice() {
+            const title = document.getElementById('noticeTitleInput').value.trim();
+            const message = document.getElementById('noticeMessageInput').value.trim();
+            const priority = document.getElementById('noticePriorityInput').value;
+            const durationDays = Number(document.getElementById('noticeDurationInput')?.value || 7);
+            if (!title || !message) {
+                alert('Please enter notice title and message.');
+                return;
+            }
+
+            const notices = getStoredArray('adminNotices');
+            const expiresAt = durationDays > 0
+                ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString()
+                : '';
+            notices.unshift({ title, message, priority, expiresAt, at: new Date().toLocaleString('en-IN') });
+            StorageManager.set('adminNotices', notices);
+            document.getElementById('noticeTitleInput').value = '';
+            document.getElementById('noticeMessageInput').value = '';
+            const durationInput = document.getElementById('noticeDurationInput');
+            if (durationInput) durationInput.value = '7';
+            addActivityLog(`Notice published: ${title}`);
+            renderNoticePanel();
+        }
+
+        function deleteAdminNotice(index) {
+            const notices = getStoredArray('adminNotices');
+            const removed = notices.splice(index, 1)[0];
+            StorageManager.set('adminNotices', notices);
+            addActivityLog(`Notice deleted: ${removed?.title || 'Untitled'}`);
+            renderNoticePanel();
+        }
+
+        function renderActivityLog() {
+            const panel = document.getElementById('activityLogPanel');
+            if (!panel) return;
+            const logs = getStoredArray('adminActivityLog');
+            if (logs.length === 0) {
+                panel.innerHTML = '<p style="color:#777;">Activity will appear here.</p>';
+                return;
+            }
+
+            panel.innerHTML = logs.slice(0, 8).map(log => `
+                <div class="activity-item">
+                    <strong>${escapeHTML(log.message)}</strong>
+                    <div style="font-size:0.85em;color:#64748b;margin-top:4px;">${escapeHTML(log.at)}</div>
+                </div>
+            `).join('');
+        }
+
+        function buildReportRows(type) {
+            if (type === 'students') {
+                return allStudents.map(student => ({
+                    id: student.id,
+                    name: student.name,
+                    email: student.email,
+                    phone: student.phone,
+                    district: student.district,
+                    college: student.college,
+                    course: student.course
+                }));
+            }
+
+            if (type === 'progress') {
+                return allStudents.map(student => {
+                    const summary = getStudentCourseSummary(student);
+                    return {
+                        student: student.name,
+                        email: student.email,
+                        course: student.course,
+                        progress: summary.progress,
+                        materialAccepted: summary.materialAccepted ? 'Yes' : 'No',
+                        quizLocked: summary.quizLocked ? 'Yes' : 'No'
+                    };
+                });
+            }
+
+            if (type === 'quiz') {
+                return getAllCourseResults().map(result => ({
+                    course: result.courseName,
+                    score: result.scorePercentage,
+                    correctAnswers: result.correctAnswers,
+                    totalQuestions: result.totalQuestions,
+                    grade: result.grade,
+                    passed: result.passed ? 'Yes' : 'No',
+                    locked: result.locked ? 'Yes' : 'No',
+                    lockedAt: result.lockedAt || ''
+                }));
+            }
+
+            return allStudents.map(student => {
+                const summary = getStudentCourseSummary(student);
+                return {
+                    student: student.name,
+                    email: student.email,
+                    course: student.course,
+                    certificateNumber: summary.result?.certificateNumber || '',
+                    certificateStatus: summary.certificateStatus
+                };
+            });
+        }
+
+        function downloadReportCSV(type) {
+            const rows = buildReportRows(type);
+            if (rows.length === 0) {
+                alert('No data available for this report.');
+                return;
+            }
+
+            const columns = Object.keys(rows[0]);
+            const csvEscape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+            const csv = '\uFEFF' + columns.map(csvEscape).join(',') + '\n' +
+                rows.map(row => columns.map(column => csvEscape(row[column])).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${type}_report_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            addActivityLog(`${type} report exported`);
+        }
+
+        function openStudentDetailModal(index) {
+            const student = allStudents[index];
+            if (!student) return;
+            const summary = getStudentCourseSummary(student);
+            const body = document.getElementById('studentDetailBody');
+            const result = summary.result || {};
+            body.innerHTML = `
+                <div class="student-detail-grid">
+                    <div class="detail-box"><strong>Name</strong>${escapeHTML(student.name)}</div>
+                    <div class="detail-box"><strong>Email</strong>${escapeHTML(student.email)}</div>
+                    <div class="detail-box"><strong>Phone</strong>${escapeHTML(student.phone)}</div>
+                    <div class="detail-box"><strong>District</strong>${escapeHTML(student.district)}</div>
+                    <div class="detail-box"><strong>College</strong>${escapeHTML(student.college)}</div>
+                    <div class="detail-box"><strong>Roll No.</strong>${escapeHTML(student.rollno)}</div>
+                </div>
+                <h3 style="margin-top:18px;">Course Status</h3>
+                <div class="student-detail-grid">
+                    <div class="detail-box"><strong>Course</strong>${escapeHTML(student.course)}</div>
+                    <div class="detail-box"><strong>Progress</strong>${summary.progress}%</div>
+                    <div class="detail-box"><strong>Material</strong>${summary.materialAccepted ? 'Accepted' : 'Pending'}</div>
+                    <div class="detail-box"><strong>Quiz</strong>${summary.quizLocked ? 'Submitted and locked' : 'Not locked'}</div>
+                    <div class="detail-box"><strong>Score</strong>${escapeHTML(result.scorePercentage ?? 'N/A')}${result.scorePercentage !== undefined ? '%' : ''}</div>
+                    <div class="detail-box"><strong>Certificate</strong>${escapeHTML(summary.certificateStatus)}</div>
+                </div>
+                <h3 style="margin-top:18px;">Manual Certificate Control</h3>
+                <div class="quick-report-row">
+                    <button class="search-btn" style="background:#10b981;" onclick="setCertificateOverrideByIndex(${index}, 'approved')" ${!summary.courseId ? 'disabled' : ''}>Approve Certificate</button>
+                    <button class="search-btn" style="background:#ef4444;" onclick="setCertificateOverrideByIndex(${index}, 'blocked')" ${!summary.courseId ? 'disabled' : ''}>Block Certificate</button>
+                    <button class="search-btn" style="background:#64748b;" onclick="setCertificateOverrideByIndex(${index}, 'auto')" ${!summary.courseId ? 'disabled' : ''}>Use Auto Status</button>
+                </div>
+            `;
+            document.getElementById('studentDetailModal').classList.add('show');
+        }
+
+        function closeStudentDetailModal() {
+            document.getElementById('studentDetailModal').classList.remove('show');
+        }
+
+        function collectLocalStudents() {
+            const studentsById = new Map();
+            const addStudent = (student) => {
+                if (!student || typeof student !== 'object') return;
+                const normalized = normalizeStudentRecord(student);
+                studentsById.set(String(normalized.id), normalized);
+            };
+
+            const studentIds = StorageManager.get('allStudentIds', []);
+            const ids = Array.isArray(studentIds) ? studentIds : [];
+            ids.forEach(id => {
+                const student = StorageManager.get(id);
+                addStudent(student);
+            });
+
+            for (let i = 0; i < localStorage.length; i += 1) {
+                const key = localStorage.key(i);
+                if (!key || !key.startsWith('student_')) continue;
+                const student = StorageManager.get(key);
+                addStudent(student);
+            }
+
+            const savedStudent = StorageManager.get('student');
+            addStudent(savedStudent);
+
+            if (StorageManager.get('userEmail')) {
+                addStudent({
+                    id: StorageManager.get('currentStudentId') || 'current_student',
+                    name: StorageManager.get('userName'),
+                    firstName: StorageManager.get('userFirstName'),
+                    lastName: StorageManager.get('userLastName'),
+                    email: StorageManager.get('userEmail'),
+                    phone: StorageManager.get('userPhone') || StorageManager.get('userMobile'),
+                    gender: StorageManager.get('userGender'),
+                    guardian: StorageManager.get('userGuardian'),
+                    dob: StorageManager.get('userDOB'),
+                    address: StorageManager.get('userAddress'),
+                    state: StorageManager.get('userState'),
+                    university: StorageManager.get('userUniversity'),
+                    district: StorageManager.get('userDistrict'),
+                    college: StorageManager.get('userCollege'),
+                    degree: StorageManager.get('userDegree'),
+                    department: StorageManager.get('userDepartment'),
+                    semester: StorageManager.get('userSemester'),
+                    session: StorageManager.get('userSession'),
+                    rollno: StorageManager.get('userRollNo'),
+                    skill: StorageManager.get('userSkill') || getLatestPassedCourseName(),
+                    emergencyName: StorageManager.get('userEmergencyName'),
+                    emergencyPhone: StorageManager.get('userEmergencyPhone'),
+                    relationship: StorageManager.get('userRelationship'),
+                    paymentStatus: StorageManager.get('paymentStatus'),
+                    registered: StorageManager.get('userRegistered')
+                });
+            }
+
+            return Array.from(studentsById.values());
+        }
+
+        window.addEventListener('load', () => {
+            // Check if admin is logged in
+            const isAdminLoggedIn = StorageManager.get('isAdminLoggedIn');
+            if ((!isAdminLoggedIn || isAdminLoggedIn !== true) && isAdminDemoModeEnabled()) {
+                StorageManager.set('isAdminLoggedIn', true);
+                StorageManager.set('adminEmail', StorageManager.get('adminEmail') || 'Local Admin');
+            } else if (!isAdminLoggedIn || isAdminLoggedIn !== true) {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            // Display admin email
+            const adminEmail = StorageManager.get('adminEmail');
+            document.getElementById('adminEmailDisplay').textContent = adminEmail || 'Admin';
+
+            // Initialize courses
+            getCourses();
+            updateCourseOptions();
+
+            // Load all students
+            loadAllStudents();
+        });
+
+        async function loadAllStudents() {
+            allStudents = [];
+
+            const token = StorageManager.get('authToken') || StorageManager.get('token');
+            if (token && typeof APIService !== 'undefined') {
+                try {
+                    const response = await APIService.getAllStudents();
+                    if (response && response.success) {
+                        allStudents = (response.students || []).map(student => ({
+                            id: student.id,
+                            name: `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'N/A',
+                            email: student.email || 'N/A',
+                            phone: student.phone || 'N/A',
+                            district: student.district || 'N/A',
+                            college: student.college || 'N/A',
+                            course: student.course || 'Not Selected',
+                            dob: student.dob || 'N/A',
+                            rollno: student.rollno || student.id || 'N/A',
+                            department: student.department || 'N/A',
+                            fullData: student
+                        }));
+                        displayStudents(allStudents);
+                        populateStudentFilters();
+                        updateStats();
+                        renderAdminExtras();
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('Backend student load failed, using local data:', error.message);
+                }
+            }
+            
+            allStudents = collectLocalStudents();
+
+            displayStudents(allStudents);
+            populateStudentFilters();
+            updateStats();
+            renderAdminExtras();
+        }
+
+        function displayStudents(students) {
+            const tableBody = document.getElementById('tableBody');
+            
+            if (students.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="no-data">
+                                <p>No students registered yet</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = students.map((student, index) => `
+                <tr>
+                    <td><div class="student-name">${escapeHTML(student.name)}</div><div class="student-email">${escapeHTML(student.email)}</div></td>
+                    <td>${escapeHTML(student.email)}</td>
+                    <td>${escapeHTML(student.district)}</td>
+                    <td>${escapeHTML(student.college)}</td>
+                    <td><span class="course-badge">${escapeHTML(student.course)}</span></td>
+                    <td>
+                        <button class="action-btn" onclick="openEditModal(${index})">Edit</button>
+                        <button class="action-btn" style="background:#14b8a6;" onclick="openStudentDetailModal(${index})">Details</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        function openEditModal(index) {
+            const student = allStudents[index];
+            currentEditingStudent = index;
+
+            document.getElementById('modalStudentName').textContent = student.name;
+            document.getElementById('modalStudentEmail').textContent = student.email;
+            document.getElementById('modalDistrict').textContent = student.district;
+            document.getElementById('modalCollege').textContent = student.college;
+            document.getElementById('modalCurrentCourse').textContent = student.course;
+            document.getElementById('newCourse').value = student.course;
+
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+            currentEditingStudent = null;
+        }
+
+        function saveChanges() {
+            const newCourse = document.getElementById('newCourse').value;
+
+            if (!newCourse) {
+                alert('Please select a course!');
+                return;
+            }
+
+            const student = allStudents[currentEditingStudent];
+            
+            // Update the full student data object
+            student.fullData.skill = newCourse;
+            student.course = newCourse;
+
+            // Update localStorage with the updated student data
+            StorageManager.set(student.id, student.fullData);
+
+            alert('✓ Course updated successfully!');
+            addActivityLog(`Course changed for ${student.name} to ${newCourse}`);
+            closeModal();
+            loadAllStudents();
+            updateStats();
+        }
+
+        function searchStudents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const districtFilter = document.getElementById('districtFilter').value.toLowerCase();
+            const collegeFilter = document.getElementById('collegeFilter').value.toLowerCase();
+
+            const filtered = allStudents.filter(student => {
+                const matchesSearch = [
+                    student.name,
+                    student.email,
+                    student.district,
+                    student.college,
+                    student.course
+                ].some(field => String(field).toLowerCase().includes(searchTerm));
+
+                const matchesDistrict = !districtFilter || student.district.toLowerCase() === districtFilter;
+                const matchesCollege = !collegeFilter || student.college.toLowerCase() === collegeFilter;
+                return matchesSearch && matchesDistrict && matchesCollege;
+            });
+
+            displayStudents(filtered);
+        }
+
+        function populateStudentFilters() {
+            const districtSelect = document.getElementById('districtFilter');
+            const collegeSelect = document.getElementById('collegeFilter');
+            const districts = new Set();
+            const colleges = new Set();
+
+            allStudents.forEach(student => {
+                if (student.district) districts.add(student.district);
+                if (student.college) colleges.add(student.college);
+            });
+
+            const currentDistrict = districtSelect.value;
+            const currentCollege = collegeSelect.value;
+
+            districtSelect.innerHTML = '<option value="">All Districts</option>' +
+                Array.from(districts).sort().map(d => `
+                    <option value="${escapeHTML(d)}" ${d === currentDistrict ? 'selected' : ''}>${escapeHTML(d)}</option>
+                `).join('');
+
+            collegeSelect.innerHTML = '<option value="">All Colleges</option>' +
+                Array.from(colleges).sort().map(c => `
+                    <option value="${escapeHTML(c)}" ${c === currentCollege ? 'selected' : ''}>${escapeHTML(c)}</option>
+                `).join('');
+        }
+
+        function updateCollegeFilterFromDistrict() {
+            const districtFilter = document.getElementById('districtFilter').value;
+            const collegeSelect = document.getElementById('collegeFilter');
+            const colleges = new Set();
+
+            allStudents.forEach(student => {
+                if (!districtFilter || student.district === districtFilter) {
+                    if (student.college) colleges.add(student.college);
+                }
+            });
+
+            const currentCollege = collegeSelect.value;
+            collegeSelect.innerHTML = '<option value="">All Colleges</option>' +
+                Array.from(colleges).sort().map(c => `
+                    <option value="${escapeHTML(c)}" ${c === currentCollege ? 'selected' : ''}>${escapeHTML(c)}</option>
+                `).join('');
+        }
+
+        function downloadExcel() {
+            if (allStudents.length === 0) {
+                alert('No students to download!');
+                return;
+            }
+
+            // Create CSV data
+            let csvContent = "Name,Email,Phone,District,College,Department,Course,Registration Date\n";
+            
+            allStudents.forEach(student => {
+                const phone = student.fullData?.phone || 'N/A';
+                const department = student.fullData?.department || 'N/A';
+                const registrationDate = student.fullData?.registrationDate || new Date().toLocaleDateString();
+                
+                // Escape quotes and wrap in quotes if contains comma
+                const escapeName = `"${student.name.replace(/"/g, '""')}"`;
+                const escapeEmail = `"${student.email.replace(/"/g, '""')}"`;
+                const escapePhone = `"${phone.replace(/"/g, '""')}"`;
+                const escapeDistrict = `"${student.district.replace(/"/g, '""')}"`;
+                const escapeCollege = `"${student.college.replace(/"/g, '""')}"`;
+                const escapeDept = `"${department.replace(/"/g, '""')}"`;
+                const escapeCourse = `"${student.course.replace(/"/g, '""')}"`;
+                const escapeDate = `"${registrationDate.replace(/"/g, '""')}"`;
+                
+                csvContent += `${escapeName},${escapeEmail},${escapePhone},${escapeDistrict},${escapeCollege},${escapeDept},${escapeCourse},${escapeDate}\n`;
+            });
+
+            // Create blob and download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Student_Data_${new Date().toLocaleDateString()}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('✓ Data downloaded successfully as CSV file!');
+        }
+
+        function downloadExcel() {
+            if (allStudents.length === 0) {
+                alert('No students to download!');
+                return;
+            }
+
+            const priorityColumns = [
+                'id', 'name', 'firstName', 'lastName', 'email', 'phone', 'gender', 'guardian',
+                'dob', 'address', 'state', 'university', 'district', 'college', 'degree',
+                'department', 'semester', 'session', 'rollno', 'skill', 'course',
+                'emergencyName', 'emergencyPhone', 'relationship', 'registered',
+                'paymentStatus', 'registrationDate'
+            ];
+            const blockedColumns = new Set(['password', 'passwordHash', 'userPassword', 'userPasswordHash', 'token', 'authToken']);
+            const columnSet = new Set(priorityColumns);
+
+            allStudents.forEach(student => {
+                Object.keys(student.fullData || {}).forEach(key => {
+                    if (!blockedColumns.has(key)) columnSet.add(key);
+                });
+            });
+
+            const columns = [
+                ...priorityColumns.filter(column => columnSet.has(column) && !blockedColumns.has(column)),
+                ...Array.from(columnSet).filter(column => !priorityColumns.includes(column) && !blockedColumns.has(column)).sort()
+            ];
+            const csvEscape = (value) => {
+                if (value === null || value === undefined) return '""';
+                if (typeof value === 'object') value = JSON.stringify(value);
+                const text = String(value).startsWith('data:image/') ? 'Image Uploaded' : String(value);
+                return `"${text.replace(/"/g, '""')}"`;
+            };
+            const rows = allStudents.map(student => {
+                const data = {
+                    ...student.fullData,
+                    id: student.id,
+                    name: student.name,
+                    email: student.email,
+                    phone: student.phone,
+                    district: student.district,
+                    college: student.college,
+                    department: student.department,
+                    rollno: student.rollno,
+                    course: student.course,
+                    skill: student.fullData?.skill || student.course
+                };
+                return columns.map(column => csvEscape(data[column])).join(',');
+            });
+            const csvContent = '\uFEFF' + columns.map(csvEscape).join(',') + '\n' + rows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `All_Student_A_to_Z_Data_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            alert('Student A to Z data downloaded successfully. Open the CSV file in Excel.');
+        }
+
+        function updateStats() {
+            const totalStudents = allStudents.length;
+            document.getElementById('totalStudents').textContent = totalStudents;
+
+            // Calculate today's students (approximate)
+            document.getElementById('todayStudents').textContent = totalStudents > 0 ? 1 : 0;
+
+            // Calculate active enrollments (students with courses)
+            const activeEnrollments = allStudents.filter(s => s.course !== 'Not Selected').length;
+            document.getElementById('activeEnrollments').textContent = activeEnrollments;
+
+            const totalCourses = document.getElementById('totalCourses');
+            if (totalCourses) totalCourses.textContent = getCourses().length;
+        }
+
+        function logoutAdmin() {
+            if (confirm('Are you sure you want to logout?')) {
+                StorageManager.set('isAdminLoggedIn', false);
+                window.location.href = 'admin-login.html';
+            }
+        }
+
+        // COURSE MANAGEMENT FUNCTIONS
+        function getCourses() {
+            const coursesStr = StorageManager.get('adminCourses');
+            const defaultCourses = [
+                { id: 1, name: 'Skill Development', description: 'Learn professional skills', duration: 30 },
+                { id: 2, name: 'Social Work', description: 'Community service training', duration: 30 },
+                { id: 3, name: 'Population Study', description: 'Demographic research', duration: 30 },
+                { id: 4, name: 'Disaster Management', description: 'Emergency response training', duration: 30 },
+                { id: 5, name: 'Digital Literacy', description: 'Complete guide to digital skills and technology literacy', duration: 50 },
+                { id: 6, name: 'Web Development', description: 'Learn HTML, CSS, JavaScript, frontend and backend basics', duration: 50 },
+                { id: 7, name: 'Cyber Security', description: 'Learn cyber safety, threats, phishing, and protection practices', duration: 50 },
+                { id: 8, name: 'Entrepreneurship', description: 'Learn business planning, innovation, startup basics, and marketing', duration: 50 },
+                { id: 9, name: 'Financial Literacy', description: 'Learn budgeting, savings, banking, digital payments, and investment basics', duration: 50 }
+            ];
+
+            if (!coursesStr || (Array.isArray(coursesStr) && coursesStr.length === 0)) {
+                StorageManager.set('adminCourses', defaultCourses);
+                addDigitalLiteracyCourseContent();
+                return defaultCourses;
+            }
+
+            if (Array.isArray(coursesStr)) {
+                const byId = new Map([...defaultCourses, ...coursesStr].map(course => [String(course.id), course]));
+                return Array.from(byId.values());
+            }
+
+            try {
+                const parsedCourses = JSON.parse(coursesStr);
+                if (Array.isArray(parsedCourses) && parsedCourses.length > 0) {
+                    const byId = new Map([...defaultCourses, ...parsedCourses].map(course => [String(course.id), course]));
+                    return Array.from(byId.values());
+                }
+            } catch (e) {
+                console.warn('Invalid adminCourses format, resetting to defaults:', e.message);
+            }
+
+            StorageManager.set('adminCourses', defaultCourses);
+            addDigitalLiteracyCourseContent();
+            return defaultCourses;
+        }
+
+        function addDigitalLiteracyCourseContent() {
+            const digitalLiteracyQuestions = [
+                // Section 1: Basics & Systems
+                { q: 'Digital literacy is best defined as:', options: ['Ability to use and evaluate digital tools', 'Playing online games', 'Using mobile only', 'Watching videos'], correct: 0 },
+                { q: 'The importance of digital literacy lies in:', options: ['Entertainment', 'Reducing skills', 'Enhancing efficiency and awareness', 'Avoiding technology'], correct: 2 },
+                { q: 'A digital device ecosystem includes:', options: ['Books and papers', 'Connected digital devices', 'Roads', 'Pens'], correct: 1 },
+                { q: 'Computer basics mainly focus on:', options: ['Software only', 'Hardware only', 'Interaction of hardware and software', 'Typing only'], correct: 2 },
+                { q: 'An operating system primarily:', options: ['Creates documents', 'Controls system resources', 'Plays games', 'Edits images'], correct: 1 },
+                
+                // Section 2: Internet & Connectivity
+                { q: 'The internet is:', options: ['Local storage', 'A hardware device', 'Global network system', 'Offline tool'], correct: 2 },
+                { q: 'Web browsing refers to:', options: ['Coding', 'Navigating web pages', 'Installing apps', 'Editing files'], correct: 1 },
+                { q: 'Search engines work by:', options: ['Editing files', 'Sending emails', 'Indexing and retrieving data', 'Deleting data'], correct: 2 },
+                { q: 'Email is mainly used for:', options: ['Gaming', 'Storage', 'Messaging', 'Programming'], correct: 2 },
+                
+                // Section 3: Security & Ethics
+                { q: 'Online safety ensures:', options: ['Sharing passwords', 'Clicking unknown links', 'Ignoring threats', 'Protecting data'], correct: 3 },
+                { q: 'Cyber security deals with:', options: ['Attacks', 'Protection of systems', 'Ignoring risks', 'Data deletion'], correct: 1 },
+                { q: 'Digital footprint means:', options: ['Physical mark', 'Offline record', 'Online data trace', 'None'], correct: 2 },
+                { q: 'Social media literacy includes:', options: ['Posting randomly', 'Critical evaluation', 'Ignoring risks', 'Sharing blindly'], correct: 1 },
+                { q: 'Two-factor authentication:', options: ['Reduces security', 'Removes password', 'Adds extra layer', 'None'], correct: 2 },
+                
+                // Section 4: Advanced Tools & E-Services
+                { q: 'Cloud computing provides:', options: ['Offline storage', 'Physical storage', 'Remote access', 'None'], correct: 2 },
+                { q: 'E-governance is:', options: ['Offline services', 'Manual systems', 'Digital government services', 'None'], correct: 2 },
+                { q: 'UPI is used for:', options: ['Cash', 'Offline', 'Instant payment', 'None'], correct: 2 },
+                { q: 'SEO improves:', options: ['Offline rank', 'Website visibility', 'Manual search', 'None'], correct: 1 },
+                { q: 'Digital literacy conclusion:', options: ['Optional', 'Essential skill', 'Useless', 'None'], correct: 1 }
+            ];
+            
+            const digitalLiteracyContent = {
+                id: 5,
+                name: 'Digital Literacy',
+                emoji: '💻',
+                description: 'Complete guide to digital skills and technology literacy',
+                duration: '50 days',
+                questions: digitalLiteracyQuestions,
+                sections: [
+                    { num: 1, title: 'Introduction to Digital Literacy', content: 'Introduction to Digital Literacy is a key component of digital literacy in today\'s modern world. It enables individuals to effectively use digital tools, platforms, and technologies.\n\nDetailed Explanation:\nIn this section, we explore Introduction to Digital Literacy in depth. Digital literacy is not just about using devices, but also understanding how technology impacts our lives. This includes safe usage, ethical behavior, and practical skills.' },
+                    { num: 2, title: 'Importance of Digital Literacy', content: 'Importance of Digital Literacy is a key component of digital literacy in today\'s modern world. It enables individuals to effectively use digital tools, platforms, and technologies.' },
+                    { num: 3, title: 'Digital Devices', content: 'Digital Devices is a key component of digital literacy in today\'s modern world. It enables individuals to effectively use digital tools, platforms, and technologies.' },
+                    { num: 4, title: 'Computer Basics', content: 'Computer Basics is a key component of digital literacy in today\'s modern world. It enables individuals to effectively use digital tools, platforms, and technologies.' },
+                    { num: 5, title: 'Operating Systems', content: 'Operating Systems is a key component of digital literacy in today\'s modern world. It enables individuals to effectively use digital tools, platforms, and technologies.' }
+                ]
+            };
+            
+            StorageManager.set('digitalLiteracyCourse_5', digitalLiteracyContent);
+        }
+
+        function openCourseModal() {
+            document.getElementById('courseName').value = '';
+            document.getElementById('courseDescription').value = '';
+            document.getElementById('courseDuration').value = '';
+            document.getElementById('courseModal').classList.add('show');
+        }
+
+        function closeCourseModal() {
+            document.getElementById('courseModal').classList.remove('show');
+        }
+
+        let tempQuizQuestions = [];
+
+        function openCourseModal() {
+            document.getElementById('courseName').value = '';
+            document.getElementById('courseDescription').value = '';
+            document.getElementById('courseDuration').value = '';
+            document.getElementById('courseMaterial').value = '';
+            document.getElementById('newQuestion').value = '';
+            document.getElementById('option1').value = '';
+            document.getElementById('option2').value = '';
+            document.getElementById('option3').value = '';
+            document.getElementById('option4').value = '';
+            document.getElementById('correctAnswer').value = '';
+            tempQuizQuestions = [];
+            updateQuestionsPreview();
+            document.getElementById('courseModal').classList.add('show');
+        }
+
+        function closeCourseModal() {
+            document.getElementById('courseModal').classList.remove('show');
+            tempQuizQuestions = [];
+        }
+
+        function addQuizQuestion() {
+            const question = document.getElementById('newQuestion').value.trim();
+            const option1 = document.getElementById('option1').value.trim();
+            const option2 = document.getElementById('option2').value.trim();
+            const option3 = document.getElementById('option3').value.trim();
+            const option4 = document.getElementById('option4').value.trim();
+            const correct = document.getElementById('correctAnswer').value;
+
+            if (!question || !option1 || !option2 || !option3 || !option4 || correct === '') {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            tempQuizQuestions.push({
+                q: question,
+                options: [option1, option2, option3, option4],
+                correct: parseInt(correct)
+            });
+
+            // Clear inputs
+            document.getElementById('newQuestion').value = '';
+            document.getElementById('option1').value = '';
+            document.getElementById('option2').value = '';
+            document.getElementById('option3').value = '';
+            document.getElementById('option4').value = '';
+            document.getElementById('correctAnswer').value = '';
+
+            updateQuestionsPreview();
+            alert('✓ Question added!');
+        }
+
+        function updateQuestionsPreview() {
+            const preview = document.getElementById('questionsListPreview');
+            if (tempQuizQuestions.length === 0) {
+                preview.innerHTML = '<p style="color: #999; text-align: center;">No questions added yet</p>';
+                return;
+            }
+
+            preview.innerHTML = tempQuizQuestions.map((q, i) => `
+                <div style="background: #f9fafb; padding: 10px; margin-bottom: 8px; border-radius: 5px; border-left: 3px solid #f59e0b;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <strong>Q${i + 1}:</strong> ${q.q}
+                            <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                                Options: ${q.options.join(', ')} | Correct: ${q.options[q.correct]}
+                            </div>
+                        </div>
+                        <button onclick="deleteQuestion(${i})" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteQuestion(index) {
+            tempQuizQuestions.splice(index, 1);
+            updateQuestionsPreview();
+        }
+
+        async function saveNewCompleteCourd() {
+            const name = document.getElementById('courseName').value.trim();
+            const description = document.getElementById('courseDescription').value.trim();
+            const duration = document.getElementById('courseDuration').value;
+            const material = document.getElementById('courseMaterial').value.trim();
+
+            if (!name) {
+                alert('Please enter course name!');
+                return;
+            }
+
+            if (!material) {
+                alert('Please enter course material/notes!');
+                return;
+            }
+
+            if (tempQuizQuestions.length === 0) {
+                alert('Please add at least one quiz question!');
+                return;
+            }
+
+            try {
+                const response = await APIService.request('/admin/courses', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        duration: parseInt(duration) || 30,
+                        material,
+                        questions: tempQuizQuestions
+                    })
+                });
+
+                if (response.success) {
+                    alert('✓ Complete course created successfully!');
+                    closeCourseModal();
+                    // Reload courses
+                    loadDashboardCourses();
+                } else {
+                    alert('✗ Failed to create course: ' + (response.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.warn('API failed, falling back to localStorage:', error.message);
+                
+                // Fallback to localStorage
+                const courseId = Math.max(...Object.keys(courseContent).map(k => parseInt(k) || 0), 4) + 1;
+                
+                courseContent[courseId] = {
+                    id: courseId,
+                    name: name,
+                    emoji: '📚',
+                    description: description || 'Professional course',
+                    notes: `<h3>${name}</h3><p>${material.replace(/\n/g, '</p><p>')}</p>`,
+                    questions: tempQuizQuestions,
+                    isCustom: true
+                };
+
+                const courses = getCourses();
+                const newCourse = {
+                    id: courseId,
+                    name: name,
+                    description: description || 'Professional course',
+                    duration: duration || 30,
+                    isCustom: true
+                };
+
+                courses.push(newCourse);
+                StorageManager.set('adminCourses', courses);
+                StorageManager.set('courseContent', courseContent);
+
+                alert('✓ Complete course created successfully (saved locally)!');
+                closeCourseModal();
+                loadDashboardCourses();
+            }
+        }
+
+        function saveNewCourse() {
+            const name = document.getElementById('courseName').value.trim();
+            const description = document.getElementById('courseDescription').value.trim();
+            const duration = document.getElementById('courseDuration').value;
+
+            if (!name) {
+                alert('Please enter course name!');
+                return;
+            }
+
+            const courses = getCourses();
+            const newId = Math.max(...courses.map(c => c.id), 0) + 1;
+            
+            const newCourse = {
+                id: newId,
+                name: name,
+                description: description || 'No description',
+                duration: duration || 30
+            };
+
+            courses.push(newCourse);
+            StorageManager.set('adminCourses', courses);
+
+            alert('✓ Course added successfully!');
+            closeCourseModal();
+            updateCourseOptions();
+        }
+
+        function updateCourseOptions() {
+            const courses = getCourses();
+            const courseNames = courses.map(c => c.name);
+            
+            // Update the edit modal course dropdown
+            const editSelect = document.getElementById('newCourse');
+            editSelect.innerHTML = '<option value="">Select New Course</option>';
+            courseNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                editSelect.appendChild(option);
+            });
+
+            // Update bulk assign dropdown
+            const bulkSelect = document.getElementById('bulkCourseSelect');
+            if (bulkSelect) {
+                bulkSelect.innerHTML = '<option value="">-- Select Course --</option>';
+                courseNames.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    bulkSelect.appendChild(option);
+                });
+            }
+        }
+
+        function openBulkAssignModal() {
+            document.getElementById('bulkCourseSelect').value = '';
+            document.getElementById('studentsList').innerHTML = '';
+            document.getElementById('selectedCount').textContent = '0';
+            
+            // Populate students list with checkboxes
+            const studentsList = document.getElementById('studentsList');
+            studentsList.innerHTML = allStudents.map((student, index) => `
+                <div style="padding: 8px; border-bottom: 1px solid #e5e7eb;">
+                    <input type="checkbox" id="student_${index}" value="${index}" onchange="updateSelectedCount()">
+                    <label for="student_${index}" style="margin-left: 8px; cursor: pointer;">
+                        ${student.name} (${student.email})
+                    </label>
+                </div>
+            `).join('');
+
+            document.getElementById('bulkAssignModal').classList.add('show');
+        }
+
+        function closeBulkAssignModal() {
+            document.getElementById('bulkAssignModal').classList.remove('show');
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('#studentsList input[type="checkbox"]:checked');
+            document.getElementById('selectedCount').textContent = checkboxes.length;
+        }
+
+        function saveBulkAssign() {
+            const courseSelect = document.getElementById('bulkCourseSelect');
+            const course = courseSelect.value;
+
+            if (!course) {
+                alert('Please select a course!');
+                return;
+            }
+
+            const checkboxes = document.querySelectorAll('#studentsList input[type="checkbox"]:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select at least one student!');
+                return;
+            }
+
+            let updatedCount = 0;
+            checkboxes.forEach(checkbox => {
+                const index = parseInt(checkbox.value);
+                const student = allStudents[index];
+                student.fullData.skill = course;
+                student.course = course;
+                localStorage.setItem(student.id, JSON.stringify(student.fullData));
+                updatedCount++;
+            });
+
+            alert(`✓ Course assigned to ${updatedCount} student(s) successfully!`);
+            closeBulkAssignModal();
+            loadAllStudents();
+            updateStats();
+        }
+
+        function openViewCoursesModal() {
+            const courses = getCourses();
+            const allCoursesList = document.getElementById('allCoursesList');
+            
+            allCoursesList.innerHTML = courses.map(course => `
+                <div style="background: white; padding: 15px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #667eea; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h4 style="color: #333; margin-bottom: 5px; font-size: 1.1em;">${course.name}</h4>
+                            <p style="color: #666; font-size: 0.9em; margin-bottom: 8px;">${course.description}</p>
+                            <div style="color: #999; font-size: 0.85em;">
+                                <span>📅 Duration: ${course.duration} days</span> | 
+                                <span>👥 Students: ${allStudents.filter(s => s.course === course.name).length}</span>
+                            </div>
+                        </div>
+                        <button class="action-btn" onclick="deleteCourse(${course.id})">🗑️ Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('viewCoursesModal').classList.add('show');
+        }
+
+        function closeViewCoursesModal() {
+            document.getElementById('viewCoursesModal').classList.remove('show');
+        }
+
+        function deleteCourse(courseId) {
+            if (confirm('Are you sure you want to delete this course? Students assigned to this course will not be affected.')) {
+                let courses = getCourses();
+                const deletedCourse = courses.find(c => c.id === courseId);
+                courses = courses.filter(c => c.id !== courseId);
+                StorageManager.set('adminCourses', courses);
+                
+                alert('✓ Course deleted successfully!');
+                updateCourseOptions();
+                openViewCoursesModal(); // Refresh the modal
+            }
+        }
+
+        // Q&A MANAGEMENT FUNCTIONS
+        function getQuestionAnswers() {
+            const qaStr = StorageManager.get('adminQuestionAnswers');
+            if (!qaStr) {
+                return {};
+            }
+            return typeof qaStr === 'object' ? qaStr : {};
+        }
+
+        function openQAManagementModal() {
+            const courses = getCourses();
+            const qaSelectCourse = document.getElementById('qaSelectCourse');
+            
+            qaSelectCourse.innerHTML = '<option value="">-- Select Course --</option>';
+            courses.forEach(course => {
+                const option = document.createElement('option');
+                option.value = course.name;
+                option.textContent = course.name;
+                qaSelectCourse.appendChild(option);
+            });
+
+            // Clear inputs
+            document.getElementById('qaQuestion').value = '';
+            document.getElementById('qaAnswer').value = '';
+            document.getElementById('qaList').innerHTML = '<p style="text-align: center; color: #999;">Select a course to view Q&A</p>';
+
+            document.getElementById('qaManagementModal').classList.add('show');
+        }
+
+        function closeQAManagementModal() {
+            document.getElementById('qaManagementModal').classList.remove('show');
+        }
+
+        function loadCourseQA() {
+            const selectedCourse = document.getElementById('qaSelectCourse').value;
+            const qaList = document.getElementById('qaList');
+
+            if (!selectedCourse) {
+                qaList.innerHTML = '<p style="text-align: center; color: #999;">Select a course to view Q&A</p>';
+                return;
+            }
+
+            const allQA = getQuestionAnswers();
+            const courseQA = allQA[selectedCourse] || [];
+
+            if (courseQA.length === 0) {
+                qaList.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No Q&A added yet for this course</p>';
+                return;
+            }
+
+            qaList.innerHTML = courseQA.map((item, index) => `
+                <div style="background: #f9fafb; padding: 15px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #ec4899;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <strong style="color: #333; font-size: 1em;">Q${index + 1}: ${item.question}</strong>
+                        <button class="action-btn" onclick="deleteQA('${selectedCourse}', ${index})" style="padding: 5px 10px; font-size: 0.8em;">🗑️ Delete</button>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; margin-left: 20px; border-left: 3px solid #10b981;">
+                        <strong style="color: #10b981;">Ans:</strong> ${item.answer}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addQuestionAnswer() {
+            const selectedCourse = document.getElementById('qaSelectCourse').value;
+            const question = document.getElementById('qaQuestion').value.trim();
+            const answer = document.getElementById('qaAnswer').value.trim();
+
+            if (!selectedCourse) {
+                alert('Please select a course!');
+                return;
+            }
+
+            if (!question) {
+                alert('Please enter the question!');
+                return;
+            }
+
+            if (!answer) {
+                alert('Please enter the answer!');
+                return;
+            }
+
+            const allQA = getQuestionAnswers();
+            if (!allQA[selectedCourse]) {
+                allQA[selectedCourse] = [];
+            }
+
+            allQA[selectedCourse].push({
+                question: question,
+                answer: answer
+            });
+
+            StorageManager.set('adminQuestionAnswers', allQA);
+
+            alert('✓ Question & Answer added successfully!');
+            document.getElementById('qaQuestion').value = '';
+            document.getElementById('qaAnswer').value = '';
+            loadCourseQA();
+        }
+
+        function deleteQA(courseName, index) {
+            if (confirm('Are you sure you want to delete this Q&A?')) {
+                const allQA = getQuestionAnswers();
+                if (allQA[courseName]) {
+                    allQA[courseName].splice(index, 1);
+                    StorageManager.set('adminQuestionAnswers', allQA);
+                    alert('✓ Q&A deleted successfully!');
+                    loadCourseQA();
+                }
+            }
+        }
+
+        // COURSE MATERIAL MANAGEMENT FUNCTIONS
+        function getCourseMaterials() {
+            const materialsStr = StorageManager.get('adminCourseMaterials');
+            if (!materialsStr) {
+                return {};
+            }
+            return typeof materialsStr === 'object' ? materialsStr : {};
+        }
+
+        function openMaterialManagementModal() {
+            const courses = getCourses();
+            const materialSelectCourse = document.getElementById('materialSelectCourse');
+            
+            materialSelectCourse.innerHTML = '<option value="">-- Select Course --</option>';
+            courses.forEach(course => {
+                const option = document.createElement('option');
+                option.value = course.name;
+                option.textContent = course.name;
+                materialSelectCourse.appendChild(option);
+            });
+
+            // Clear inputs
+            document.getElementById('materialTitle').value = '';
+            document.getElementById('materialContent').value = '';
+            document.getElementById('materialList').innerHTML = '<p style="text-align: center; color: #999;">Select a course to view materials</p>';
+
+            document.getElementById('materialManagementModal').classList.add('show');
+        }
+
+        function closeMaterialManagementModal() {
+            document.getElementById('materialManagementModal').classList.remove('show');
+        }
+
+        function loadCourseMaterial() {
+            const selectedCourse = document.getElementById('materialSelectCourse').value;
+            const materialList = document.getElementById('materialList');
+
+            if (!selectedCourse) {
+                materialList.innerHTML = '<p style="text-align: center; color: #999;">Select a course to view materials</p>';
+                return;
+            }
+
+            const allMaterials = getCourseMaterials();
+            const courseMaterials = allMaterials[selectedCourse] || [];
+
+            if (courseMaterials.length === 0) {
+                materialList.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No materials added yet for this course</p>';
+                return;
+            }
+
+            materialList.innerHTML = courseMaterials.map((material, index) => `
+                <div style="background: #f9fafb; padding: 15px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #14b8a6;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <strong style="color: #333; font-size: 1em;">📖 ${material.title}</strong>
+                        <button class="action-btn" onclick="deleteMaterial('${selectedCourse}', ${index})" style="padding: 5px 10px; font-size: 0.8em;">🗑️ Delete</button>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; margin-left: 0; border-left: 3px solid #14b8a6; font-size: 0.95em; line-height: 1.6; color: #555;">
+                        ${material.content.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addCourseMaterial() {
+            const selectedCourse = document.getElementById('materialSelectCourse').value;
+            const title = document.getElementById('materialTitle').value.trim();
+            const content = document.getElementById('materialContent').value.trim();
+
+            if (!selectedCourse) {
+                alert('Please select a course!');
+                return;
+            }
+
+            if (!title) {
+                alert('Please enter the material title!');
+                return;
+            }
+
+            if (!content) {
+                alert('Please enter the material content!');
+                return;
+            }
+
+            const allMaterials = getCourseMaterials();
+            if (!allMaterials[selectedCourse]) {
+                allMaterials[selectedCourse] = [];
+            }
+
+            allMaterials[selectedCourse].push({
+                title: title,
+                content: content
+            });
+
+            StorageManager.set('adminCourseMaterials', allMaterials);
+
+            alert('✓ Material added successfully!');
+            document.getElementById('materialTitle').value = '';
+            document.getElementById('materialContent').value = '';
+            loadCourseMaterial();
+        }
+
+        function deleteMaterial(courseName, index) {
+            if (confirm('Are you sure you want to delete this material?')) {
+                const allMaterials = getCourseMaterials();
+                if (allMaterials[courseName]) {
+                    allMaterials[courseName].splice(index, 1);
+                    StorageManager.set('adminCourseMaterials', allMaterials);
+                    alert('✓ Material deleted successfully!');
+                    loadCourseMaterial();
+                }
+            }
+        }
+
+        // Close all modals when clicking outside
+        window.onclick = function(event) {
+            const editModal = document.getElementById('editModal');
+            const courseModal = document.getElementById('courseModal');
+            const bulkModal = document.getElementById('bulkAssignModal');
+            const viewModal = document.getElementById('viewCoursesModal');
+            const qaModal = document.getElementById('qaManagementModal');
+            const materialModal = document.getElementById('materialManagementModal');
+            const detailModal = document.getElementById('studentDetailModal');
+
+            if (event.target === editModal) closeModal();
+            if (event.target === courseModal) closeCourseModal();
+            if (event.target === bulkModal) closeBulkAssignModal();
+            if (event.target === viewModal) closeViewCoursesModal();
+            if (event.target === qaModal) closeQAManagementModal();
+            if (event.target === materialModal) closeMaterialManagementModal();
+            if (event.target === detailModal) closeStudentDetailModal();
+        };
+
+        // Allow Enter key in search
+        document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchStudents();
+            }
+        });
+    </script>
+
+    <!-- Dashboard Course Management Modal -->
+    <div id="dashboardCoursePanel" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <span>📚 Course Management</span>
+                <button class="close-btn" onclick="closeDashboardCoursePanel()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px;">
+                    <button style="padding: 10px 20px; background: #14b8a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;" id="viewTabBtn" onclick="switchDashboardTab('view')">View Courses</button>
+                    <button style="padding: 10px 20px; background: #f0f0f0; color: #666; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;" id="addTabBtn" onclick="switchDashboardTab('add')">Add New Course</button>
+                </div>
+
+                <!-- View Tab -->
+                <div id="viewTabContent" style="display: block;">
+                    <div id="dashboardCoursesList"></div>
+                </div>
+
+                <!-- Add Tab -->
+                <div id="addTabContent" style="display: none;">
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Course Name: <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="dashNewCourseName" placeholder="e.g., Data Science, Python" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Description: <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="dashNewCourseDesc" placeholder="Brief description" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Duration (days): <span style="color: #ef4444;">*</span></label>
+                            <input type="number" id="dashNewCourseDuration" placeholder="e.g., 30" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+
+                        <button style="width: 100%; padding: 12px; background: #14b8a6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 1em;" onclick="addDashboardCourse()">✅ Add Course</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeDashboardCoursePanel()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== DASHBOARD COURSE MANAGEMENT ==========
+        function openDashboardCoursePanel() {
+            document.getElementById('dashboardCoursePanel').classList.add('show');
+            loadDashboardCourses();
+        }
+
+        function closeDashboardCoursePanel() {
+            document.getElementById('dashboardCoursePanel').classList.remove('show');
+        }
+
+        function switchDashboardTab(tab) {
+            if (tab === 'view') {
+                document.getElementById('viewTabContent').style.display = 'block';
+                document.getElementById('addTabContent').style.display = 'none';
+                document.getElementById('viewTabBtn').style.background = '#14b8a6';
+                document.getElementById('viewTabBtn').style.color = 'white';
+                document.getElementById('addTabBtn').style.background = '#f0f0f0';
+                document.getElementById('addTabBtn').style.color = '#666';
+                loadDashboardCourses();
+            } else {
+                document.getElementById('viewTabContent').style.display = 'none';
+                document.getElementById('addTabContent').style.display = 'block';
+                document.getElementById('viewTabBtn').style.background = '#f0f0f0';
+                document.getElementById('viewTabBtn').style.color = '#666';
+                document.getElementById('addTabBtn').style.background = '#14b8a6';
+                document.getElementById('addTabBtn').style.color = 'white';
+            }
+        }
+
+        function getDashboardCourses() {
+            const coursesStr = StorageManager.get('adminCourses');
+            const defaultCourses = [
+                { id: 1, name: 'Skill Development', description: 'Learn professional skills', duration: 30 },
+                { id: 2, name: 'Social Work', description: 'Community service training', duration: 30 },
+                { id: 3, name: 'Population Study', description: 'Demographic research', duration: 30 },
+                { id: 4, name: 'Disaster Management', description: 'Emergency response training', duration: 30 },
+                { id: 5, name: 'Digital Literacy', description: 'Complete guide to digital skills', duration: 50 },
+                { id: 6, name: 'Web Development', description: 'Learn HTML, CSS, JavaScript, frontend and backend basics', duration: 50 },
+                { id: 7, name: 'Cyber Security', description: 'Learn cyber safety, threats, phishing, and protection practices', duration: 50 },
+                { id: 8, name: 'Entrepreneurship', description: 'Learn business planning, innovation, startup basics, and marketing', duration: 50 },
+                { id: 9, name: 'Financial Literacy', description: 'Learn budgeting, savings, banking, digital payments, and investment basics', duration: 50 }
+            ];
+
+            if (!coursesStr || (Array.isArray(coursesStr) && coursesStr.length === 0)) {
+                StorageManager.set('adminCourses', defaultCourses);
+                return defaultCourses;
+            }
+
+            if (Array.isArray(coursesStr)) {
+                const byId = new Map([...defaultCourses, ...coursesStr].map(course => [String(course.id), course]));
+                return Array.from(byId.values());
+            }
+
+            try {
+                const parsedCourses = JSON.parse(coursesStr);
+                if (Array.isArray(parsedCourses) && parsedCourses.length > 0) {
+                    const byId = new Map([...defaultCourses, ...parsedCourses].map(course => [String(course.id), course]));
+                    return Array.from(byId.values());
+                }
+            } catch (e) {
+                console.warn('Invalid adminCourses format, resetting to defaults:', e.message);
+            }
+
+            StorageManager.set('adminCourses', defaultCourses);
+            return defaultCourses;
+        }
+
+        async function loadDashboardCourses() {
+            try {
+                const response = await APIService.request('/admin/courses');
+                const courses = response.courses || [];
+                
+                const coursesList = document.getElementById('dashboardCoursesList');
+                
+                if (courses.length === 0) {
+                    coursesList.innerHTML = '<div style="text-align: center; padding: 30px; color: #999;"><div style="font-size: 2em; margin-bottom: 10px;">📚</div><p>No courses available</p></div>';
+                    return;
+                }
+
+                coursesList.innerHTML = courses.map(course => `
+                    <div style="background: #f9fafb; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #14b8a6; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #333; margin-bottom: 3px;">${course.name}</div>
+                            <div style="font-size: 0.85em; color: #666;">${course.description} • ${course.duration || 30} days</div>
+                        </div>
+                        <button style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: 600;" onclick="deleteDashboardCourse(${course.id})">🗑️ Delete</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.warn('API failed, falling back to localStorage:', error.message);
+                // Fallback to localStorage
+                const courses = getCourses();
+                const coursesList = document.getElementById('dashboardCoursesList');
+                
+                if (courses.length === 0) {
+                    coursesList.innerHTML = '<div style="text-align: center; padding: 30px; color: #999;"><div style="font-size: 2em; margin-bottom: 10px;">📚</div><p>No courses available</p></div>';
+                    return;
+                }
+
+                coursesList.innerHTML = courses.map(course => `
+                    <div style="background: #f9fafb; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #14b8a6; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #333; margin-bottom: 3px;">${course.name}</div>
+                            <div style="font-size: 0.85em; color: #666;">${course.description} • ${course.duration} days</div>
+                        </div>
+                        <button style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: 600;" onclick="deleteDashboardCourse(${course.id})">🗑️ Delete</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function deleteDashboardCourse(courseId) {
+            if (confirm('Are you sure you want to delete this course?')) {
+                try {
+                    const response = await APIService.request(`/admin/courses/${courseId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.success) {
+                        alert('✓ Course deleted successfully!');
+                        loadDashboardCourses();
+                    } else {
+                        alert('✗ Failed to delete course: ' + (response.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error deleting course:', error);
+                    alert('✗ Failed to delete course. Please try again.');
+                }
+            }
+        }
+
+        function addDashboardCourse() {
+            const name = document.getElementById('dashNewCourseName').value.trim();
+            const description = document.getElementById('dashNewCourseDesc').value.trim();
+            const duration = parseInt(document.getElementById('dashNewCourseDuration').value);
+
+            if (!name) {
+                alert('Please enter course name!');
+                return;
+            }
+
+            if (!description) {
+                alert('Please enter course description!');
+                return;
+            }
+
+            if (!duration || duration < 1) {
+                alert('Please enter a valid duration!');
+                return;
+            }
+
+            const courses = getDashboardCourses();
+            const newId = Math.max(...courses.map(c => c.id), 0) + 1;
+
+            const newCourse = {
+                id: newId,
+                name: name,
+                description: description,
+                duration: duration
+            };
+
+            courses.push(newCourse);
+            StorageManager.set('adminCourses', courses);
+
+            // Clear form
+            document.getElementById('dashNewCourseName').value = '';
+            document.getElementById('dashNewCourseDesc').value = '';
+            document.getElementById('dashNewCourseDuration').value = '';
+
+            alert('✓ Course added successfully!');
+            switchDashboardTab('view');
+        }
+
+        // Close on background click
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('dashboardCoursePanel');
+            if (event.target === modal) {
+                closeDashboardCoursePanel();
+            }
+        });
+    </script>
+</body>
+</html>
