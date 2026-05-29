@@ -8,8 +8,18 @@ const pool = require('./config/database');
 
 const app = express();
 
+function getOrigin(url) {
+    try {
+        return new URL(url).origin;
+    } catch (error) {
+        return url;
+    }
+}
+
 const allowedOrigins = new Set([
     process.env.FRONTEND_URL,
+    process.env.FRONTEND_URL ? getOrigin(process.env.FRONTEND_URL) : '',
+    'https://biharskillinterns-afk.github.io',
     'http://localhost',
     'http://127.0.0.1',
     'null'

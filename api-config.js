@@ -3,7 +3,11 @@
 
 const API_PROTOCOL = window.location.protocol === 'file:' ? 'http:' : window.location.protocol;
 const API_HOST = window.location.hostname || 'localhost';
-const API_BASE_URL = window.BSI_API_BASE_URL || localStorage.getItem('bsiApiBaseUrl') || `${API_PROTOCOL}//${API_HOST}:5000/api`;
+const LIVE_API_BASE_URL = 'https://bihar-skill-intern-backend.onrender.com/api';
+const DEFAULT_API_BASE_URL = API_HOST.endsWith('.github.io')
+    ? LIVE_API_BASE_URL
+    : `${API_PROTOCOL}//${API_HOST}:5000/api`;
+const API_BASE_URL = window.BSI_API_BASE_URL || localStorage.getItem('bsiApiBaseUrl') || DEFAULT_API_BASE_URL;
 
 // Shared auth storage for static file mode and normal hosted mode.
 // window.name survives file:// page navigation in the same tab, so it backs up localStorage.

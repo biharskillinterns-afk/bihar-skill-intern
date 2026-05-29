@@ -5,7 +5,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:import": "node scripts/import-schema.js"
+  },
+  "engines": {
+    "node": ">=22.2.0"
   },
   "keywords": [
     "internship",
