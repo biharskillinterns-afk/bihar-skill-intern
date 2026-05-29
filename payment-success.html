@@ -8,8 +8,16 @@
 <body>
     <script>
         localStorage.setItem('paymentStatus', 'completed');
+        localStorage.setItem('paymentVerified', 'true');
         localStorage.setItem('isRegistrationComplete', 'true');
         localStorage.setItem('isLoggedIn', 'false');
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('razorpay_payment_id')) {
+            localStorage.setItem('razorpayPaymentId', params.get('razorpay_payment_id'));
+        }
+        if (params.get('razorpay_order_id')) {
+            localStorage.setItem('razorpayOrderId', params.get('razorpay_order_id'));
+        }
         window.location.replace('login.html');
     </script>
 </body>

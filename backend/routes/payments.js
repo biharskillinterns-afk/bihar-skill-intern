@@ -25,6 +25,15 @@ function getRazorpayConfig() {
     };
 }
 
+function getFrontendUrl(req) {
+    const frontend = req.query.frontend || req.body.frontend || process.env.FRONTEND_URL || 'https://biharskillinterns-afk.github.io/bihar-skill-intern';
+    try {
+        return new URL(String(frontend)).origin + new URL(String(frontend)).pathname.replace(/\/?$/, '/');
+    } catch (error) {
+        return 'https://biharskillinterns-afk.github.io/bihar-skill-intern/';
+    }
+}
+
 function getValidAmount(amount) {
     const numericAmount = Number(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) return null;
@@ -289,6 +298,43 @@ router.post('/registration-verify', async (req, res) => {
             message: 'Failed to verify registration payment',
             error: error.message
         });
+    }
+});
+
+router.post('/registration-callback', async (req, res) => {
+    const frontendUrl = getFrontendUrl(req);
+    try {
+        const razorpayPaymentId = req.body.razorpay_payment_id;
+        const razorpayOrderId = req.body.razorpay_order_id;
+        const razorpaySignature = req.body.razorpay_signature;
+        const studentEmail = req.query.studentEmail || req.body.studentEmail || '';
+        const amount = getValidAmount(req.query.amount || req.body.amount) || await getRegistrationAmount(req.db);
+
+        if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
+            return res.redirect(`${frontendUrl}payment.html?payment=failed&reason=missing_payment_details`);
+        }
+
+        if (!verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
+            return res.redirect(`${frontendUrl}payment.html?payment=failed&reason=invalid_signature`);
+        }
+
+        await markRegistrationPaymentCompleted(req, {
+            razorpayPaymentId,
+            razorpayOrderId,
+            studentEmail,
+            amount
+        });
+
+        const redirectUrl = new URL('payment-success.html', frontendUrl);
+        redirectUrl.searchParams.set('payment', 'success');
+        redirectUrl.searchParams.set('razorpay_payment_id', razorpayPaymentId);
+        redirectUrl.searchParams.set('razorpay_order_id', razorpayOrderId);
+        res.redirect(303, redirectUrl.toString());
+    } catch (error) {
+        const redirectUrl = new URL('payment.html', frontendUrl);
+        redirectUrl.searchParams.set('payment', 'failed');
+        redirectUrl.searchParams.set('reason', error.message || 'verification_failed');
+        res.redirect(303, redirectUrl.toString());
     }
 });
 

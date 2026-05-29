@@ -191,6 +191,26 @@
             }, 900);
         }
 
+        function getFrontendBaseUrl() {
+            return new URL('./', window.location.href).href;
+        }
+
+        function getCallbackUrl(order, amount) {
+            const callbackUrl = new URL(`${API_BASE_URL}/payments/registration-callback`);
+            callbackUrl.searchParams.set('frontend', getFrontendBaseUrl());
+            callbackUrl.searchParams.set('studentEmail', getStoredValue('userEmail', ''));
+            callbackUrl.searchParams.set('amount', String(order.amount || amount || getPaymentAmount()));
+            return callbackUrl.toString();
+        }
+
+        function showPaymentReturnStatus() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('payment') === 'failed') {
+                const reason = params.get('reason') || 'Payment failed.';
+                setStatus(`Payment complete nahi hua: ${reason}`);
+            }
+        }
+
         function resetPayButton(message) {
             const payButton = document.getElementById('payButton');
             document.querySelectorAll('.razorpay-container').forEach(container => container.remove());
@@ -227,6 +247,7 @@
             document.getElementById('studentEmail').textContent = userEmail;
             document.getElementById('paymentAmount').textContent = `₹${getPaymentAmount()}`;
             loadRegistrationAmount();
+            showPaymentReturnStatus();
 
             if (!getStoredValue('userRegistered', '')) {
                 setStatus('Please complete registration first.');
@@ -288,6 +309,8 @@
                     local_order_id: getStoredValue('orderId', ''),
                     student_email: getStoredValue('userEmail', '')
                 },
+                callback_url: getCallbackUrl(order, amount),
+                redirect: true,
                 theme: {
                     color: '#2563eb'
                 },
