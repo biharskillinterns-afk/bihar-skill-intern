@@ -414,6 +414,20 @@
                     throw new Error(verified?.message || 'Payment verification failed.');
                 }
 
+                if (!verified.databaseUpdated) {
+                    const syncedStatus = await APIService.getRegistrationPaymentStatus(
+                        response.razorpay_order_id || order.razorpayOrderId,
+                        {
+                            studentEmail: getStoredValue('userEmail', ''),
+                            amount: String(order.amount || getPaymentAmount())
+                        }
+                    );
+
+                    if (!syncedStatus?.success || syncedStatus.status !== 'completed') {
+                        throw new Error('Payment receive hua, lekin registration sync nahi hua. Please 1 minute baad login try karein.');
+                    }
+                }
+
                 if (paymentStatusTimer) clearInterval(paymentStatusTimer);
                 saveCompletedPayment({
                     amount: order.amount || getPaymentAmount(),

@@ -7,6 +7,7 @@ dotenv.config();
 const pool = require('./config/database');
 const { ensureDatabaseExists } = require('./config/database');
 const { ensureSchema } = require('./config/schema');
+const paymentsRouter = require('./routes/payments');
 
 const app = express();
 
@@ -26,6 +27,12 @@ const allowedOrigins = new Set([
     'http://127.0.0.1',
     'null'
 ].filter(Boolean));
+
+// Webhook must receive the raw body so Razorpay signature verification works.
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+    req.db = pool;
+    paymentsRouter.handleRazorpayWebhook(req, res);
+});
 
 // Middleware
 app.use(cors({
@@ -53,7 +60,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/courses', require('./routes/courses'));
-app.use('/api/payments', require('./routes/payments'));
+app.use('/api/payments', paymentsRouter);
 app.use('/api/certificates', require('./routes/certificates'));
 
 // Health check endpoint

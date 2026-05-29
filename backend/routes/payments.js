@@ -101,6 +101,46 @@ async function findStudentId(connection, req, studentEmail) {
     return students[0]?.id || null;
 }
 
+function normalizePhone(phone = '') {
+    return String(phone).replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+}
+
+function getPaymentEmail(payment = {}) {
+    return String(
+        payment.email ||
+        payment.notes?.studentEmail ||
+        payment.notes?.student_email ||
+        ''
+    ).trim().toLowerCase();
+}
+
+function getPaymentPhone(payment = {}) {
+    return normalizePhone(payment.contact || payment.notes?.studentPhone || payment.notes?.student_phone || '');
+}
+
+function mapPaymentMethod(method = '') {
+    const normalized = String(method).toLowerCase();
+    if (normalized === 'card') return 'credit_card';
+    if (normalized === 'netbanking') return 'net_banking';
+    if (normalized === 'wallet') return 'wallet';
+    if (normalized === 'upi') return 'upi';
+    return 'upi';
+}
+
+async function findPaymentByOrder(connection, razorpayOrderId) {
+    if (!razorpayOrderId) return null;
+
+    const [payments] = await connection.query(
+        `SELECT id, studentId, courseId, amount, gatewayOrderId
+         FROM payments
+         WHERE gatewayOrderId = ?
+         ORDER BY id DESC LIMIT 1`,
+        [razorpayOrderId]
+    );
+
+    return payments[0] || null;
+}
+
 async function savePendingRegistrationPayment(req, paymentData) {
     let connection;
     try {
@@ -139,38 +179,36 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
     let connection;
     try {
         connection = await req.db.getConnection();
-        const studentId = await findStudentId(connection, req, paymentData.studentEmail);
-        const courseId = await getDefaultCourseId(connection);
+        const existingPayment = await findPaymentByOrder(connection, paymentData.razorpayOrderId);
+        const studentId = existingPayment?.studentId || await findStudentId(connection, req, paymentData.studentEmail);
+        const courseId = existingPayment?.courseId || await getDefaultCourseId(connection);
 
         if (!studentId || !courseId) {
             return false;
         }
 
-        const [existingPayments] = await connection.query(
-            'SELECT id FROM payments WHERE gatewayOrderId = ? AND studentId = ? LIMIT 1',
-            [paymentData.razorpayOrderId, studentId]
-        );
-
         await connection.beginTransaction();
         try {
-            if (existingPayments.length > 0) {
+            if (existingPayment) {
                 await connection.query(
                     `UPDATE payments
                      SET status = 'completed',
                          gatewayPaymentId = ?,
+                         paymentMethod = COALESCE(?, paymentMethod),
                          completedAt = NOW()
                      WHERE id = ?`,
-                    [paymentData.razorpayPaymentId, existingPayments[0].id]
+                    [paymentData.razorpayPaymentId, paymentData.paymentMethod || null, existingPayment.id]
                 );
             } else {
                 await connection.query(
                     `INSERT INTO payments
                         (studentId, courseId, amount, paymentMethod, gatewayPaymentId, gatewayOrderId, status, notes, createdAt, completedAt)
-                     VALUES (?, ?, ?, 'upi', ?, ?, 'completed', ?, NOW(), NOW())`,
+                     VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, NOW(), NOW())`,
                     [
                         studentId,
                         courseId,
-                        paymentData.amount,
+                        paymentData.amount || 0,
+                        paymentData.paymentMethod || 'upi',
                         paymentData.razorpayPaymentId,
                         paymentData.razorpayOrderId,
                         JSON.stringify({
@@ -205,6 +243,13 @@ async function syncCompletedPaymentsForStudent(db, studentId, studentEmail = '')
     let connection;
     try {
         connection = await db.getConnection();
+        const [students] = await connection.query(
+            'SELECT id, email, phone, createdAt FROM students WHERE id = ? LIMIT 1',
+            [studentId]
+        );
+        const student = students[0] || { email: studentEmail };
+        const email = String(studentEmail || student.email || '').trim().toLowerCase();
+        const phone = normalizePhone(student.phone || '');
         const [pendingPayments] = await connection.query(
             `SELECT id, amount, gatewayOrderId
              FROM payments
@@ -212,8 +257,6 @@ async function syncCompletedPaymentsForStudent(db, studentId, studentEmail = '')
              ORDER BY createdAt DESC LIMIT 5`,
             [studentId]
         );
-
-        if (pendingPayments.length === 0) return false;
 
         const razorpay = getRazorpayClient();
         let updated = false;
@@ -229,12 +272,39 @@ async function syncCompletedPaymentsForStudent(db, studentId, studentEmail = '')
                     {
                         razorpayPaymentId: successfulPayment.id,
                         razorpayOrderId: payment.gatewayOrderId,
-                        studentEmail,
-                        amount: payment.amount
+                        studentEmail: email,
+                        amount: payment.amount,
+                        paymentMethod: mapPaymentMethod(successfulPayment.method)
                     }
                 );
                 updated = true;
             }
+        }
+
+        if (updated) return true;
+
+        const createdAt = student.createdAt ? new Date(student.createdAt).getTime() : Date.now() - (24 * 60 * 60 * 1000);
+        const from = Math.max(0, Math.floor((createdAt - (60 * 60 * 1000)) / 1000));
+        const to = Math.floor(Date.now() / 1000);
+        const recentPayments = await razorpay.payments.all({ from, to, count: 100 });
+        const successfulPayment = (recentPayments.items || []).find(payment => {
+            if (!['captured', 'authorized'].includes(payment.status)) return false;
+            const paymentEmail = getPaymentEmail(payment);
+            const paymentPhone = getPaymentPhone(payment);
+            return (email && paymentEmail === email) || (phone && paymentPhone === phone);
+        });
+
+        if (successfulPayment?.order_id) {
+            return await markRegistrationPaymentCompleted(
+                { db, headers: {} },
+                {
+                    razorpayPaymentId: successfulPayment.id,
+                    razorpayOrderId: successfulPayment.order_id,
+                    studentEmail: email || getPaymentEmail(successfulPayment),
+                    amount: getValidAmount(Number(successfulPayment.amount) / 100) || 0,
+                    paymentMethod: mapPaymentMethod(successfulPayment.method)
+                }
+            );
         }
 
         return updated;
@@ -340,7 +410,7 @@ router.post('/registration-verify', async (req, res) => {
             razorpayPaymentId,
             razorpayOrderId,
             studentEmail,
-            amount: getValidAmount(amount) || 299
+            amount: getValidAmount(amount) || await getRegistrationAmount(req.db)
         });
 
         res.json({
@@ -425,8 +495,9 @@ router.get('/registration-status/:orderId', async (req, res) => {
         await markRegistrationPaymentCompleted(req, {
             razorpayPaymentId: successfulPayment.id,
             razorpayOrderId: orderId,
-            studentEmail,
-            amount
+            studentEmail: studentEmail || getPaymentEmail(successfulPayment),
+            amount,
+            paymentMethod: mapPaymentMethod(successfulPayment.method)
         });
 
         res.json({
@@ -603,5 +674,66 @@ router.get('/history', verifyToken, isStudent, async (req, res) => {
     }
 });
 
+async function handleRazorpayWebhook(req, res) {
+    try {
+        const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        if (webhookSecret) {
+            const signature = req.headers['x-razorpay-signature'];
+            const expectedSignature = crypto
+                .createHmac('sha256', webhookSecret)
+                .update(req.body)
+                .digest('hex');
+
+            if (signature !== expectedSignature) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid webhook signature'
+                });
+            }
+        }
+
+        const payload = JSON.parse(req.body.toString('utf8'));
+        const payment = payload.payload?.payment?.entity;
+        const order = payload.payload?.order?.entity;
+
+        if (payment && ['payment.captured', 'payment.authorized'].includes(payload.event)) {
+            await markRegistrationPaymentCompleted(req, {
+                razorpayPaymentId: payment.id,
+                razorpayOrderId: payment.order_id,
+                studentEmail: getPaymentEmail(payment),
+                amount: getValidAmount(Number(payment.amount) / 100) || 0,
+                paymentMethod: mapPaymentMethod(payment.method)
+            });
+        }
+
+        if (order?.id && payload.event === 'order.paid') {
+            const razorpay = getRazorpayClient();
+            const paymentsResponse = await razorpay.orders.fetchPayments(order.id);
+            const successfulPayment = (paymentsResponse.items || []).find(item =>
+                ['captured', 'authorized'].includes(item.status)
+            );
+
+            if (successfulPayment) {
+                await markRegistrationPaymentCompleted(req, {
+                    razorpayPaymentId: successfulPayment.id,
+                    razorpayOrderId: order.id,
+                    studentEmail: getPaymentEmail(successfulPayment),
+                    amount: getValidAmount(Number(successfulPayment.amount) / 100) || 0,
+                    paymentMethod: mapPaymentMethod(successfulPayment.method)
+                });
+            }
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.warn('Razorpay webhook processing failed:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Webhook processing failed'
+        });
+    }
+}
+
 module.exports = router;
 module.exports.syncCompletedPaymentsForStudent = syncCompletedPaymentsForStudent;
+module.exports.handleRazorpayWebhook = handleRazorpayWebhook;
