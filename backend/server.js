@@ -46,8 +46,8 @@ app.use(cors({
         callback(new Error(`CORS blocked origin: ${origin}`));
     }
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Make pool accessible to routes
 app.use((req, res, next) => {
@@ -71,9 +71,10 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({
+    const statusCode = err.status || err.statusCode || 500;
+    res.status(statusCode).json({
         success: false,
-        message: 'Internal server error',
+        message: statusCode === 413 ? 'Uploaded form data is too large' : 'Internal server error',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
