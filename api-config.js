@@ -13,6 +13,23 @@ const API_BASE_URL = window.BSI_API_BASE_URL || localStorage.getItem('bsiApiBase
 // window.name survives file:// page navigation in the same tab, so it backs up localStorage.
 class BSIAuthStorage {
     static windowNameKey = 'bsiAuthState';
+    static heavyStorageKeys = new Set([
+        'student',
+        'userProfileImage',
+        'userSignatureImage'
+    ]);
+
+    static isHeavyStorageKey(key) {
+        return this.heavyStorageKeys.has(key) || String(key || '').startsWith('student_');
+    }
+
+    static removeLargeStudentFields(studentData = {}) {
+        const cleaned = { ...studentData };
+        delete cleaned.profilePhoto;
+        delete cleaned.profileImage;
+        delete cleaned.signature;
+        return cleaned;
+    }
 
     static readWindowState() {
         try {
@@ -40,11 +57,16 @@ class BSIAuthStorage {
             localStorage.setItem(key, value);
         } catch (error) {
             console.warn(`Unable to save ${key} in localStorage:`, error.message);
+            if (error && (error.name === 'QuotaExceededError' || String(error.message || '').toLowerCase().includes('quota'))) {
+                this.removeItem(key);
+            }
         }
 
-        this.writeWindowState({
-            [key]: value
-        });
+        if (!this.isHeavyStorageKey(key)) {
+            this.writeWindowState({
+                [key]: value
+            });
+        }
     }
 
     static removeItem(key) {
@@ -219,7 +241,8 @@ class BSIAuthStorage {
             : 'pending';
         studentData.paymentStatus = paymentStatus;
 
-        this.setItem(studentData.id, JSON.stringify(studentData));
+        const studentRecord = this.removeLargeStudentFields(studentData);
+        this.setItem(studentData.id, JSON.stringify(studentRecord));
 
         let studentIds = [];
         try {
@@ -265,8 +288,12 @@ class BSIAuthStorage {
         this.setItem('userEmergencyName', studentData.emergencyName || '');
         this.setItem('userEmergencyPhone', studentData.emergencyPhone || '');
         this.setItem('userRelationship', studentData.relationship || '');
-        this.setItem('userProfileImage', studentData.profilePhoto || studentData.profileImage || this.getItem('userProfileImage') || '');
-        this.setItem('userSignatureImage', studentData.signature || '');
+        if (studentData.profilePhoto || studentData.profileImage) {
+            this.setItem('userProfileImage', studentData.profilePhoto || studentData.profileImage);
+        }
+        if (studentData.signature) {
+            this.setItem('userSignatureImage', studentData.signature);
+        }
         this.setItem('userRegistered', 'true');
         this.setItem('paymentStatus', paymentStatus);
         this.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
@@ -405,7 +432,7 @@ class APIService {
                 BSIAuthStorage.saveStudent(response.student, response.student.passwordHash);
                 const savedStudentId = BSIAuthStorage.getItem('currentStudentId');
                 const savedStudent = savedStudentId ? BSIAuthStorage.getItem(savedStudentId) : null;
-                BSIAuthStorage.setItem('student', savedStudent || JSON.stringify(response.student));
+                BSIAuthStorage.setItem('student', savedStudent || JSON.stringify(BSIAuthStorage.removeLargeStudentFields(response.student)));
             }
         }
 
@@ -436,7 +463,7 @@ class APIService {
                 BSIAuthStorage.setItem('isLoggedIn', paymentStatus === 'completed' ? 'true' : 'false');
                 const savedStudentId = BSIAuthStorage.getItem('currentStudentId');
                 const savedStudent = savedStudentId ? BSIAuthStorage.getItem(savedStudentId) : null;
-                BSIAuthStorage.setItem('student', savedStudent || JSON.stringify(response.student));
+                BSIAuthStorage.setItem('student', savedStudent || JSON.stringify(BSIAuthStorage.removeLargeStudentFields(response.student)));
             }
         }
         return response;

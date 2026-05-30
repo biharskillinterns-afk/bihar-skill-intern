@@ -612,7 +612,11 @@
                 return;
             }
 
-            localStorage.setItem(studentData.id, JSON.stringify(studentData));
+            const studentRecord = { ...studentData };
+            delete studentRecord.profilePhoto;
+            delete studentRecord.profileImage;
+            delete studentRecord.signature;
+            localStorage.setItem(studentData.id, JSON.stringify(studentRecord));
             let studentIds = [];
             try {
                 studentIds = JSON.parse(localStorage.getItem('allStudentIds') || '[]');
@@ -652,8 +656,12 @@
             localStorage.setItem('userEmergencyName', studentData.emergencyName || '');
             localStorage.setItem('userEmergencyPhone', studentData.emergencyPhone || '');
             localStorage.setItem('userRelationship', studentData.relationship || '');
-            localStorage.setItem('userProfileImage', studentData.profilePhoto || '');
-            localStorage.setItem('userSignatureImage', studentData.signature || '');
+            try {
+                if (studentData.profilePhoto) localStorage.setItem('userProfileImage', studentData.profilePhoto);
+                if (studentData.signature) localStorage.setItem('userSignatureImage', studentData.signature);
+            } catch (error) {
+                console.warn('Photo/signature local save skipped:', error.message);
+            }
             localStorage.removeItem('userPassword');
             localStorage.setItem('userPasswordHash', passwordHash);
             localStorage.setItem('userRegistered', 'true');
@@ -1027,7 +1035,17 @@
                             localStorage.setItem('authToken', response.token);
                         }
                         if (response.student) {
-                            localStorage.setItem('student', JSON.stringify(response.student));
+                            const lightStudent = typeof BSIAuthStorage !== 'undefined'
+                                ? BSIAuthStorage.removeLargeStudentFields(response.student)
+                                : { ...response.student };
+                            delete lightStudent.profilePhoto;
+                            delete lightStudent.profileImage;
+                            delete lightStudent.signature;
+                            try {
+                                localStorage.setItem('student', JSON.stringify(lightStudent));
+                            } catch (error) {
+                                console.warn('Student cache save skipped:', error.message);
+                            }
                         }
                         studentData.id = response.student?.id ? 'student_' + response.student.id : studentId;
                         saveRegisteredStudent(studentData, passwordHash);
