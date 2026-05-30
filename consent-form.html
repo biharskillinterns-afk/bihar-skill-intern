@@ -734,6 +734,7 @@
         </div>
     </div>
 
+    <script src="api-config.js"></script>
     <script>
         const form = document.getElementById('consentForm');
         const formSection = document.getElementById('formSection');
@@ -754,6 +755,66 @@
 
         function normalizeRollNumber(value) {
             return String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+        }
+
+        function getConsentStorageBackend() {
+            return typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+        }
+
+        function getConsentStudentKey(studentData = null) {
+            const studentId = (studentData && (studentData.id || studentData.studentId))
+                || localStorage.getItem('currentStudentId')
+                || '';
+            const rollNo = normalizeRollNumber((studentData && (studentData.rollNo || studentData.rollno || studentData.userRollNo))
+                || getConsentRollFromUrl()
+                || localStorage.getItem('userRollNo')
+                || '');
+            const email = String((studentData && studentData.email) || localStorage.getItem('userEmail') || '').trim().toLowerCase();
+            return `consentFormData_${studentId || rollNo || email || 'current'}`;
+        }
+
+        function saveConsentData(data, studentData = null) {
+            const storage = getConsentStorageBackend();
+            const value = JSON.stringify(data);
+            storage.setItem(getConsentStudentKey(studentData), value);
+            storage.setItem('consentFormData', value);
+        }
+
+        function getSavedConsentData(studentData = null) {
+            const storage = getConsentStorageBackend();
+            const keys = [getConsentStudentKey(studentData), 'consentFormData'];
+
+            for (const key of keys) {
+                const saved = storage.getItem(key);
+                if (!saved) continue;
+
+                try {
+                    const data = JSON.parse(saved);
+                    const currentStudentId = String((studentData && (studentData.id || studentData.studentId)) || localStorage.getItem('currentStudentId') || '');
+                    const requestedRollNo = normalizeRollNumber(getConsentRollFromUrl());
+                    const dataStudentId = String(data.studentId || '');
+                    const dataRollNo = normalizeRollNumber(data.rollNo || '');
+                    const isGlobalFallback = key === 'consentFormData';
+                    if (isGlobalFallback && currentStudentId && !dataStudentId && !dataRollNo) continue;
+                    const matchesStudent = !currentStudentId || !dataStudentId || dataStudentId === currentStudentId;
+                    const matchesRoll = !requestedRollNo || !dataRollNo || dataRollNo === requestedRollNo;
+
+                    if (matchesStudent && matchesRoll) return data;
+                } catch (error) {
+                    console.warn('Ignoring unreadable consent data:', error.message);
+                }
+            }
+
+            return null;
+        }
+
+        function compactStudentForStorage(student) {
+            if (!student || typeof student !== 'object') return student;
+            const cleaned = { ...student };
+            delete cleaned.profilePhoto;
+            delete cleaned.profileImage;
+            delete cleaned.signature;
+            return cleaned;
         }
 
         function getConsentRollFromUrl() {
@@ -811,6 +872,65 @@
             setStorageValue('userRollNo', rollNo);
             setStorageValue('userSkill', student.skill || student.course || student.selectedSkill || student.userSkill || '');
             syncRegistrationImages(student);
+        }
+
+        function mergeStudentRecords(baseStudent, nextStudent) {
+            const merged = { ...(baseStudent || {}) };
+            Object.entries(nextStudent || {}).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    merged[key] = value;
+                }
+            });
+            const displayName = (merged.name || merged.fullName || '').trim()
+                || [merged.firstName, merged.lastName].filter(Boolean).join(' ').trim();
+            if (displayName) {
+                merged.name = displayName;
+                merged.fullName = displayName;
+            }
+            return merged;
+        }
+
+        function persistConsentStudentSnapshot(student) {
+            if (!student || typeof student !== 'object') return;
+            const storage = getConsentStorageBackend();
+            const id = student.id || student.studentId || localStorage.getItem('currentStudentId') || '';
+            if (!id) return;
+
+            const safeStudent = compactStudentForStorage({ ...student, id });
+            storage.setItem(id, JSON.stringify(safeStudent));
+            storage.setItem('student', JSON.stringify(safeStudent));
+            storage.setItem('currentStudentId', id);
+
+            let studentIds = [];
+            try {
+                studentIds = JSON.parse(storage.getItem('allStudentIds') || '[]');
+            } catch (error) {
+                studentIds = [];
+            }
+            if (!Array.isArray(studentIds)) studentIds = [];
+            if (!studentIds.includes(id)) {
+                studentIds.push(id);
+                storage.setItem('allStudentIds', JSON.stringify(studentIds));
+            }
+
+            syncStudentToConsentContext(student);
+        }
+
+        async function loadStudentProfileFromBackend(existingStudent = null) {
+            if (typeof APIService === 'undefined' || !APIService.getToken()) return existingStudent;
+
+            try {
+                const response = await APIService.getStudentProfile();
+                const backendStudent = response && (response.student || response.data || response);
+                if (!backendStudent || !backendStudent.email) return existingStudent;
+
+                const merged = mergeStudentRecords(existingStudent, backendStudent);
+                persistConsentStudentSnapshot(merged);
+                return merged;
+            } catch (error) {
+                console.warn('Unable to refresh consent student profile:', error.message);
+                return existingStudent;
+            }
         }
 
         function findRegisteredStudentByRoll(rollNumber) {
@@ -899,7 +1019,11 @@
             const aliases = {
                 rollno: ['rollno', 'rollNo', 'userRollNo'],
                 guardian: ['guardian', 'fatherName', 'userGuardian'],
-                skill: ['skill', 'course', 'selectedSkill', 'userSkill']
+                skill: ['skill', 'course', 'courseName', 'selectedSkill', 'userSkill'],
+                university: ['university', 'userUniversity'],
+                college: ['college', 'userCollege'],
+                session: ['session', 'userSession'],
+                district: ['district', 'city', 'userDistrict']
             };
             const fields = aliases[field] || [field];
             for (const key of fields) {
@@ -926,16 +1050,48 @@
             };
         }
 
-        // Fetch student's enrolled course details and auto-fill
-        async function autoFillCourseDetails() {
+        function readJsonStorage(key, fallback = null) {
             try {
-                console.clear();
-                console.log('=== AUTO-FILL COURSE DETAILS DEBUG ===');
-                
+                const value = localStorage.getItem(key);
+                return value ? JSON.parse(value) : fallback;
+            } catch (error) {
+                return fallback;
+            }
+        }
+
+        function getLatestCompletedCourseResult(studentData = null) {
+            const activeStudentId = String((studentData && (studentData.id || studentData.studentId)) || localStorage.getItem('currentStudentId') || '');
+            const results = [];
+
+            for (let i = 0; i < localStorage.length; i += 1) {
+                const key = localStorage.key(i);
+                if (!key || !key.startsWith('courseResult_')) continue;
+                const result = readJsonStorage(key);
+                if (!result) continue;
+                const resultStudentId = String(result.studentId || '');
+                if (activeStudentId && resultStudentId && resultStudentId !== activeStudentId) continue;
+                results.push({ ...result, storageKey: key });
+            }
+
+            results.sort((a, b) => new Date(b.completedAt || b.date || 0) - new Date(a.completedAt || a.date || 0));
+            return results[0] || null;
+        }
+
+        function getEnrolledCourseName(studentData = null) {
+            const enrolledCourses = readJsonStorage('enrolledCourses', []);
+            if (Array.isArray(enrolledCourses) && enrolledCourses.length > 0) {
+                const course = enrolledCourses[0];
+                return course.courseName || course.name || course.title || course.id || '';
+            }
+            return getRegistrationValue(studentData, 'skill', 'userSkill');
+        }
+
+        // Fetch student's enrolled course details and auto-fill
+        async function autoFillCourseDetails(studentDataInput = null) {
+            try {
                 // Get the student data
-                const studentData = getRegisteredStudentData();
+                const studentData = studentDataInput || getRegisteredStudentData();
                 const requestedRollNo = getConsentRollFromUrl();
-                console.log('Student Data Found:', !!studentData, studentData);
 
                 // ===== CHECK CERTIFICATE FIRST (HIGHEST PRIORITY) =====
                 const currentDateRange = getCurrentTrainingDateRange();
@@ -954,6 +1110,9 @@
                         const certStudentId = String(certData.studentId || '');
                         const activeStudentId = String((studentData && studentData.id) || localStorage.getItem('currentStudentId') || '');
                         courseName = (!certStudentId || certStudentId === activeStudentId) ? (certData.courseName || '') : '';
+                        startDate = certData.startDate || certData.courseStartDate || startDate;
+                        endDate = certData.endDate || certData.courseEndDate || certData.completedAt || endDate;
+                        skillsLearned = certData.skillsLearned || certData.skills || skillsLearned;
                     }
                 } catch (e) {
                     console.log('Could not parse certificate data');
@@ -965,12 +1124,19 @@
                                 localStorage.getItem('courseForCertificate') || '';
                 }
                 // ===== FALLBACK: Try other sources if certificate data not found =====
-                console.log('Course Name Found:', courseName);
+                const latestResult = getLatestCompletedCourseResult(studentData);
+                if (latestResult) {
+                    courseName = courseName || latestResult.courseName || latestResult.name || latestResult.title || '';
+                    endDate = latestResult.completedAt ? formatDateForInput(new Date(latestResult.completedAt)) : endDate;
+                    skillsLearned = skillsLearned || latestResult.skillsLearned || latestResult.skills || '';
+                }
                 
                 if (!courseName) {
                     courseName = localStorage.getItem('userSkill') || 
                                 localStorage.getItem('selectedCourse') || 
-                                localStorage.getItem('enrolledCourse') || '';
+                                localStorage.getItem('enrolledCourse') ||
+                                getEnrolledCourseName(studentData) ||
+                                '';
                 }
                 
                 if (studentData && !courseName) {
@@ -1138,7 +1304,7 @@
             };
 
             // Save to localStorage
-            localStorage.setItem('consentFormData', JSON.stringify(data));
+            saveConsentData(data, studentData);
 
             // Populate document
             document.getElementById('docTopName').textContent = (data.fullName || 'Student Name').toUpperCase();
@@ -1202,24 +1368,12 @@
         window.addEventListener('load', async function() {
             console.log('📋 Consent Form Page Loaded - Starting initialization...');
             
-            const studentData = getRegisteredStudentData();
+            let studentData = getRegisteredStudentData();
+            studentData = await loadStudentProfileFromBackend(studentData);
             clearStaleAdminConsentContext();
-            const currentStudentId = (studentData && studentData.id) || localStorage.getItem('currentStudentId') || '';
-            const requestedRollNo = normalizeRollNumber(getConsentRollFromUrl());
-            const saved = localStorage.getItem('consentFormData');
-            let savedData = null;
-            try {
-                savedData = saved ? JSON.parse(saved) : null;
-            } catch (error) {
-                console.warn('Ignoring unreadable consent form data:', error);
-            }
+            const savedData = getSavedConsentData(studentData);
 
-            const savedMatchesCurrentStudent = savedData
-                && currentStudentId
-                && String(savedData.studentId || '') === String(currentStudentId)
-                && (!requestedRollNo || normalizeRollNumber(savedData.rollNo) === requestedRollNo);
-
-            if (savedMatchesCurrentStudent) {
+            if (savedData) {
                 // Load from saved consent form data
                 console.log('📌 Loading from previously saved consent form data');
                 const data = savedData;
@@ -1258,7 +1412,7 @@
             
             // Auto-fill course details from database - ALWAYS CALL THIS
             console.log('🔄 Starting auto-fill process for course details...');
-            await autoFillCourseDetails();
+            await autoFillCourseDetails(studentData);
 
             if (new URLSearchParams(window.location.search).get('auto') === '1') {
                 if (!studentData) {
