@@ -10,11 +10,48 @@ const sslConfig = process.env.DB_SSL === 'true'
     }
     : undefined;
 
+function normalizeDbHost(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return raw;
+
+    try {
+        if (/^mysql:\/\//i.test(raw)) {
+            return new URL(raw).hostname;
+        }
+    } catch (error) {
+        // Fall through to simple cleanup.
+    }
+
+    return raw
+        .replace(/^mysql:\/\//i, '')
+        .replace(/^https?:\/\//i, '')
+        .split('@')
+        .pop()
+        .split('/')[0]
+        .split('?')[0]
+        .split(':')[0]
+        .trim();
+}
+
+function normalizeDbPort(value) {
+    const explicitPort = String(value || '').trim();
+
+    try {
+        if (/^mysql:\/\//i.test(process.env.DB_HOST || '')) {
+            return new URL(process.env.DB_HOST).port || explicitPort || 3306;
+        }
+    } catch (error) {
+        // Keep the explicit DB_PORT value.
+    }
+
+    return explicitPort || 3306;
+}
+
 const baseConfig = {
-    host: process.env.DB_HOST,
+    host: normalizeDbHost(process.env.DB_HOST),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT || 3306,
+    port: normalizeDbPort(process.env.DB_PORT),
     ...(sslConfig ? { ssl: sslConfig } : {}),
     waitForConnections: true,
     connectionLimit: 10,
@@ -38,15 +75,16 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME
 });
 
-// Test connection
-pool.getConnection()
-    .then(connection => {
-        console.log('✅ Database connected successfully!');
-        connection.release();
-    })
-    .catch(err => {
-        console.error('❌ Database connection failed:', err.message);
-    });
+async function testDatabaseConnection() {
+    const connection = await pool.getConnection();
+    connection.release();
+}
 
 module.exports = pool;
 module.exports.ensureDatabaseExists = ensureDatabaseExists;
+module.exports.testDatabaseConnection = testDatabaseConnection;
+module.exports.dbConnectionInfo = {
+    host: baseConfig.host,
+    port: baseConfig.port,
+    database: process.env.DB_NAME || ''
+};
