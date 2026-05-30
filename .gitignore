@@ -4,6 +4,10 @@ node_modules/
 backend/node_modules/
 *.log
 *.local
+backups/
+ops/.backup-env.ps1
+ops/db-backup-config.ps1
+ops/logs/
 .DS_Store
 Thumbs.db
 mysql-installer-*.msi
