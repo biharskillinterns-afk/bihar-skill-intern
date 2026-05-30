@@ -235,6 +235,7 @@ class BSIAuthStorage {
         this.setItem('userGuardian', studentData.guardian || '');
         this.setItem('userDOB', studentData.dob || '');
         this.setItem('userAddress', studentData.address || '');
+        this.setItem('userPincode', studentData.pincode || '');
         this.setItem('userState', studentData.state || 'Bihar');
         this.setItem('userUniversity', studentData.university || 'Veer Kunwar Singh University');
         this.setItem('userDistrict', studentData.district || '');

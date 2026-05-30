@@ -864,6 +864,7 @@
             setStorageValue('userGuardian', student.guardian || student.fatherName || '');
             setStorageValue('userDOB', student.dob || '');
             setStorageValue('userAddress', student.address || '');
+            setStorageValue('userPincode', student.pincode || '');
             setStorageValue('userState', student.state || 'Bihar');
             setStorageValue('userDistrict', student.district || '');
             setStorageValue('userCollege', student.college || '');
@@ -1023,7 +1024,8 @@
                 university: ['university', 'userUniversity'],
                 college: ['college', 'userCollege'],
                 session: ['session', 'userSession'],
-                district: ['district', 'city', 'userDistrict']
+                district: ['district', 'city', 'userDistrict'],
+                pincode: ['pincode', 'pinCode', 'pin', 'postalCode', 'userPincode']
             };
             const fields = aliases[field] || [field];
             for (const key of fields) {
@@ -1098,7 +1100,6 @@
                 let courseName = '';
                 let startDate = currentDateRange.startDate;
                 let endDate = currentDateRange.endDate;
-                let skillsLearned = '';
                 let certificateLoaded = false;
                 
                 try {
@@ -1112,7 +1113,6 @@
                         courseName = (!certStudentId || certStudentId === activeStudentId) ? (certData.courseName || '') : '';
                         startDate = certData.startDate || certData.courseStartDate || startDate;
                         endDate = certData.endDate || certData.courseEndDate || certData.completedAt || endDate;
-                        skillsLearned = certData.skillsLearned || certData.skills || skillsLearned;
                     }
                 } catch (e) {
                     console.log('Could not parse certificate data');
@@ -1128,7 +1128,6 @@
                 if (latestResult) {
                     courseName = courseName || latestResult.courseName || latestResult.name || latestResult.title || '';
                     endDate = latestResult.completedAt ? formatDateForInput(new Date(latestResult.completedAt)) : endDate;
-                    skillsLearned = skillsLearned || latestResult.skillsLearned || latestResult.skills || '';
                 }
                 
                 if (!courseName) {
@@ -1164,20 +1163,7 @@
 
                 console.log('Generated Current Date Range:', { startDate, endDate });
 
-                // ===== SKILLS =====
-                if (studentData) {
-                    skillsLearned = studentData.skills || studentData.skillsLearned || 
-                                   studentData.description || '';
-                }
-
-                // Fallback: try to extract from common storage keys
-                if (!skillsLearned) {
-                    skillsLearned = localStorage.getItem('userSkillsDescription') || 
-                                   localStorage.getItem('courseDescription') || '';
-                }
-
-                console.log('Skills Learned:', skillsLearned);
-                console.log('Final Values:', { courseName, startDate, endDate, skillsLearned });
+                console.log('Final Values:', { courseName, startDate, endDate });
 
                 // Debug: Log all localStorage entries (certificate-related)
                 console.log('Certificate Storage Keys:');
@@ -1226,18 +1212,6 @@
                     console.log('✗ End Date not filled');
                 }
                 
-                const skillsField = document.getElementById('skillsLearned');
-                if (skillsLearned && !skillsField.value) {
-                    skillsField.value = skillsLearned;
-                    skillsField.setAttribute('readonly', 'readonly');
-                    skillsField.style.backgroundColor = '#f0f9ff';
-                    skillsField.style.borderColor = '#0284c7';
-                    skillsField.title = 'Auto-filled from course details';
-                    console.log('✓ Filled Skills:', skillsLearned);
-                } else {
-                    console.log('✗ Skills not filled');
-                }
-
                 console.log('=== AUTO-FILL COMPLETE ===');
 
             } catch (error) {
@@ -1405,10 +1379,30 @@
                 document.getElementById('address').value = getRegistrationValue(studentData, 'address', 'userAddress');
                 document.getElementById('city').value = getRegistrationValue(studentData, 'district', 'userDistrict');
                 document.getElementById('state').value = getRegistrationValue(studentData, 'state', 'userState', 'Bihar');
-                document.getElementById('pincode').value = '';
+                document.getElementById('pincode').value = getRegistrationValue(studentData, 'pincode', 'userPincode');
                 document.getElementById('courseName').value = getRegistrationValue(studentData, 'skill', 'userSkill');
                 // Don't set empty values - let autoFillCourseDetails populate them
             }
+
+            const registrationDefaults = {
+                fullName: getRegistrationValue(studentData, 'name', 'userName')
+                    || [studentData?.firstName, studentData?.lastName].filter(Boolean).join(' ').trim(),
+                fatherName: getRegistrationValue(studentData, 'guardian', 'userGuardian'),
+                email: getRegistrationValue(studentData, 'email', 'userEmail'),
+                phone: getRegistrationValue(studentData, 'phone', 'userPhone'),
+                dob: getRegistrationValue(studentData, 'dob', 'userDOB'),
+                gender: getRegistrationValue(studentData, 'gender', 'userGender'),
+                address: getRegistrationValue(studentData, 'address', 'userAddress'),
+                city: getRegistrationValue(studentData, 'district', 'userDistrict'),
+                state: getRegistrationValue(studentData, 'state', 'userState', 'Bihar'),
+                pincode: getRegistrationValue(studentData, 'pincode', 'userPincode'),
+                courseName: getRegistrationValue(studentData, 'skill', 'userSkill')
+            };
+
+            Object.entries(registrationDefaults).forEach(([fieldId, value]) => {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value && value) field.value = value;
+            });
             
             // Auto-fill course details from database - ALWAYS CALL THIS
             console.log('🔄 Starting auto-fill process for course details...');

@@ -8,7 +8,7 @@ router.get('/profile', verifyToken, isStudent, async (req, res) => {
         const connection = await req.db.getConnection();
         const [students] = await connection.query(
             `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state,
-                    rollNo, rollNo AS rollno, guardian, address, university, degree, department, semester, session,
+                    rollNo, rollNo AS rollno, guardian, address, pincode, university, degree, department, semester, session,
                     emergencyName, emergencyPhone, relationship, profileImage, signature, bio, status, createdAt, updatedAt
              FROM students WHERE id = ?`,
             [req.user.id]
@@ -48,6 +48,7 @@ router.put('/profile', verifyToken, isStudent, async (req, res) => {
             rollno,
             guardian,
             address,
+            pincode,
             university,
             degree,
             department,
@@ -67,6 +68,7 @@ router.put('/profile', verifyToken, isStudent, async (req, res) => {
                  rollNo = COALESCE(?, rollNo),
                  guardian = COALESCE(?, guardian),
                  address = COALESCE(?, address),
+                 pincode = COALESCE(?, pincode),
                  university = COALESCE(?, university),
                  degree = COALESCE(?, degree),
                  department = COALESCE(?, department),
@@ -87,6 +89,7 @@ router.put('/profile', verifyToken, isStudent, async (req, res) => {
                 rollNo ?? rollno ?? null,
                 guardian ?? null,
                 address ?? null,
+                pincode ?? null,
                 university ?? null,
                 degree ?? null,
                 department ?? null,

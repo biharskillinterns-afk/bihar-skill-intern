@@ -39,6 +39,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
             rollno,
             guardian,
             address,
+            pincode,
             university,
             degree,
             department,
@@ -70,9 +71,9 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
         const [result] = await connection.query(
             `INSERT INTO students
                 (firstName, lastName, email, phone, password, dob, gender, college, course, district,
-                 rollNo, guardian, address, university, degree, department, semester, session,
+                 rollNo, guardian, address, pincode, university, degree, department, semester, session,
                  emergencyName, emergencyPhone, relationship, profileImage, signature, createdAt)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
             [
                 firstName,
                 lastName,
@@ -87,6 +88,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 rollNo || rollno || '',
                 guardian || '',
                 address || '',
+                pincode || '',
                 university || 'Veer Kunwar Singh University',
                 degree || '',
                 department || '',
@@ -127,6 +129,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 rollno: rollNo || rollno || '',
                 guardian: guardian || '',
                 address: address || '',
+                pincode: pincode || '',
                 university: university || 'Veer Kunwar Singh University',
                 degree: degree || '',
                 department: department || '',
@@ -215,6 +218,7 @@ router.post('/login', validateLogin, async (req, res) => {
                 rollno: student.rollNo,
                 guardian: student.guardian,
                 address: student.address,
+                pincode: student.pincode,
                 university: student.university,
                 degree: student.degree,
                 department: student.department,

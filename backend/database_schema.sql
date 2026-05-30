@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS students (
     rollNo VARCHAR(50),
     guardian VARCHAR(150),
     address TEXT,
+    pincode VARCHAR(10),
     university VARCHAR(150) DEFAULT 'Veer Kunwar Singh University',
     degree VARCHAR(100),
     department VARCHAR(100),
