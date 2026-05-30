@@ -3,9 +3,13 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const sslConfig = process.env.DB_SSL === 'true'
+function envValue(key, fallback = '') {
+    return String(process.env[key] || fallback).trim();
+}
+
+const sslConfig = envValue('DB_SSL').toLowerCase() === 'true'
     ? {
-        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+        rejectUnauthorized: envValue('DB_SSL_REJECT_UNAUTHORIZED').toLowerCase() !== 'false',
         ...(process.env.DB_SSL_CA ? { ca: process.env.DB_SSL_CA.replace(/\\n/g, '\n') } : {})
     }
     : undefined;
@@ -49,8 +53,8 @@ function normalizeDbPort(value) {
 
 const baseConfig = {
     host: normalizeDbHost(process.env.DB_HOST),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    user: envValue('DB_USER'),
+    password: envValue('DB_PASSWORD'),
     port: normalizeDbPort(process.env.DB_PORT),
     ...(sslConfig ? { ssl: sslConfig } : {}),
     waitForConnections: true,
@@ -59,11 +63,12 @@ const baseConfig = {
 };
 
 async function ensureDatabaseExists() {
-    if (!process.env.DB_NAME) return;
+    const configuredDatabase = envValue('DB_NAME');
+    if (!configuredDatabase) return;
 
     const connection = await mysql.createConnection(baseConfig);
     try {
-        const databaseName = String(process.env.DB_NAME).replace(/`/g, '``');
+        const databaseName = configuredDatabase.replace(/`/g, '``');
         await connection.query(`CREATE DATABASE IF NOT EXISTS \`${databaseName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
     } finally {
         await connection.end();
@@ -72,7 +77,7 @@ async function ensureDatabaseExists() {
 
 const pool = mysql.createPool({
     ...baseConfig,
-    database: process.env.DB_NAME
+    database: envValue('DB_NAME')
 });
 
 async function testDatabaseConnection() {
@@ -86,5 +91,5 @@ module.exports.testDatabaseConnection = testDatabaseConnection;
 module.exports.dbConnectionInfo = {
     host: baseConfig.host,
     port: baseConfig.port,
-    database: process.env.DB_NAME || ''
+    database: envValue('DB_NAME')
 };
