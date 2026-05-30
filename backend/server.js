@@ -143,10 +143,16 @@ async function initializeDatabaseWithRetry() {
 
             await ensureDatabaseExists();
             await testDatabaseConnection();
-            await ensureRuntimeSchema(pool);
+            try {
+                await ensureRuntimeSchema(pool);
+            } catch (error) {
+                const missingTable = error.code === 'ER_NO_SUCH_TABLE'
+                    || /table .* doesn't exist/i.test(error.message || '');
+                if (!missingTable) throw error;
 
-            if (process.env.SKIP_SCHEMA_SYNC !== 'true') {
+                console.log('Database tables are missing. Creating full schema...');
                 await ensureSchema(pool);
+                await ensureRuntimeSchema(pool);
             }
 
             databaseState.ready = true;
