@@ -355,7 +355,7 @@
                         <div class="form-group">
                             <label>Profile Photo <span class="required">*</span></label>
                             <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" required>
-                            <small>JPG/PNG, max 2 MB</small>
+                            <small>JPG/PNG, 50 KB se 100 KB ke beech</small>
                             <div id="photoPreview" class="file-preview" style="display: none;">
                                 <img id="photoImg" src="" alt="Profile Photo Preview" style="max-width: 100px; max-height: 100px; border-radius: 5px;">
                             </div>
@@ -363,7 +363,7 @@
                         <div class="form-group">
                             <label>Digital Signature <span class="required">*</span></label>
                             <input type="file" id="signature" name="signature" accept="image/*" required>
-                            <small>JPG/PNG, max 2 MB</small>
+                            <small>JPG/PNG, 20 KB se 50 KB ke beech</small>
                             <div id="signaturePreview" class="file-preview" style="display: none;">
                                 <img id="signatureImg" src="" alt="Signature Preview" style="max-width: 100px; max-height: 50px; border: 1px solid #ddd; padding: 5px;">
                             </div>
@@ -795,6 +795,42 @@
             });
         }
 
+        const uploadRules = {
+            profilePhoto: {
+                label: 'Profile photo',
+                minKb: 50,
+                maxKb: 100
+            },
+            signature: {
+                label: 'Digital signature',
+                minKb: 20,
+                maxKb: 50
+            }
+        };
+
+        function validateImageUpload(file, inputId) {
+            const rule = uploadRules[inputId];
+            if (!file) return { valid: false, message: 'Please select an image file.' };
+
+            if (!file.type.startsWith('image/')) {
+                return { valid: false, message: 'Please select a valid image file.' };
+            }
+
+            if (rule) {
+                const sizeKb = Math.round(file.size / 1024);
+                const minBytes = rule.minKb * 1024;
+                const maxBytes = rule.maxKb * 1024;
+                if (file.size < minBytes || file.size > maxBytes) {
+                    return {
+                        valid: false,
+                        message: `${rule.label} size ${rule.minKb} KB se ${rule.maxKb} KB ke beech hona chahiye. Current size: ${sizeKb} KB.`
+                    };
+                }
+            }
+
+            return { valid: true };
+        }
+
         // File upload handling
         function handleFileUpload(inputId, previewId, imgId) {
             const input = document.getElementById(inputId);
@@ -804,17 +840,9 @@
             input.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (file) {
-                    // Validate file size (2MB)
-                    if (file.size > 2 * 1024 * 1024) {
-                        alert('File size should be less than 2MB');
-                        input.value = '';
-                        preview.style.display = 'none';
-                        return;
-                    }
-
-                    // Validate file type
-                    if (!file.type.startsWith('image/')) {
-                        alert('Please select a valid image file');
+                    const validation = validateImageUpload(file, inputId);
+                    if (!validation.valid) {
+                        alert(validation.message);
                         input.value = '';
                         preview.style.display = 'none';
                         return;
@@ -923,6 +951,18 @@
 
             if (!signature) {
                 finishWithError('Please upload your digital signature.');
+                return;
+            }
+
+            const photoValidation = validateImageUpload(profilePhoto, 'profilePhoto');
+            if (!photoValidation.valid) {
+                finishWithError(photoValidation.message);
+                return;
+            }
+
+            const signatureValidation = validateImageUpload(signature, 'signature');
+            if (!signatureValidation.valid) {
+                finishWithError(signatureValidation.message);
                 return;
             }
 
