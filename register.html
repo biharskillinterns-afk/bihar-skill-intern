@@ -355,7 +355,7 @@
                         <div class="form-group">
                             <label>Profile Photo <span class="required">*</span></label>
                             <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" required>
-                            <small>JPG/PNG, 50 KB se 100 KB ke beech</small>
+                            <small>JPG/PNG, between 50 KB and 100 KB</small>
                             <div id="photoPreview" class="file-preview" style="display: none;">
                                 <img id="photoImg" src="" alt="Profile Photo Preview" style="max-width: 100px; max-height: 100px; border-radius: 5px;">
                             </div>
@@ -363,7 +363,7 @@
                         <div class="form-group">
                             <label>Digital Signature <span class="required">*</span></label>
                             <input type="file" id="signature" name="signature" accept="image/*" required>
-                            <small>JPG/PNG, 20 KB se 50 KB ke beech</small>
+                            <small>JPG/PNG, between 20 KB and 50 KB</small>
                             <div id="signaturePreview" class="file-preview" style="display: none;">
                                 <img id="signatureImg" src="" alt="Signature Preview" style="max-width: 100px; max-height: 50px; border: 1px solid #ddd; padding: 5px;">
                             </div>
@@ -823,7 +823,7 @@
                 if (file.size < minBytes || file.size > maxBytes) {
                     return {
                         valid: false,
-                        message: `${rule.label} size ${rule.minKb} KB se ${rule.maxKb} KB ke beech hona chahiye. Current size: ${sizeKb} KB.`
+                        message: `${rule.label} size must be between ${rule.minKb} KB and ${rule.maxKb} KB. Current size: ${sizeKb} KB.`
                     };
                 }
             }
@@ -1104,7 +1104,7 @@
                 }
             } catch (apiError) {
                 console.warn('Backend registration failed:', apiError.message);
-                finishWithError(`Backend registration failed: ${apiError.message}. Backend start karke dobara try karein.`);
+                finishWithError(`Backend registration failed: ${apiError.message}. Please start the backend and try again.`);
                 return;
             }
 

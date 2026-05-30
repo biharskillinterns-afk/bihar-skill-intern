@@ -1627,13 +1627,13 @@
                 }
                 StorageManager.set('bsiPaymentAmount', roundedAmount);
             } catch (error) {
-                alert(`Payment amount save nahi ho paya: ${error.message}`);
+                alert(`Payment amount could not be saved: ${error.message}`);
                 return;
             }
             addActivityLog(`Payment amount changed to ₹${roundedAmount}`);
             renderPaymentAmountSettings();
             renderActivityLog();
-            alert(`Payment amount ₹${roundedAmount} set ho gaya.`);
+            alert(`Payment amount has been set to ₹${roundedAmount}.`);
         }
 
         async function resetPaymentAmount() {
@@ -1644,7 +1644,7 @@
                 }
                 StorageManager.set('bsiPaymentAmount', DEFAULT_PAYMENT_AMOUNT);
             } catch (error) {
-                alert(`Payment amount reset nahi ho paya: ${error.message}`);
+                alert(`Payment amount could not be reset: ${error.message}`);
                 return;
             }
             addActivityLog(`Payment amount reset to ₹${DEFAULT_PAYMENT_AMOUNT}`);

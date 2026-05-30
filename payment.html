@@ -266,7 +266,7 @@
             const params = new URLSearchParams(window.location.search);
             if (params.get('payment') === 'failed') {
                 const reason = params.get('reason') || 'Payment failed.';
-                setStatus(`Payment complete nahi hua: ${reason}`);
+                setStatus(`Payment was not completed: ${reason}`);
             }
         }
 
@@ -321,13 +321,13 @@
 
             try {
                 if (typeof Razorpay !== 'function') {
-                    throw new Error('Razorpay checkout load nahi hua. Internet connection check karein.');
+                    throw new Error('Razorpay checkout did not load. Please check your internet connection.');
                 }
                 if (typeof APIService === 'undefined') {
-                    throw new Error('Payment API config load nahi hua.');
+                    throw new Error('Payment API configuration did not load.');
                 }
                 if (!getStoredValue('authToken', '')) {
-                    throw new Error('Backend registration complete nahi hai. Back to Registration par click karke form dobara submit karein.');
+                    throw new Error('Backend registration is not complete. Click Back to Registration and submit the form again.');
                 }
 
                 const amount = getPaymentAmount();
@@ -339,14 +339,14 @@
                 });
 
                 if (!order || !order.success || !order.razorpayOrderId) {
-                    throw new Error(order?.message || 'Payment order create nahi ho paya.');
+                    throw new Error(order?.message || 'Payment order could not be created.');
                 }
 
                 openRazorpay(order, payButton);
             } catch (error) {
                 payButton.disabled = false;
                 payButton.textContent = 'Pay Securely';
-                setStatus(error.message || 'Payment start nahi ho paya.');
+                setStatus(error.message || 'Payment could not be started.');
             }
         }
 
@@ -426,7 +426,7 @@
                     );
 
                     if (!syncedStatus?.success || syncedStatus.status !== 'completed') {
-                        throw new Error('Payment receive hua, lekin registration sync nahi hua. Please 1 minute baad login try karein.');
+                        throw new Error('Payment was received, but registration did not sync. Please try logging in after 1 minute.');
                     }
                 }
 
@@ -442,7 +442,7 @@
             } catch (error) {
                 payButton.disabled = false;
                 payButton.textContent = 'Pay Securely';
-                setStatus(error.message || 'Payment verify nahi ho paya.');
+                setStatus(error.message || 'Payment could not be verified.');
             }
         }
     </script>

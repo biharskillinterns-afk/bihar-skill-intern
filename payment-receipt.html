@@ -243,7 +243,7 @@
             </div>
 
             <div class="receipt-body">
-                <div id="receiptContent" class="empty-state">Payment details load ho rahe hain...</div>
+                <div id="receiptContent" class="empty-state">Loading payment details...</div>
             </div>
         </section>
     </main>
@@ -339,7 +339,7 @@
                     <div class="detail-row"><div class="detail-label">Generated On</div><div class="detail-value">${formatDateTime(new Date())}</div></div>
                 </div>
 
-                <p class="footer-note">Ye receipt Bihar Skill Interns portal par saved payment record ke basis par generated hai.</p>
+                <p class="footer-note">This receipt is generated from the saved payment record on the Bihar Skill Interns portal.</p>
             `;
         }
 
@@ -368,7 +368,7 @@
 
             receiptStatus.textContent = 'Not Found';
             receiptContent.className = 'empty-state';
-            receiptContent.textContent = 'Payment receipt nahi mila. Payment complete hone ke baad yahan receipt dikhegi.';
+            receiptContent.textContent = 'Payment receipt was not found. After payment is completed, the receipt will appear here.';
         }
 
         window.addEventListener('load', loadReceipt);
