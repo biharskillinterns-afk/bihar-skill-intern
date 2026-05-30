@@ -142,50 +142,10 @@ class BSIAuthStorage {
     }
 
     static clearActiveStudentSession() {
-        this.clearGeneratedStudentArtifacts();
         [
-            'currentStudentId',
-            'student',
-            'userName',
-            'userFirstName',
-            'userLastName',
-            'userEmail',
-            'userUsername',
-            'userPhone',
-            'userMobile',
-            'userGender',
-            'userGuardian',
-            'userDOB',
-            'userAddress',
-            'userState',
-            'userUniversity',
-            'userDistrict',
-            'userCollege',
-            'userDegree',
-            'userDepartment',
-            'userSemester',
-            'userSession',
-            'userRollNo',
-            'userSkill',
-            'userEmergencyName',
-            'userEmergencyPhone',
-            'userRelationship',
-            'userProfileImage',
-            'userSignatureImage',
-            'userPasswordHash',
             'userPassword',
             'userRegistered',
             'isLoggedIn',
-            'paymentStatus',
-            'paymentVerified',
-            'paymentDate',
-            'paymentAmount',
-            'paymentMethod',
-            'paymentGateway',
-            'razorpayPaymentId',
-            'razorpayOrderId',
-            'razorpaySignature',
-            'isRegistrationComplete',
             'authToken',
             'token'
         ].forEach(key => this.removeItem(key));
@@ -513,6 +473,13 @@ class APIService {
 
     static async getStudentProgress() {
         return this.request('/students/progress');
+    }
+
+    static async updateCourseProgress(courseId, data) {
+        return this.request(`/courses/${encodeURIComponent(courseId)}/progress`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
     }
 
     // =============================================

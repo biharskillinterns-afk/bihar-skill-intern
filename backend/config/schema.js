@@ -109,6 +109,19 @@ async function ensureRuntimeSchema(pool) {
                 await connection.query(`ALTER TABLE students ADD COLUMN \`${columnName}\` ${definition}`);
             }
         }
+
+        const requiredStudentCourseColumns = [
+            ['grade', "VARCHAR(5) DEFAULT NULL"],
+            ['certificateNumber', "VARCHAR(100) DEFAULT NULL"],
+            ['quizData', "LONGTEXT"]
+        ];
+
+        for (const [columnName, definition] of requiredStudentCourseColumns) {
+            const [columns] = await connection.query('SHOW COLUMNS FROM student_courses LIKE ?', [columnName]);
+            if (columns.length === 0) {
+                await connection.query(`ALTER TABLE student_courses ADD COLUMN \`${columnName}\` ${definition}`);
+            }
+        }
     } finally {
         connection.release();
     }

@@ -1127,6 +1127,7 @@
                 StorageManager.set('adminCourses', courses);
             }
 
+            await hydrateProgressFromBackend();
             syncCompletedCourseSelection();
             refreshSelectedSkillDisplay();
             renderCourses();
@@ -1138,10 +1139,12 @@
                 .then((loadedCourses) => {
                     if (Array.isArray(loadedCourses) && loadedCourses.length > 0) {
                         courses = loadedCourses;
-                        syncCompletedCourseSelection();
-                        refreshSelectedSkillDisplay();
-                        renderCourses();
-                        updateStats();
+                        hydrateProgressFromBackend().finally(() => {
+                            syncCompletedCourseSelection();
+                            refreshSelectedSkillDisplay();
+                            renderCourses();
+                            updateStats();
+                        });
                     }
                 })
                 .catch((error) => {
@@ -1245,9 +1248,63 @@
             StorageManager.set('selectedCourseId', course.id);
             StorageManager.set('selectedCourseName', course.name);
             logActivity(`Enrolled in "${course.name}" course`);
+            if (typeof APIService !== 'undefined') {
+                APIService.enrollCourse(courseId).catch(error => {
+                    if (!String(error.message || '').toLowerCase().includes('already enrolled')) {
+                        console.warn('Backend enrollment sync failed:', error.message);
+                    }
+                });
+            }
             alert('✓ Successfully enrolled in the course!');
             renderCourses();
             updateStats();
+        }
+
+        async function hydrateProgressFromBackend() {
+            if (typeof APIService === 'undefined') return;
+            try {
+                const response = await APIService.getStudentProgress();
+                const rows = response && response.success && Array.isArray(response.progress)
+                    ? response.progress
+                    : [];
+
+                rows.forEach(row => {
+                    const courseId = row.courseId || row.id;
+                    if (!courseId) return;
+
+                    StorageManager.set('course_' + courseId, true);
+                    StorageManager.set('progress_' + courseId, Number(row.progress || 0));
+
+                    if (row.status === 'completed' || Number(row.progress || 0) >= 100) {
+                        const course = courses.find(item => String(item.id) === String(courseId)) || {};
+                        let quizData = null;
+                        try {
+                            quizData = row.quizData ? JSON.parse(row.quizData) : null;
+                        } catch (error) {
+                            quizData = null;
+                        }
+
+                        const result = quizData || {
+                            courseId,
+                            courseName: row.courseName || course.name || 'Completed Course',
+                            courseEmoji: course.emoji || '',
+                            scorePercentage: Number(row.marks || 100),
+                            correctAnswers: Number(row.correctAnswers || row.marks || 0),
+                            totalQuestions: Number(row.totalQuestions || 0),
+                            grade: row.grade || 'A',
+                            passed: true,
+                            locked: true,
+                            completedAt: row.completedAt || new Date().toISOString(),
+                            certificateNumber: row.certificateNumber || StorageManager.get('certificateNumber') || ''
+                        };
+
+                        StorageManager.set('courseResult_' + courseId, result);
+                        if (result.certificateNumber) StorageManager.set('certificateNumber', result.certificateNumber);
+                    }
+                });
+            } catch (error) {
+                console.warn('Backend progress sync failed:', error.message);
+            }
         }
 
         function continueCourse(courseId) {

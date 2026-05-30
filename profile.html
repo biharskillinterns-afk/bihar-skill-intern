@@ -1613,7 +1613,13 @@
             if (typeof BSIAuthStorage !== 'undefined') {
                 BSIAuthStorage.clearActiveStudentSession();
             } else {
-                localStorage.clear();
+                [
+                    'isLoggedIn',
+                    'authToken',
+                    'token',
+                    'userPassword',
+                    'userRegistered'
+                ].forEach(key => localStorage.removeItem(key));
             }
             window.location.href = 'index.html';
         }

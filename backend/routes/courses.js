@@ -102,4 +102,75 @@ router.post('/:id/enroll', verifyToken, isStudent, async (req, res) => {
     }
 });
 
+// Save course progress and completion result
+router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
+    let connection;
+    try {
+        const courseId = req.params.id;
+        const {
+            progress = 0,
+            status,
+            marks,
+            grade,
+            certificateNumber,
+            quizData
+        } = req.body;
+
+        const safeProgress = Math.max(0, Math.min(100, Number(progress) || 0));
+        const finalStatus = status || (safeProgress >= 100 ? 'completed' : safeProgress > 0 ? 'in_progress' : 'enrolled');
+
+        connection = await req.db.getConnection();
+
+        const [courses] = await connection.query(
+            "SELECT id FROM courses WHERE id = ? AND status = 'active'",
+            [courseId]
+        );
+
+        if (courses.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Course not found or inactive'
+            });
+        }
+
+        await connection.query(
+            `INSERT INTO student_courses
+                (studentId, courseId, enrolledAt, progress, status, marks, grade, certificateNumber, quizData, completedAt)
+             VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?, IF(? = 'completed', NOW(), NULL))
+             ON DUPLICATE KEY UPDATE
+                progress = VALUES(progress),
+                status = VALUES(status),
+                marks = VALUES(marks),
+                grade = VALUES(grade),
+                certificateNumber = VALUES(certificateNumber),
+                quizData = VALUES(quizData),
+                completedAt = IF(VALUES(status) = 'completed', COALESCE(completedAt, NOW()), completedAt)`,
+            [
+                req.user.id,
+                courseId,
+                safeProgress,
+                finalStatus,
+                marks ?? null,
+                grade || null,
+                certificateNumber || null,
+                quizData ? JSON.stringify(quizData) : null,
+                finalStatus
+            ]
+        );
+
+        res.json({
+            success: true,
+            message: 'Course progress saved'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save course progress',
+            error: error.message
+        });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
 module.exports = router;

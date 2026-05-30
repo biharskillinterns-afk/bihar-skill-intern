@@ -451,10 +451,11 @@
 
     <script>
         // ============= LOCALSTORAGE UTILITY (FIX ALL GLITCHES) =============
+        const storageBackend = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
         const StorageManager = {
             get: (key, defaultValue = null) => {
                 try {
-                    const value = localStorage.getItem(key);
+                    const value = storageBackend.getItem(key);
                     if (value === null) return defaultValue;
                     if (value === 'true') return true;
                     if (value === 'false') return false;
@@ -472,13 +473,13 @@
             set: (key, value) => {
                 try {
                     if (value === null || value === undefined) {
-                        localStorage.removeItem(key);
+                        storageBackend.removeItem(key);
                     } else if (typeof value === 'object') {
-                        localStorage.setItem(key, JSON.stringify(value));
+                        storageBackend.setItem(key, JSON.stringify(value));
                     } else if (typeof value === 'boolean') {
-                        localStorage.setItem(key, value.toString());
+                        storageBackend.setItem(key, value.toString());
                     } else {
-                        localStorage.setItem(key, String(value));
+                        storageBackend.setItem(key, String(value));
                     }
                     return true;
                 } catch (e) {
@@ -2508,6 +2509,17 @@
             StorageManager.set('course_' + currentCourse, true);
             if (result.passed) {
                 updateSelectedCourseAfterPass(course);
+            }
+
+            if (typeof APIService !== 'undefined') {
+                APIService.updateCourseProgress(currentCourse, {
+                    progress: 100,
+                    status: 'completed',
+                    marks: scorePercentage,
+                    grade,
+                    certificateNumber: result.certificateNumber,
+                    quizData: result
+                }).catch(error => console.warn('Backend course progress sync failed:', error.message));
             }
 
             sessionStorage.setItem('quizScore', scorePercentage);
