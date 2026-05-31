@@ -267,10 +267,14 @@ CREATE TABLE IF NOT EXISTS password_resets (
 -- =============================================
 
 -- Insert sample courses
-INSERT IGNORE INTO courses (courseName, description, duration, instructor, level, certificate, fee) VALUES
-('Web Development Basics', 'Learn HTML, CSS, and JavaScript', 30, 'John Doe', 'beginner', TRUE, 2999),
-('Advanced Python', 'Master Python programming', 45, 'Jane Smith', 'intermediate', TRUE, 3999),
-('Mobile App Development', 'React Native and Flutter', 60, 'Alex Kumar', 'intermediate', TRUE, 4999);
+INSERT IGNORE INTO courses (id, courseName, description, duration, instructor, level, certificate, fee, status) VALUES
+(1, 'Web Development Basics', 'Learn HTML, CSS, and JavaScript', 30, 'John Doe', 'beginner', TRUE, 2999, 'active'),
+(2, 'Advanced Python', 'Master Python programming', 45, 'Jane Smith', 'intermediate', TRUE, 3999, 'active'),
+(3, 'Mobile App Development', 'React Native and Flutter', 60, 'Alex Kumar', 'intermediate', TRUE, 4999, 'active'),
+(10, 'Agriculture', 'Learn farming systems, crop production, soil management, irrigation, agri-business, and sustainable agriculture practices.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(11, 'Healthcare', 'Learn healthcare systems, disease prevention, nutrition, first aid, patient care, hygiene, and public health awareness.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(12, 'Teacher Training', 'Learn teaching methods, lesson planning, classroom management, student psychology, assessment, and modern teaching tools.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(13, 'Tourism', 'Learn tourism types, travel services, hospitality, destination management, cultural tourism, and tourism career skills.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active');
 
 -- Create your first admin through POST /api/auth/admin/register.
 -- The first admin is created as super_admin. After that, set ADMIN_REGISTRATION_KEY
