@@ -31,6 +31,20 @@ class BSIAuthStorage {
         return cleaned;
     }
 
+    static normalizeDateForInput(value) {
+        if (!value) return '';
+        const text = String(value).trim();
+        const isoMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (isoMatch) return isoMatch[1];
+
+        const parsed = new Date(text);
+        if (Number.isNaN(parsed.getTime())) return text;
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const day = String(parsed.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     static readWindowState() {
         try {
             if (!window.name) return {};
@@ -153,6 +167,8 @@ class BSIAuthStorage {
 
     static saveStudent(studentData, passwordHash) {
         studentData.id = studentData.id || studentData.studentId || (studentData.email ? `student_${studentData.email}` : `student_${Date.now()}`);
+        const wasLoggedIn = this.getItem('isLoggedIn') === 'true';
+        const hasActiveToken = Boolean(this.getItem('authToken') || this.getItem('token') || studentData.token);
         const previousStudentId = this.getItem('currentStudentId');
         const previousEmail = (this.getItem('userEmail') || this.getItem('userUsername') || '').toLowerCase();
         const nextEmail = String(studentData.email || '').toLowerCase();
@@ -233,9 +249,9 @@ class BSIAuthStorage {
         this.setItem('userMobile', studentData.phone || '');
         this.setItem('userGender', studentData.gender || '');
         this.setItem('userGuardian', studentData.guardian || '');
-        this.setItem('userDOB', studentData.dob || '');
+        this.setItem('userDOB', this.normalizeDateForInput(studentData.dob || studentData.dateOfBirth || studentData.userDOB || ''));
         this.setItem('userAddress', studentData.address || '');
-        this.setItem('userPincode', studentData.pincode || '');
+        this.setItem('userPincode', studentData.pincode || studentData.pinCode || studentData.pin || studentData.postalCode || studentData.userPincode || this.getItem('userPincode') || '');
         this.setItem('userState', studentData.state || 'Bihar');
         this.setItem('userUniversity', studentData.university || 'Veer Kunwar Singh University');
         this.setItem('userDistrict', studentData.district || '');
@@ -258,7 +274,7 @@ class BSIAuthStorage {
         this.setItem('userRegistered', 'true');
         this.setItem('paymentStatus', paymentStatus);
         this.setItem('isRegistrationComplete', paymentStatus === 'completed' ? 'true' : 'false');
-        this.setItem('isLoggedIn', 'false');
+        this.setItem('isLoggedIn', wasLoggedIn || hasActiveToken || studentData.isLoggedIn === true || studentData.isLoggedIn === 'true' ? 'true' : 'false');
     }
 
     static restoreStudentByEmail(email) {

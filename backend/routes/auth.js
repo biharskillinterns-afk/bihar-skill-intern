@@ -21,6 +21,18 @@ const getJwtSecret = () => {
 };
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost';
 
+const normalizeDateOnly = (value) => {
+    if (!value) return '';
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString().slice(0, 10);
+    }
+    const text = String(value).trim();
+    const isoMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoMatch) return isoMatch[1];
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? text : parsed.toISOString().slice(0, 10);
+};
+
 // Student Registration
 router.post('/register', validateStudentRegistration, async (req, res) => {
     try {
@@ -395,6 +407,72 @@ router.post('/reset-password', validateResetPassword, async (req, res) => {
             message: 'Password reset failed',
             error: error.message
         });
+    }
+});
+
+// Reset student password using registration details when email delivery is unavailable.
+router.post('/reset-password-by-details', async (req, res) => {
+    let connection;
+    try {
+        const { email, phone, dob, newPassword } = req.body;
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanPhone = String(phone || '').replace(/\D/g, '');
+        const cleanDob = normalizeDateOnly(dob);
+
+        if (!cleanEmail || !cleanPhone || !cleanDob || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email, phone, date of birth and new password are required'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must be at least 6 characters'
+            });
+        }
+
+        connection = await req.db.getConnection();
+        const [students] = await connection.query(
+            'SELECT id, email, phone, dob FROM students WHERE LOWER(email) = ? LIMIT 1',
+            [cleanEmail]
+        );
+
+        if (students.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No student account found with this email'
+            });
+        }
+
+        const student = students[0];
+        const storedPhone = String(student.phone || '').replace(/\D/g, '');
+        const storedDob = normalizeDateOnly(student.dob);
+
+        if (storedPhone !== cleanPhone || storedDob !== cleanDob) {
+            return res.status(403).json({
+                success: false,
+                message: 'Details do not match your registration record'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await connection.query('UPDATE students SET password = ? WHERE id = ?', [hashedPassword, student.id]);
+
+        res.json({
+            success: true,
+            message: 'Password reset successful. You can login with your new password now.'
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Password reset failed',
+            error: error.message
+        });
+    } finally {
+        if (connection) connection.release();
     }
 });
 

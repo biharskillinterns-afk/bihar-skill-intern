@@ -862,9 +862,9 @@
             setStorageValue('userPhone', student.phone || '');
             setStorageValue('userGender', student.gender || '');
             setStorageValue('userGuardian', student.guardian || student.fatherName || '');
-            setStorageValue('userDOB', student.dob || '');
+            setStorageValue('userDOB', normalizeDateInputValue(student.dob || student.dateOfBirth || student.userDOB || ''));
             setStorageValue('userAddress', student.address || '');
-            setStorageValue('userPincode', student.pincode || '');
+            setStorageValue('userPincode', getConsentPincode(student));
             setStorageValue('userState', student.state || 'Bihar');
             setStorageValue('userDistrict', student.district || '');
             setStorageValue('userCollege', student.college || '');
@@ -1025,13 +1025,35 @@
                 college: ['college', 'userCollege'],
                 session: ['session', 'userSession'],
                 district: ['district', 'city', 'userDistrict'],
-                pincode: ['pincode', 'pinCode', 'pin', 'postalCode', 'userPincode']
+                pincode: ['pincode', 'pinCode', 'pin', 'postalCode', 'zip', 'zipCode', 'userPincode'],
+                dob: ['dob', 'dateOfBirth', 'birthDate', 'userDOB']
             };
             const fields = aliases[field] || [field];
             for (const key of fields) {
                 if (studentData && studentData[key]) return studentData[key];
             }
             return localStorage.getItem(storageKey) || fallback;
+        }
+
+        function normalizeDateInputValue(value) {
+            if (!value) return '';
+            const text = String(value).trim();
+            const isoMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (isoMatch) return isoMatch[1];
+
+            const parsed = new Date(text);
+            if (Number.isNaN(parsed.getTime())) return '';
+            return formatDateForInput(parsed);
+        }
+
+        function extractPincodeFromText(value) {
+            const match = String(value || '').match(/\b\d{6}\b/);
+            return match ? match[0] : '';
+        }
+
+        function getConsentPincode(studentData) {
+            return getRegistrationValue(studentData, 'pincode', 'userPincode') ||
+                extractPincodeFromText(getRegistrationValue(studentData, 'address', 'userAddress'));
         }
 
         function formatDateForInput(date) {
@@ -1355,12 +1377,12 @@
                 document.getElementById('fatherName').value = data.fatherName || '';
                 document.getElementById('email').value = data.email || '';
                 document.getElementById('phone').value = data.phone || '';
-                document.getElementById('dob').value = data.dob || '';
+                document.getElementById('dob').value = normalizeDateInputValue(data.dob);
                 document.getElementById('gender').value = data.gender || '';
                 document.getElementById('address').value = data.address || '';
                 document.getElementById('city').value = data.city || '';
                 document.getElementById('state').value = data.state || '';
-                document.getElementById('pincode').value = data.pincode || '';
+                document.getElementById('pincode').value = data.pincode || getConsentPincode(studentData);
                 document.getElementById('courseName').value = data.courseName || '';
                 document.getElementById('startDate').value = data.startDate || '';
                 document.getElementById('endDate').value = data.endDate || '';
@@ -1374,12 +1396,12 @@
                 document.getElementById('fatherName').value = getRegistrationValue(studentData, 'guardian', 'userGuardian');
                 document.getElementById('email').value = getRegistrationValue(studentData, 'email', 'userEmail');
                 document.getElementById('phone').value = getRegistrationValue(studentData, 'phone', 'userPhone');
-                document.getElementById('dob').value = getRegistrationValue(studentData, 'dob', 'userDOB');
+                document.getElementById('dob').value = normalizeDateInputValue(getRegistrationValue(studentData, 'dob', 'userDOB'));
                 document.getElementById('gender').value = getRegistrationValue(studentData, 'gender', 'userGender');
                 document.getElementById('address').value = getRegistrationValue(studentData, 'address', 'userAddress');
                 document.getElementById('city').value = getRegistrationValue(studentData, 'district', 'userDistrict');
                 document.getElementById('state').value = getRegistrationValue(studentData, 'state', 'userState', 'Bihar');
-                document.getElementById('pincode').value = getRegistrationValue(studentData, 'pincode', 'userPincode');
+                document.getElementById('pincode').value = getConsentPincode(studentData);
                 document.getElementById('courseName').value = getRegistrationValue(studentData, 'skill', 'userSkill');
                 // Don't set empty values - let autoFillCourseDetails populate them
             }
@@ -1390,12 +1412,12 @@
                 fatherName: getRegistrationValue(studentData, 'guardian', 'userGuardian'),
                 email: getRegistrationValue(studentData, 'email', 'userEmail'),
                 phone: getRegistrationValue(studentData, 'phone', 'userPhone'),
-                dob: getRegistrationValue(studentData, 'dob', 'userDOB'),
+                dob: normalizeDateInputValue(getRegistrationValue(studentData, 'dob', 'userDOB')),
                 gender: getRegistrationValue(studentData, 'gender', 'userGender'),
                 address: getRegistrationValue(studentData, 'address', 'userAddress'),
                 city: getRegistrationValue(studentData, 'district', 'userDistrict'),
                 state: getRegistrationValue(studentData, 'state', 'userState', 'Bihar'),
-                pincode: getRegistrationValue(studentData, 'pincode', 'userPincode'),
+                pincode: getConsentPincode(studentData),
                 courseName: getRegistrationValue(studentData, 'skill', 'userSkill')
             };
 

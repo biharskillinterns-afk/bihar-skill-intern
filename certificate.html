@@ -1310,10 +1310,11 @@
         }
 
         window.addEventListener('load', () => {
-            const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const authStorage = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+            const loggedIn = authStorage.getItem('isLoggedIn') === 'true';
             const paymentComplete = typeof BSIAuthStorage !== 'undefined'
                 ? BSIAuthStorage.hasCompletedRegistration()
-                : localStorage.getItem('paymentStatus') === 'completed' || localStorage.getItem('isRegistrationComplete') === 'true';
+                : authStorage.getItem('paymentStatus') === 'completed' || authStorage.getItem('isRegistrationComplete') === 'true';
             const result = getCertificateResult();
             if (!loggedIn || !paymentComplete || !result) {
                 alert(!loggedIn ? 'Please login first.' : (!paymentComplete ? 'Please complete payment before viewing your certificate.' : 'Please pass a course before viewing your certificate.'));
