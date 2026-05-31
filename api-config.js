@@ -341,6 +341,34 @@ class BSIAuthStorage {
 
 // API Service Class
 class APIService {
+    static sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    static isNetworkError(error) {
+        const message = String(error?.message || '').toLowerCase();
+        return error?.name === 'TypeError' ||
+            message.includes('failed to fetch') ||
+            message.includes('network') ||
+            message.includes('timed out') ||
+            message.includes('load failed');
+    }
+
+    static async wakeBackend() {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
+            await fetch(`${API_BASE_URL}/health`, {
+                method: 'GET',
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+        } catch (error) {
+            console.warn('Backend wake-up check failed:', error.message);
+        }
+    }
+
     static getToken() {
         return BSIAuthStorage.getItem('authToken');
     }
@@ -396,10 +424,31 @@ class APIService {
     // =============================================
 
     static async registerStudent(data) {
-        const response = await this.request('/auth/pending-registration', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        let response;
+        let lastError;
+
+        for (let attempt = 1; attempt <= 2; attempt += 1) {
+            try {
+                if (attempt > 1) {
+                    await this.wakeBackend();
+                    await this.sleep(2500);
+                }
+
+                response = await this.request('/auth/pending-registration', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                break;
+            } catch (error) {
+                lastError = error;
+                if (!this.isNetworkError(error) || attempt === 2) {
+                    throw error;
+                }
+                await this.sleep(2500);
+            }
+        }
+
+        if (!response && lastError) throw lastError;
 
         if (response.success) {
             if (response.token) {

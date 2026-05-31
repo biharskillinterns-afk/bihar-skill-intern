@@ -1122,7 +1122,12 @@
                 }
             } catch (apiError) {
                 console.warn('Backend registration failed:', apiError.message);
-                finishWithError(`Backend registration failed: ${apiError.message}. Please start the backend and try again.`);
+                const errorText = String(apiError.message || '');
+                const networkIssue = /failed to fetch|network|timed out|load failed/i.test(errorText);
+                finishWithError(networkIssue
+                    ? 'Server connection failed. Please check internet, wait 30 seconds, and submit again. Your filled details are still on this page.'
+                    : `Backend registration failed: ${apiError.message}`
+                );
                 return;
             }
 
