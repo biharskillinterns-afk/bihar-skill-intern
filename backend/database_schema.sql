@@ -267,15 +267,30 @@ CREATE TABLE IF NOT EXISTS password_resets (
 -- =============================================
 
 -- Insert sample courses
-INSERT IGNORE INTO courses (id, courseName, description, duration, instructor, level, certificate, fee, status) VALUES
-(1, 'Web Development Basics', 'Learn HTML, CSS, and JavaScript', 30, 'John Doe', 'beginner', TRUE, 2999, 'active'),
-(2, 'Advanced Python', 'Master Python programming', 45, 'Jane Smith', 'intermediate', TRUE, 3999, 'active'),
-(3, 'Mobile App Development', 'React Native and Flutter', 60, 'Alex Kumar', 'intermediate', TRUE, 4999, 'active'),
+INSERT INTO courses (id, courseName, description, duration, instructor, level, certificate, fee, status) VALUES
+(1, 'Skill Development', 'Comprehensive training to develop practical and technical skills for professional growth.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(2, 'Social Work', 'Learn social welfare, community development, and making positive impact in society.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(3, 'Population Study', 'Study demographic trends, population dynamics, and social statistics.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(4, 'Disaster Management', 'Learn disaster prevention, emergency response, preparedness, recovery, and crisis management.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(5, 'Digital Literacy', 'Complete guide to digital skills, internet usage, online safety, and technology literacy.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(6, 'Web Development', 'Learn HTML, CSS, JavaScript, frontend and backend basics, hosting, deployment, SEO, testing, and full stack web development foundations.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(7, 'Cyber Security', 'Learn cyber safety, threats, malware, passwords, phishing, network security, and protection practices.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(8, 'Entrepreneurship', 'Learn business ideas, planning, innovation, startup basics, marketing, finance, and entrepreneurial skills.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
+(9, 'Financial Literacy', 'Learn budgeting, savings, banking, digital payments, investments, insurance, and smart money management.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
 (10, 'Agriculture', 'Learn farming systems, crop production, soil management, irrigation, agri-business, and sustainable agriculture practices.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
 (11, 'Healthcare', 'Learn healthcare systems, disease prevention, nutrition, first aid, patient care, hygiene, and public health awareness.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
 (12, 'Teacher Training', 'Learn teaching methods, lesson planning, classroom management, student psychology, assessment, and modern teaching tools.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
 (13, 'Tourism', 'Learn tourism types, travel services, hospitality, destination management, cultural tourism, and tourism career skills.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active'),
-(14, 'HR Management', 'Learn recruitment, selection, training, performance appraisal, motivation, compensation, employee welfare, labor laws, and HR analytics.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active');
+(14, 'HR Management', 'Learn recruitment, selection, training, performance appraisal, motivation, compensation, employee welfare, labor laws, and HR analytics.', 50, 'Bihar Skill Interns', 'beginner', TRUE, 0, 'active')
+ON DUPLICATE KEY UPDATE
+    courseName = VALUES(courseName),
+    description = VALUES(description),
+    duration = VALUES(duration),
+    instructor = VALUES(instructor),
+    level = VALUES(level),
+    certificate = VALUES(certificate),
+    fee = VALUES(fee),
+    status = VALUES(status);
 
 -- Create your first admin through POST /api/auth/admin/register.
 -- The first admin is created as super_admin. After that, set ADMIN_REGISTRATION_KEY

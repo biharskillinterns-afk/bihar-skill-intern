@@ -158,6 +158,49 @@ async function ensureRuntimeSchema(pool) {
                 INDEX idx_pending_created (createdAt)
             )
         `);
+
+        const defaultCourses = [
+            [1, 'Skill Development', 'Comprehensive training to develop practical and technical skills for professional growth.', 50],
+            [2, 'Social Work', 'Learn social welfare, community development, and making positive impact in society.', 50],
+            [3, 'Population Study', 'Study demographic trends, population dynamics, and social statistics.', 50],
+            [4, 'Disaster Management', 'Learn disaster prevention, emergency response, preparedness, recovery, and crisis management.', 50],
+            [5, 'Digital Literacy', 'Complete guide to digital skills, internet usage, online safety, and technology literacy.', 50],
+            [6, 'Web Development', 'Learn HTML, CSS, JavaScript, frontend and backend basics, hosting, deployment, SEO, testing, and full stack web development foundations.', 50],
+            [7, 'Cyber Security', 'Learn cyber safety, threats, malware, passwords, phishing, network security, and protection practices.', 50],
+            [8, 'Entrepreneurship', 'Learn business ideas, planning, innovation, startup basics, marketing, finance, and entrepreneurial skills.', 50],
+            [9, 'Financial Literacy', 'Learn budgeting, savings, banking, digital payments, investments, insurance, and smart money management.', 50],
+            [10, 'Agriculture', 'Learn farming systems, crop production, soil management, irrigation, agri-business, and sustainable agriculture practices.', 50],
+            [11, 'Healthcare', 'Learn healthcare systems, disease prevention, nutrition, first aid, patient care, hygiene, and public health awareness.', 50],
+            [12, 'Teacher Training', 'Learn teaching methods, lesson planning, classroom management, student psychology, assessment, and modern teaching tools.', 50],
+            [13, 'Tourism', 'Learn tourism types, travel services, hospitality, destination management, cultural tourism, and tourism career skills.', 50],
+            [14, 'HR Management', 'Learn recruitment, selection, training, performance appraisal, motivation, compensation, employee welfare, labor laws, and HR analytics.', 50]
+        ];
+
+        await connection.query(
+            `INSERT INTO courses (id, courseName, description, duration, instructor, level, certificate, fee, status, createdAt)
+             VALUES ?
+             ON DUPLICATE KEY UPDATE
+                courseName = VALUES(courseName),
+                description = VALUES(description),
+                duration = VALUES(duration),
+                instructor = VALUES(instructor),
+                level = VALUES(level),
+                certificate = VALUES(certificate),
+                fee = VALUES(fee),
+                status = VALUES(status)`,
+            [defaultCourses.map(([id, courseName, description, duration]) => [
+                id,
+                courseName,
+                description,
+                duration,
+                'Bihar Skill Interns',
+                'beginner',
+                true,
+                0,
+                'active',
+                new Date()
+            ])]
+        );
     } finally {
         connection.release();
     }
