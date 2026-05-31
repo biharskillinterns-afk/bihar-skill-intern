@@ -164,6 +164,140 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
     }
 });
 
+// Save registration details temporarily. The real student login is created only after payment is completed.
+router.post('/pending-registration', validateStudentRegistration, async (req, res) => {
+    let connection;
+    try {
+        const {
+            firstName,
+            lastName,
+            email,
+            phone,
+            password,
+            dob,
+            gender,
+            college,
+            course = '',
+            district,
+            rollNo,
+            rollno,
+            guardian,
+            address,
+            pincode,
+            university,
+            degree,
+            department,
+            semester,
+            session,
+            emergencyName,
+            emergencyPhone,
+            relationship,
+            profileImage,
+            signature
+        } = req.body;
+
+        connection = await req.db.getConnection();
+
+        const [existingUser] = await connection.query('SELECT id FROM students WHERE email = ?', [email]);
+        if (existingUser.length > 0) {
+            const existingStudentId = existingUser[0].id;
+            const [completedPayments] = await connection.query(
+                "SELECT id FROM payments WHERE studentId = ? AND status = 'completed' LIMIT 1",
+                [existingStudentId]
+            );
+
+            if (completedPayments.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already registered'
+                });
+            }
+
+            await connection.query('DELETE FROM students WHERE id = ?', [existingStudentId]);
+        }
+
+        await connection.query('DELETE FROM pending_registrations WHERE email = ?', [email]);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const [result] = await connection.query(
+            `INSERT INTO pending_registrations
+                (firstName, lastName, email, phone, password, dob, gender, college, course, district,
+                 rollNo, guardian, address, pincode, university, degree, department, semester, session,
+                 emergencyName, emergencyPhone, relationship, profileImage, signature, expiresAt, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW())`,
+            [
+                firstName,
+                lastName,
+                email,
+                phone,
+                hashedPassword,
+                dob,
+                gender,
+                college,
+                course,
+                district,
+                rollNo || rollno || '',
+                guardian || '',
+                address || '',
+                pincode || '',
+                university || 'Veer Kunwar Singh University',
+                degree || '',
+                department || '',
+                semester || '',
+                session || '',
+                emergencyName || '',
+                emergencyPhone || '',
+                relationship || '',
+                profileImage || '',
+                signature || ''
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Registration details saved. Complete payment to create your login.',
+            pendingRegistrationId: result.insertId,
+            student: {
+                id: `pending_${result.insertId}`,
+                pendingRegistrationId: result.insertId,
+                firstName,
+                lastName,
+                email,
+                phone,
+                dob,
+                gender,
+                college,
+                course,
+                district,
+                rollNo: rollNo || rollno || '',
+                rollno: rollNo || rollno || '',
+                guardian: guardian || '',
+                address: address || '',
+                pincode: pincode || '',
+                university: university || 'Veer Kunwar Singh University',
+                degree: degree || '',
+                department: department || '',
+                semester: semester || '',
+                session: session || '',
+                emergencyName: emergencyName || '',
+                emergencyPhone: emergencyPhone || '',
+                relationship: relationship || '',
+                profileImage: profileImage || '',
+                signature: signature || '',
+                paymentStatus: 'pending'
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Registration could not be saved',
+            error: error.message
+        });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
 // Student Login
 router.post('/login', validateLogin, async (req, res) => {
     try {

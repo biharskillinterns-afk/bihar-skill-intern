@@ -40,6 +40,42 @@ CREATE TABLE IF NOT EXISTS students (
 );
 
 -- =============================================
+-- PENDING REGISTRATIONS (Promoted only after payment)
+-- =============================================
+CREATE TABLE IF NOT EXISTS pending_registrations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    dob DATE NOT NULL,
+    gender ENUM('male', 'female', 'other') NOT NULL,
+    college VARCHAR(150) NOT NULL,
+    course VARCHAR(150) DEFAULT '',
+    district VARCHAR(100),
+    state VARCHAR(100) DEFAULT 'Bihar',
+    rollNo VARCHAR(50),
+    guardian VARCHAR(150),
+    address TEXT,
+    pincode VARCHAR(10),
+    university VARCHAR(150) DEFAULT 'Veer Kunwar Singh University',
+    degree VARCHAR(100),
+    department VARCHAR(100),
+    semester VARCHAR(50),
+    session VARCHAR(50),
+    emergencyName VARCHAR(150),
+    emergencyPhone VARCHAR(20),
+    relationship VARCHAR(100),
+    profileImage LONGTEXT,
+    signature LONGTEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expiresAt TIMESTAMP NULL,
+    INDEX idx_pending_email (email),
+    INDEX idx_pending_created (createdAt)
+);
+
+-- =============================================
 -- ADMINS TABLE
 -- =============================================
 CREATE TABLE IF NOT EXISTS admins (

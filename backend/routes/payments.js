@@ -194,16 +194,110 @@ async function savePendingRegistrationPayment(req, paymentData) {
     }
 }
 
+function formatStudentResponse(student, paymentStatus = 'completed') {
+    if (!student) return null;
+    return {
+        id: student.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+        phone: student.phone,
+        dob: student.dob,
+        gender: student.gender,
+        college: student.college,
+        course: student.course,
+        district: student.district,
+        state: student.state,
+        rollNo: student.rollNo,
+        rollno: student.rollNo,
+        guardian: student.guardian,
+        address: student.address,
+        pincode: student.pincode,
+        university: student.university,
+        degree: student.degree,
+        department: student.department,
+        semester: student.semester,
+        session: student.session,
+        emergencyName: student.emergencyName,
+        emergencyPhone: student.emergencyPhone,
+        relationship: student.relationship,
+        profileImage: student.profileImage,
+        signature: student.signature,
+        paymentStatus
+    };
+}
+
+async function createStudentFromPendingRegistration(connection, pendingRegistrationId) {
+    if (!pendingRegistrationId) return null;
+
+    const [pendingRows] = await connection.query(
+        `SELECT * FROM pending_registrations
+         WHERE id = ? AND (expiresAt IS NULL OR expiresAt > NOW())
+         LIMIT 1`,
+        [pendingRegistrationId]
+    );
+
+    if (pendingRows.length === 0) return null;
+    const pending = pendingRows[0];
+
+    const [existingStudents] = await connection.query('SELECT * FROM students WHERE email = ? LIMIT 1', [pending.email]);
+    if (existingStudents.length > 0) {
+        await connection.query('DELETE FROM pending_registrations WHERE id = ?', [pending.id]);
+        return existingStudents[0];
+    }
+
+    const [result] = await connection.query(
+        `INSERT INTO students
+            (firstName, lastName, email, phone, password, dob, gender, college, course, district,
+             rollNo, guardian, address, pincode, university, degree, department, semester, session,
+             emergencyName, emergencyPhone, relationship, profileImage, signature, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+            pending.firstName,
+            pending.lastName,
+            pending.email,
+            pending.phone,
+            pending.password,
+            pending.dob,
+            pending.gender,
+            pending.college,
+            pending.course || '',
+            pending.district || '',
+            pending.rollNo || '',
+            pending.guardian || '',
+            pending.address || '',
+            pending.pincode || '',
+            pending.university || 'Veer Kunwar Singh University',
+            pending.degree || '',
+            pending.department || '',
+            pending.semester || '',
+            pending.session || '',
+            pending.emergencyName || '',
+            pending.emergencyPhone || '',
+            pending.relationship || '',
+            pending.profileImage || '',
+            pending.signature || ''
+        ]
+    );
+
+    await connection.query('DELETE FROM pending_registrations WHERE id = ?', [pending.id]);
+    return {
+        ...pending,
+        id: result.insertId
+    };
+}
+
 async function markRegistrationPaymentCompleted(req, paymentData) {
     let connection;
     try {
         connection = await req.db.getConnection();
         const existingPayment = await findPaymentByOrder(connection, paymentData.razorpayOrderId);
-        const studentId = existingPayment?.studentId || await findStudentId(connection, req, paymentData.studentEmail);
+        const createdStudent = await createStudentFromPendingRegistration(connection, paymentData.pendingRegistrationId);
+        const studentId = existingPayment?.studentId || createdStudent?.id || await findStudentId(connection, req, paymentData.studentEmail);
         const courseId = existingPayment?.courseId || await getOrCreateDefaultCourseId(connection);
 
         if (!studentId || !courseId) {
-            return false;
+            return null;
         }
 
         await connection.beginTransaction();
@@ -245,7 +339,11 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
             );
 
             await connection.commit();
-            return true;
+            return {
+                success: true,
+                studentId,
+                student: createdStudent ? formatStudentResponse(createdStudent, 'completed') : null
+            };
         } catch (error) {
             await connection.rollback();
             throw error;
@@ -253,7 +351,7 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
     } catch (error) {
         console.warn('Unable to mark Razorpay payment completed:', error.message);
         req.paymentCompletionError = error.message;
-        return false;
+        return null;
     } finally {
         if (connection) connection.release();
     }
@@ -338,7 +436,7 @@ async function syncCompletedPaymentsForStudent(db, studentId, studentEmail = '')
 
 router.post('/registration-order', async (req, res) => {
     try {
-        const { studentName, studentEmail, studentPhone, localOrderId } = req.body;
+        const { studentName, studentEmail, studentPhone, localOrderId, pendingRegistrationId } = req.body;
         const { keyId, keySecret } = getRazorpayConfig();
         const payableAmount = await getRegistrationAmount(req.db);
 
@@ -363,7 +461,8 @@ router.post('/registration-order', async (req, res) => {
                 purpose: 'registration_fee',
                 studentName: String(studentName || ''),
                 studentEmail: String(studentEmail || ''),
-                studentPhone: String(studentPhone || '')
+                studentPhone: String(studentPhone || ''),
+                pendingRegistrationId: String(pendingRegistrationId || '')
             }
         });
 
@@ -371,7 +470,8 @@ router.post('/registration-order', async (req, res) => {
             amount: payableAmount,
             razorpayOrderId: order.id,
             localOrderId,
-            studentEmail
+            studentEmail,
+            pendingRegistrationId
         });
 
         res.json({
@@ -410,7 +510,7 @@ router.get('/registration-amount', async (req, res) => {
 
 router.post('/registration-verify', async (req, res) => {
     try {
-        const { razorpayPaymentId, razorpayOrderId, razorpaySignature, studentEmail, amount } = req.body;
+        const { razorpayPaymentId, razorpayOrderId, razorpaySignature, studentEmail, amount, pendingRegistrationId } = req.body;
 
         if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
             return res.status(400).json({
@@ -426,18 +526,26 @@ router.post('/registration-verify', async (req, res) => {
             });
         }
 
-        const databaseUpdated = await markRegistrationPaymentCompleted(req, {
+        const completion = await markRegistrationPaymentCompleted(req, {
             razorpayPaymentId,
             razorpayOrderId,
             studentEmail,
+            pendingRegistrationId,
             amount: getValidAmount(amount) || await getRegistrationAmount(req.db)
         });
+        const token = completion?.student ? jwt.sign(
+            { id: completion.student.id, email: completion.student.email, role: 'student' },
+            getJwtSecret(),
+            { expiresIn: process.env.JWT_EXPIRE || '7d' }
+        ) : null;
 
         res.json({
             success: true,
             message: 'Registration payment verified successfully',
             paymentStatus: 'completed',
-            databaseUpdated
+            databaseUpdated: Boolean(completion),
+            token,
+            student: completion?.student || null
         });
     } catch (error) {
         res.status(500).json({
@@ -455,6 +563,7 @@ router.post('/registration-callback', async (req, res) => {
         const razorpayOrderId = req.body.razorpay_order_id;
         const razorpaySignature = req.body.razorpay_signature;
         const studentEmail = req.query.studentEmail || req.body.studentEmail || '';
+        const pendingRegistrationId = req.query.pendingRegistrationId || req.body.pendingRegistrationId || '';
         const amount = getValidAmount(req.query.amount || req.body.amount) || await getRegistrationAmount(req.db);
 
         if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
@@ -469,6 +578,7 @@ router.post('/registration-callback', async (req, res) => {
             razorpayPaymentId,
             razorpayOrderId,
             studentEmail,
+            pendingRegistrationId,
             amount
         });
 
@@ -489,6 +599,7 @@ router.get('/registration-status/:orderId', async (req, res) => {
     try {
         const { orderId } = req.params;
         const studentEmail = req.query.studentEmail || '';
+        const pendingRegistrationId = req.query.pendingRegistrationId || '';
         const amount = getValidAmount(req.query.amount) || await getRegistrationAmount(req.db);
 
         if (!orderId) {
@@ -512,10 +623,11 @@ router.get('/registration-status/:orderId', async (req, res) => {
             });
         }
 
-        const databaseUpdated = await markRegistrationPaymentCompleted(req, {
+        const completion = await markRegistrationPaymentCompleted(req, {
             razorpayPaymentId: successfulPayment.id,
             razorpayOrderId: orderId,
             studentEmail: studentEmail || getPaymentEmail(successfulPayment),
+            pendingRegistrationId,
             amount,
             paymentMethod: mapPaymentMethod(successfulPayment.method)
         });
@@ -524,7 +636,8 @@ router.get('/registration-status/:orderId', async (req, res) => {
             success: true,
             status: 'completed',
             paymentStatus: 'completed',
-            databaseUpdated,
+            databaseUpdated: Boolean(completion),
+            student: completion?.student || null,
             razorpayPaymentId: successfulPayment.id,
             razorpayOrderId: orderId
         });
@@ -539,7 +652,7 @@ router.get('/registration-status/:orderId', async (req, res) => {
 
 router.post('/registration-reconcile', async (req, res) => {
     try {
-        const { studentEmail = '', razorpayPaymentId = '', razorpayOrderId = '' } = req.body;
+        const { studentEmail = '', razorpayPaymentId = '', razorpayOrderId = '', pendingRegistrationId = '' } = req.body;
 
         if (!studentEmail || (!razorpayPaymentId && !razorpayOrderId)) {
             return res.status(400).json({
@@ -578,20 +691,28 @@ router.post('/registration-reconcile', async (req, res) => {
             });
         }
 
-        const databaseUpdated = await markRegistrationPaymentCompleted(req, {
+        const completion = await markRegistrationPaymentCompleted(req, {
             razorpayPaymentId: successfulPayment.id,
             razorpayOrderId: successfulPayment.order_id || razorpayOrderId,
             studentEmail,
+            pendingRegistrationId,
             amount: getValidAmount(Number(successfulPayment.amount) / 100) || await getRegistrationAmount(req.db),
             paymentMethod: mapPaymentMethod(successfulPayment.method)
         });
+        const token = completion?.student ? jwt.sign(
+            { id: completion.student.id, email: completion.student.email, role: 'student' },
+            getJwtSecret(),
+            { expiresIn: process.env.JWT_EXPIRE || '7d' }
+        ) : null;
 
         res.json({
-            success: databaseUpdated,
-            status: databaseUpdated ? 'completed' : 'not_updated',
-            paymentStatus: databaseUpdated ? 'completed' : 'pending',
-            databaseUpdated,
-            error: databaseUpdated ? undefined : req.paymentCompletionError,
+            success: Boolean(completion),
+            status: completion ? 'completed' : 'not_updated',
+            paymentStatus: completion ? 'completed' : 'pending',
+            databaseUpdated: Boolean(completion),
+            token,
+            student: completion?.student || null,
+            error: completion ? undefined : req.paymentCompletionError,
             razorpayPaymentId: successfulPayment.id,
             razorpayOrderId: successfulPayment.order_id || razorpayOrderId
         });

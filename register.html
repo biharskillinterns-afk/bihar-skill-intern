@@ -1101,7 +1101,11 @@
                                 console.warn('Student cache save skipped:', error.message);
                             }
                         }
-                        studentData.id = response.student?.id ? 'student_' + response.student.id : studentId;
+                        studentData.id = response.student?.id || studentId;
+                        if (response.pendingRegistrationId) {
+                            studentData.pendingRegistrationId = response.pendingRegistrationId;
+                            storage.setItem('pendingRegistrationId', response.pendingRegistrationId);
+                        }
                         saveRegisteredStudent(studentData, passwordHash);
 
                         storage.setItem('paymentStatus', 'pending');

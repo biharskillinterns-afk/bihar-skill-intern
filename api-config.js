@@ -396,7 +396,7 @@ class APIService {
     // =============================================
 
     static async registerStudent(data) {
-        const response = await this.request('/auth/register', {
+        const response = await this.request('/auth/pending-registration', {
             method: 'POST',
             body: JSON.stringify(data)
         });
