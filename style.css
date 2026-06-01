@@ -188,6 +188,31 @@ section h3 {
     color: #1e40af;
 }
 
+.helpline-card {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 auto 24px;
+    padding: 12px 16px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #14532d;
+    font-weight: 700;
+}
+
+.helpline-card a {
+    color: #047857;
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.helpline-card a:hover {
+    text-decoration: underline;
+}
+
 /* Footer */
 footer {
     background: #1e40af;
