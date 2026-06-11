@@ -318,6 +318,36 @@
             font-weight: 600;
         }
 
+        .payment-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.82em;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .payment-badge.paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .payment-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .payment-badge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .payment-badge.unknown {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
         .action-btn {
             padding: 8px 16px;
             background: #667eea;
@@ -828,7 +858,7 @@
                 <input 
                     type="text" 
                     id="searchInput" 
-                    placeholder="Search by name, email, district, or college..."
+                    placeholder="Search by name, email, phone, roll no, payment id, district, or college..."
                     oninput="searchStudents()"
                 >
                 <select id="districtFilter" onchange="updateCollegeFilterFromDistrict(); searchStudents();">
@@ -836,6 +866,13 @@
                 </select>
                 <select id="collegeFilter" onchange="searchStudents();">
                     <option value="">All Colleges</option>
+                </select>
+                <select id="paymentFilter" onchange="searchStudents();">
+                    <option value="">All Payments</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                    <option value="unknown">Unknown</option>
                 </select>
                 <button class="search-btn" onclick="searchStudents()">🔍 Search</button>
                 <button class="search-btn" style="background: #10b981; margin-left: 10px;" onclick="downloadExcel()">📊 Download Excel</button>
@@ -849,13 +886,14 @@
                             <th>Email</th>
                             <th>District</th>
                             <th>College</th>
+                            <th>Payment</th>
                             <th>Current Course</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px;">
+                            <td colspan="7" style="text-align: center; padding: 40px;">
                                 <div class="no-data">
                                     <p>No students registered yet</p>
                                 </div>
@@ -877,6 +915,11 @@
             </div>
 
             <div class="admin-grid">
+                <div class="admin-panel">
+                    <h3>Payment Overview</h3>
+                    <div id="paymentOverviewPanel"></div>
+                </div>
+
                 <div class="admin-panel">
                     <h3>Student Progress Tracker</h3>
                     <div id="progressTrackerPanel"></div>
@@ -1360,6 +1403,77 @@
             return String(value || '').trim().toLowerCase().replace(/\s+/g, '');
         }
 
+        function getRawStudent(student) {
+            return student?.fullData || student || {};
+        }
+
+        function normalizePaymentStatus(student) {
+            const raw = getRawStudent(student);
+            const statusText = String(
+                raw.paymentStatus ||
+                raw.registrationPaymentStatus ||
+                raw.payment_status ||
+                raw.status ||
+                ''
+            ).trim().toLowerCase();
+
+            if (['completed', 'captured', 'paid', 'success', 'active', 'verified'].includes(statusText)) {
+                return 'paid';
+            }
+
+            if (['failed', 'cancelled', 'canceled', 'refunded', 'rejected'].includes(statusText)) {
+                return 'failed';
+            }
+
+            if (['pending', 'created', 'attempted', 'processing'].includes(statusText)) {
+                return 'pending';
+            }
+
+            if (raw.razorpayPaymentId || raw.paymentId || raw.payment_id || raw.lastPaymentId) {
+                return 'paid';
+            }
+
+            return 'unknown';
+        }
+
+        function getPaymentStatusLabel(student) {
+            const status = normalizePaymentStatus(student);
+            return {
+                paid: 'Paid',
+                pending: 'Pending',
+                failed: 'Failed',
+                unknown: 'Unknown'
+            }[status] || 'Unknown';
+        }
+
+        function getStudentSearchText(student) {
+            const raw = getRawStudent(student);
+            return [
+                student.name,
+                student.email,
+                student.phone,
+                student.district,
+                student.college,
+                student.course,
+                student.rollno,
+                student.department,
+                raw.gender,
+                raw.guardian,
+                raw.pincode,
+                raw.pinCode,
+                raw.address,
+                raw.state,
+                raw.university,
+                raw.degree,
+                raw.semester,
+                raw.session,
+                raw.razorpayPaymentId,
+                raw.razorpayOrderId,
+                raw.paymentId,
+                raw.orderId
+            ].map(value => String(value || '').toLowerCase()).join(' ');
+        }
+
         function findStudentByRollNumber(rollNumber) {
             const target = normalizeRollNumber(rollNumber);
             if (!target) return null;
@@ -1601,6 +1715,7 @@
         function renderAdminExtras() {
             renderPaymentAmountSettings();
             loadPaymentAmountSettings();
+            renderPaymentOverview();
             renderProgressTracker();
             renderQuizReport();
             renderCertificatePanel();
@@ -1608,6 +1723,26 @@
             renderPendingActions();
             renderNoticePanel();
             renderActivityLog();
+        }
+
+        function renderPaymentOverview() {
+            const panel = document.getElementById('paymentOverviewPanel');
+            if (!panel) return;
+
+            const counts = allStudents.reduce((summary, student) => {
+                const status = normalizePaymentStatus(student);
+                summary[status] = (summary[status] || 0) + 1;
+                return summary;
+            }, { paid: 0, pending: 0, failed: 0, unknown: 0 });
+
+            panel.innerHTML = `
+                <div class="student-detail-grid" style="grid-template-columns: repeat(2, minmax(120px, 1fr));">
+                    <div class="detail-box"><strong>Paid</strong><span class="payment-badge paid">${counts.paid}</span></div>
+                    <div class="detail-box"><strong>Pending</strong><span class="payment-badge pending">${counts.pending}</span></div>
+                    <div class="detail-box"><strong>Failed</strong><span class="payment-badge failed">${counts.failed}</span></div>
+                    <div class="detail-box"><strong>Unknown</strong><span class="payment-badge unknown">${counts.unknown}</span></div>
+                </div>
+            `;
         }
 
         function getConfiguredPaymentAmount() {
@@ -1958,14 +2093,32 @@
             const summary = getStudentCourseSummary(student);
             const body = document.getElementById('studentDetailBody');
             const result = summary.result || {};
+            const raw = getRawStudent(student);
+            const paymentStatus = getPaymentStatusLabel(student);
+            const paymentId = raw.razorpayPaymentId || raw.paymentId || raw.payment_id || raw.lastPaymentId || 'N/A';
+            const orderId = raw.razorpayOrderId || raw.orderId || raw.order_id || raw.lastOrderId || 'N/A';
+            const amountPaid = raw.paymentAmount || raw.amountPaid || raw.registrationAmount || 'N/A';
+            const paidAt = raw.paymentCompletedAt || raw.paidAt || raw.registrationDate || raw.createdAt || 'N/A';
             body.innerHTML = `
                 <div class="student-detail-grid">
                     <div class="detail-box"><strong>Name</strong>${escapeHTML(student.name)}</div>
                     <div class="detail-box"><strong>Email</strong>${escapeHTML(student.email)}</div>
                     <div class="detail-box"><strong>Phone</strong>${escapeHTML(student.phone)}</div>
+                    <div class="detail-box"><strong>Gender</strong>${escapeHTML(raw.gender || 'N/A')}</div>
+                    <div class="detail-box"><strong>Father/Guardian</strong>${escapeHTML(raw.guardian || raw.fatherName || 'N/A')}</div>
+                    <div class="detail-box"><strong>Date of Birth</strong>${escapeHTML(student.dob || raw.dob || raw.dateOfBirth || 'N/A')}</div>
                     <div class="detail-box"><strong>District</strong>${escapeHTML(student.district)}</div>
                     <div class="detail-box"><strong>College</strong>${escapeHTML(student.college)}</div>
+                    <div class="detail-box"><strong>Pincode</strong>${escapeHTML(student.pincode || raw.pincode || raw.pinCode || 'N/A')}</div>
                     <div class="detail-box"><strong>Roll No.</strong>${escapeHTML(student.rollno)}</div>
+                </div>
+                <h3 style="margin-top:18px;">Payment Status</h3>
+                <div class="student-detail-grid">
+                    <div class="detail-box"><strong>Status</strong><span class="payment-badge ${normalizePaymentStatus(student)}">${paymentStatus}</span></div>
+                    <div class="detail-box"><strong>Amount</strong>${amountPaid === 'N/A' ? 'N/A' : '₹' + escapeHTML(amountPaid)}</div>
+                    <div class="detail-box"><strong>Payment ID</strong>${escapeHTML(paymentId)}</div>
+                    <div class="detail-box"><strong>Order ID</strong>${escapeHTML(orderId)}</div>
+                    <div class="detail-box"><strong>Payment/Registration Date</strong>${escapeHTML(paidAt)}</div>
                 </div>
                 <h3 style="margin-top:18px;">Course Status</h3>
                 <div class="student-detail-grid">
@@ -2098,6 +2251,8 @@
                             dob: student.dob || 'N/A',
                             rollno: student.rollno || student.id || 'N/A',
                             department: student.department || 'N/A',
+                            pincode: student.pincode || 'N/A',
+                            paymentStatus: student.paymentStatus || student.status || 'unknown',
                             fullData: student
                         }));
                         displayStudents(allStudents);
@@ -2125,7 +2280,7 @@
             if (students.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <div class="no-data">
                                 <p>No students registered yet</p>
                             </div>
@@ -2135,19 +2290,23 @@
                 return;
             }
 
-            tableBody.innerHTML = students.map((student, index) => `
+            tableBody.innerHTML = students.map(student => {
+                const sourceIndex = allStudents.findIndex(item => String(item.id) === String(student.id));
+                return `
                 <tr>
                     <td><div class="student-name">${escapeHTML(student.name)}</div><div class="student-email">${escapeHTML(student.email)}</div></td>
                     <td>${escapeHTML(student.email)}</td>
                     <td>${escapeHTML(student.district)}</td>
                     <td>${escapeHTML(student.college)}</td>
+                    <td><span class="payment-badge ${normalizePaymentStatus(student)}">${getPaymentStatusLabel(student)}</span></td>
                     <td><span class="course-badge">${escapeHTML(student.course)}</span></td>
                     <td>
-                        <button class="action-btn" onclick="openEditModal(${index})">Edit</button>
-                        <button class="action-btn" style="background:#14b8a6;" onclick="openStudentDetailModal(${index})">Details</button>
+                        <button class="action-btn" onclick="openEditModal(${sourceIndex})">Edit</button>
+                        <button class="action-btn" style="background:#14b8a6;" onclick="openStudentDetailModal(${sourceIndex})">Details</button>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
         function openEditModal(index) {
             const student = allStudents[index];
@@ -2196,19 +2355,15 @@
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const districtFilter = document.getElementById('districtFilter').value.toLowerCase();
             const collegeFilter = document.getElementById('collegeFilter').value.toLowerCase();
+            const paymentFilter = document.getElementById('paymentFilter')?.value || '';
 
             const filtered = allStudents.filter(student => {
-                const matchesSearch = [
-                    student.name,
-                    student.email,
-                    student.district,
-                    student.college,
-                    student.course
-                ].some(field => String(field).toLowerCase().includes(searchTerm));
+                const matchesSearch = !searchTerm || getStudentSearchText(student).includes(searchTerm);
 
                 const matchesDistrict = !districtFilter || student.district.toLowerCase() === districtFilter;
                 const matchesCollege = !collegeFilter || student.college.toLowerCase() === collegeFilter;
-                return matchesSearch && matchesDistrict && matchesCollege;
+                const matchesPayment = !paymentFilter || normalizePaymentStatus(student) === paymentFilter;
+                return matchesSearch && matchesDistrict && matchesCollege && matchesPayment;
             });
 
             displayStudents(filtered);
@@ -2308,10 +2463,11 @@
 
             const priorityColumns = [
                 'id', 'name', 'firstName', 'lastName', 'email', 'phone', 'gender', 'guardian',
-                'dob', 'address', 'state', 'university', 'district', 'college', 'degree',
+                'dob', 'address', 'pincode', 'state', 'university', 'district', 'college', 'degree',
                 'department', 'semester', 'session', 'rollno', 'skill', 'course',
                 'emergencyName', 'emergencyPhone', 'relationship', 'registered',
-                'paymentStatus', 'registrationDate'
+                'paymentStatus', 'paymentStatusLabel', 'paymentAmount', 'razorpayPaymentId', 'razorpayOrderId',
+                'progress', 'certificateStatus', 'certificateNumber', 'registrationDate'
             ];
             const blockedColumns = new Set(['password', 'passwordHash', 'userPassword', 'userPasswordHash', 'token', 'authToken']);
             const columnSet = new Set(priorityColumns);
@@ -2333,6 +2489,7 @@
                 return `"${text.replace(/"/g, '""')}"`;
             };
             const rows = allStudents.map(student => {
+                const summary = getStudentCourseSummary(student);
                 const data = {
                     ...student.fullData,
                     id: student.id,
@@ -2343,8 +2500,15 @@
                     college: student.college,
                     department: student.department,
                     rollno: student.rollno,
+                    pincode: student.pincode || student.fullData?.pincode || student.fullData?.pinCode || '',
                     course: student.course,
-                    skill: student.fullData?.skill || student.course
+                    skill: student.fullData?.skill || student.course,
+                    paymentStatus: normalizePaymentStatus(student),
+                    paymentStatusLabel: getPaymentStatusLabel(student),
+                    paymentAmount: student.fullData?.paymentAmount || student.fullData?.amountPaid || student.fullData?.registrationAmount || '',
+                    progress: `${summary.progress}%`,
+                    certificateStatus: summary.certificateStatus,
+                    certificateNumber: summary.result?.certificateNumber || ''
                 };
                 return columns.map(column => csvEscape(data[column])).join(',');
             });

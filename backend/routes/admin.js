@@ -57,9 +57,22 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
         const [students] = await connection.query(
-            `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state,
-                    rollNo, rollNo AS rollno, pincode, status, createdAt
-             FROM students`
+            `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
+                    s.course, s.district, s.state, s.rollNo, s.rollNo AS rollno, s.pincode,
+                    s.status, s.createdAt, p.status AS paymentStatus, p.amount AS paymentAmount,
+                    p.gatewayPaymentId AS razorpayPaymentId, p.gatewayOrderId AS razorpayOrderId,
+                    p.completedAt AS paymentCompletedAt, p.createdAt AS paymentCreatedAt
+             FROM students s
+             LEFT JOIN (
+                SELECT p1.*
+                FROM payments p1
+                INNER JOIN (
+                    SELECT studentId, MAX(id) AS latestPaymentId
+                    FROM payments
+                    GROUP BY studentId
+                ) latest ON latest.latestPaymentId = p1.id
+             ) p ON p.studentId = s.id
+             ORDER BY s.createdAt DESC`
         );
         connection.release();
         
@@ -82,10 +95,25 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
         const [students] = await connection.query(
-            `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state,
-                    rollNo, rollNo AS rollno, guardian, address, pincode, university, degree, department, semester, session,
-                    emergencyName, emergencyPhone, relationship, profileImage, signature, bio, status, createdAt, updatedAt
-             FROM students WHERE id = ?`,
+            `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
+                    s.course, s.district, s.state, s.rollNo, s.rollNo AS rollno, s.guardian, s.address,
+                    s.pincode, s.university, s.degree, s.department, s.semester, s.session,
+                    s.emergencyName, s.emergencyPhone, s.relationship, s.profileImage, s.signature,
+                    s.bio, s.status, s.createdAt, s.updatedAt, p.status AS paymentStatus,
+                    p.amount AS paymentAmount, p.gatewayPaymentId AS razorpayPaymentId,
+                    p.gatewayOrderId AS razorpayOrderId, p.completedAt AS paymentCompletedAt,
+                    p.createdAt AS paymentCreatedAt
+             FROM students s
+             LEFT JOIN (
+                SELECT p1.*
+                FROM payments p1
+                INNER JOIN (
+                    SELECT studentId, MAX(id) AS latestPaymentId
+                    FROM payments
+                    GROUP BY studentId
+                ) latest ON latest.latestPaymentId = p1.id
+             ) p ON p.studentId = s.id
+             WHERE s.id = ?`,
             [req.params.id]
         );
         connection.release();
