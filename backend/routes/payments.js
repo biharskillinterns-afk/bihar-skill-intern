@@ -137,6 +137,54 @@ function getPaymentPhone(payment = {}) {
     return normalizePhone(payment.contact || payment.notes?.studentPhone || payment.notes?.student_phone || '');
 }
 
+function getRegistrationNoteValue(...sources) {
+    for (const source of sources) {
+        const notes = source?.notes || {};
+        const value = notes.pendingRegistrationId ||
+            notes.pending_registration_id ||
+            notes.registrationId ||
+            notes.registration_id;
+
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+            return String(value).trim();
+        }
+    }
+
+    return '';
+}
+
+function getRegistrationEmailFromNotes(...sources) {
+    for (const source of sources) {
+        const notes = source?.notes || {};
+        const value = source?.email ||
+            notes.studentEmail ||
+            notes.student_email ||
+            notes.email;
+
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+            return String(value).trim().toLowerCase();
+        }
+    }
+
+    return '';
+}
+
+function getRegistrationPhoneFromNotes(...sources) {
+    for (const source of sources) {
+        const notes = source?.notes || {};
+        const value = source?.contact ||
+            notes.studentPhone ||
+            notes.student_phone ||
+            notes.phone;
+
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+            return normalizePhone(value);
+        }
+    }
+
+    return '';
+}
+
 function mapPaymentMethod(method = '') {
     const normalized = String(method).toLowerCase();
     if (normalized === 'card') return 'credit_card';
@@ -292,7 +340,18 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
     try {
         connection = await req.db.getConnection();
         const existingPayment = await findPaymentByOrder(connection, paymentData.razorpayOrderId);
-        const createdStudent = await createStudentFromPendingRegistration(connection, paymentData.pendingRegistrationId);
+        let pendingRegistrationId = paymentData.pendingRegistrationId;
+        if (!pendingRegistrationId && paymentData.razorpayOrderId) {
+            const [pendingRows] = await connection.query(
+                `SELECT id FROM pending_registrations
+                 WHERE email = ?
+                 ORDER BY id DESC LIMIT 1`,
+                [paymentData.studentEmail || '']
+            );
+            pendingRegistrationId = pendingRows[0]?.id || '';
+        }
+
+        const createdStudent = await createStudentFromPendingRegistration(connection, pendingRegistrationId);
         const studentId = existingPayment?.studentId || createdStudent?.id || await findStudentId(connection, req, paymentData.studentEmail);
         const courseId = existingPayment?.courseId || await getOrCreateDefaultCourseId(connection);
 
@@ -959,10 +1018,21 @@ async function handleRazorpayWebhook(req, res) {
         const order = payload.payload?.order?.entity;
 
         if (payment && ['payment.captured', 'payment.authorized'].includes(payload.event)) {
+            let paymentOrder = order;
+            if (!paymentOrder && payment.order_id) {
+                try {
+                    paymentOrder = await getRazorpayClient().orders.fetch(payment.order_id);
+                } catch (error) {
+                    console.warn('Unable to fetch Razorpay order during webhook:', error.message);
+                }
+            }
+
             await markRegistrationPaymentCompleted(req, {
                 razorpayPaymentId: payment.id,
                 razorpayOrderId: payment.order_id,
-                studentEmail: getPaymentEmail(payment),
+                studentEmail: getRegistrationEmailFromNotes(payment, paymentOrder) || getPaymentEmail(payment),
+                studentPhone: getRegistrationPhoneFromNotes(payment, paymentOrder) || getPaymentPhone(payment),
+                pendingRegistrationId: getRegistrationNoteValue(payment, paymentOrder),
                 amount: getValidAmount(Number(payment.amount) / 100) || 0,
                 paymentMethod: mapPaymentMethod(payment.method)
             });
@@ -979,7 +1049,9 @@ async function handleRazorpayWebhook(req, res) {
                 await markRegistrationPaymentCompleted(req, {
                     razorpayPaymentId: successfulPayment.id,
                     razorpayOrderId: order.id,
-                    studentEmail: getPaymentEmail(successfulPayment),
+                    studentEmail: getRegistrationEmailFromNotes(successfulPayment, order) || getPaymentEmail(successfulPayment),
+                    studentPhone: getRegistrationPhoneFromNotes(successfulPayment, order) || getPaymentPhone(successfulPayment),
+                    pendingRegistrationId: getRegistrationNoteValue(successfulPayment, order),
                     amount: getValidAmount(Number(successfulPayment.amount) / 100) || 0,
                     paymentMethod: mapPaymentMethod(successfulPayment.method)
                 });
