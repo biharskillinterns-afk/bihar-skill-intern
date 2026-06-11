@@ -1129,6 +1129,20 @@
             }
         }
 
+        function formatProfileDate(value) {
+            if (!value || value === '-' || value === 'null' || value === 'undefined') return '-';
+            const text = String(value).trim();
+            const isoMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (isoMatch) return isoMatch[1];
+
+            const parsed = new Date(text);
+            if (Number.isNaN(parsed.getTime())) return text;
+            const year = parsed.getFullYear();
+            const month = String(parsed.getMonth() + 1).padStart(2, '0');
+            const day = String(parsed.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         window.addEventListener('load', () => {
             console.log('Profile page loaded');
             const token = getStoredProfileValue('authToken') || getStoredProfileValue('token');
@@ -1156,10 +1170,11 @@
                 return;
             }
 
+            loadProfileData();
+            loadEnrolledCourses();
+
             if (!token) {
                 console.log('Loading profile data from localStorage');
-                loadProfileData();
-                loadEnrolledCourses();
                 document.getElementById('certificatesList').innerHTML = '<div class="no-certificates"><p>No certificates earned yet. Complete a course to earn your certificate!</p></div>';
                 return;
             }
@@ -1179,7 +1194,7 @@
             const lastName = getRegistrationValue(studentData, 'lastName', 'userLastName', nameParts.slice(1).join(' '));
             const email = getRegistrationValue(studentData, 'email', 'userEmail', '-');
             const phone = getRegistrationValue(studentData, 'phone', 'userPhone', '-');
-            const dob = getRegistrationValue(studentData, 'dob', 'userDOB', '-');
+            const dob = formatProfileDate(getRegistrationValue(studentData, 'dob', 'userDOB', '-'));
             const skill = getRegistrationValue(studentData, 'skill', 'userSkill', 'Skill Development');
             const initials = `${firstName[0] || 'S'}${lastName[0] || ''}`.toUpperCase();
             const profilePhoto = (studentData && studentData.profilePhoto) || localStorage.getItem('userProfileImage');
@@ -1251,7 +1266,8 @@
                 document.getElementById('emailValue').textContent = student.email || '-';
                 document.getElementById('phoneValue').textContent = student.phone || '-';
                 document.getElementById('usernameValue').textContent = student.email.split('@')[0] || '-';
-                document.getElementById('dobValue').textContent = student.dob || '-';
+                const formattedDob = formatProfileDate(student.dob);
+                document.getElementById('dobValue').textContent = formattedDob;
                 document.getElementById('skillValue').textContent = student.course || '-';
 
                 // Edit fields
@@ -1259,7 +1275,7 @@
                 document.getElementById('lastNameEdit').value = student.lastName;
                 document.getElementById('emailEdit').value = student.email;
                 document.getElementById('phoneEdit').value = student.phone;
-                document.getElementById('dobEdit').value = student.dob;
+                document.getElementById('dobEdit').value = formattedDob === '-' ? '' : formattedDob;
                 document.getElementById('skillEdit').value = student.course;
 
                 // Load signature if available
