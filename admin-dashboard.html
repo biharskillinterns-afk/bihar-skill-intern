@@ -17,6 +17,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        body.modal-scroll-lock {
+            overflow: hidden;
+        }
+
         /* Top Navigation */
         .admin-nav {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -398,6 +402,27 @@
 
         .modal-body {
             margin-bottom: 20px;
+        }
+
+        .view-courses-content {
+            display: flex;
+            flex-direction: column;
+            max-width: 700px;
+            max-height: min(86vh, 820px);
+            overflow: hidden;
+        }
+
+        .view-courses-content .modal-header,
+        .view-courses-content .modal-footer {
+            flex: 0 0 auto;
+        }
+
+        .view-courses-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 8px;
+            overscroll-behavior: contain;
         }
 
         .info-row {
@@ -1093,12 +1118,12 @@
 
     <!-- View All Courses Modal -->
     <div id="viewCoursesModal" class="modal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content view-courses-content">
             <div class="modal-header">
                 <span>All Available Courses</span>
                 <button class="close-btn" onclick="closeViewCoursesModal()">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body view-courses-body">
                 <div id="allCoursesList"></div>
             </div>
             <div class="modal-footer">
@@ -2759,10 +2784,12 @@
             `).join('');
 
             document.getElementById('viewCoursesModal').classList.add('show');
+            document.body.classList.add('modal-scroll-lock');
         }
 
         function closeViewCoursesModal() {
             document.getElementById('viewCoursesModal').classList.remove('show');
+            document.body.classList.remove('modal-scroll-lock');
         }
 
         function deleteCourse(courseId) {
