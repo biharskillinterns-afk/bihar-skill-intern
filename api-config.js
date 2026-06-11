@@ -674,3 +674,36 @@ class APIService {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = APIService;
 }
+
+// Warm the Render backend in the background as soon as a public page opens.
+// This reduces the first-action delay on free Render instances after sleep.
+if (typeof window !== 'undefined') {
+    window.BSIWarmBackend = window.BSIWarmBackend || function warmBackendOnce() {
+        if (window.__bsiBackendWarmStarted) return;
+        window.__bsiBackendWarmStarted = true;
+
+        try {
+            const apiOrigin = new URL(API_BASE_URL).origin;
+            const preconnect = document.createElement('link');
+            preconnect.rel = 'preconnect';
+            preconnect.href = apiOrigin;
+            preconnect.crossOrigin = 'anonymous';
+            document.head.appendChild(preconnect);
+        } catch (error) {
+            console.warn('Unable to preconnect backend:', error.message);
+        }
+
+        const runWake = () => APIService.wakeBackend();
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(runWake, { timeout: 2000 });
+        } else {
+            setTimeout(runWake, 1200);
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.BSIWarmBackend, { once: true });
+    } else {
+        window.BSIWarmBackend();
+    }
+}
