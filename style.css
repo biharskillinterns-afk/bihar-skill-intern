@@ -50,6 +50,13 @@ header {
     box-shadow: 0 12px 28px rgba(8, 47, 122, 0.22);
 }
 
+.brand-logo-small {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    display: block;
+}
+
 .header-container h1 {
     font-size: 2.5em;
     margin-bottom: 10px;
