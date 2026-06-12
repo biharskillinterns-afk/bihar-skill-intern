@@ -13,18 +13,20 @@
         }
 
         body {
-            background: #f5f7fa;
+            background: linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #172033;
         }
 
         /* Top Navigation Bar */
         .top-nav {
             background: white;
-            padding: 15px 40px;
+            padding: 14px 34px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -34,7 +36,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.8em;
+            font-size: 1.55em;
             font-weight: bold;
             color: #2563eb;
         }
@@ -46,7 +48,7 @@
 
         .nav-menu {
             display: flex;
-            gap: 30px;
+            gap: 10px;
             list-style: none;
         }
 
@@ -54,15 +56,15 @@
             text-decoration: none;
             color: #333;
             font-weight: 500;
-            padding: 8px 0;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s;
+            padding: 9px 12px;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
         }
 
         .nav-menu a:hover,
         .nav-menu a.active {
             color: #2563eb;
-            border-bottom-color: #2563eb;
+            background: #eff6ff;
         }
 
         .nav-right {
@@ -106,7 +108,7 @@
             color: white;
             border: none;
             padding: 8px 16px;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             transition: background 0.3s;
@@ -166,18 +168,19 @@
 
         /* Main Container */
         .dashboard-container {
-            max-width: 1400px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 30px 20px;
+            padding: 32px 22px;
         }
 
         /* Welcome Section */
         .welcome-section {
             background: white;
             padding: 30px 40px;
-            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
         }
 
         .welcome-section h2 {
@@ -195,7 +198,7 @@
         /* Action Buttons */
         .action-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
@@ -203,10 +206,10 @@
         .action-btn {
             padding: 12px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -264,8 +267,9 @@
         .stat-card {
             background: white;
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -306,15 +310,16 @@
 
         .course-card {
             background: white;
-            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: all 0.3s;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .course-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
         }
 
         .course-header {
@@ -380,14 +385,14 @@
         .enroll-btn {
             width: 100%;
             padding: 10px;
-            background: linear-gradient(135deg, #2563eb, #1e40af);
+            background: #2563eb;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             margin-top: 15px;
-            transition: all 0.3s;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
         }
 
         .enroll-btn:hover {

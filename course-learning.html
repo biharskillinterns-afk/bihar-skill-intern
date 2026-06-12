@@ -15,24 +15,26 @@
         }
 
         body {
-            background: #f5f7fa;
+            background: linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #172033;
         }
 
         .top-nav {
             background: white;
-            padding: 15px 40px;
+            padding: 14px 34px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
         .nav-logo {
-            font-size: 1.8em;
+            font-size: 1.55em;
             font-weight: bold;
             color: #2563eb;
         }
@@ -42,7 +44,7 @@
             color: white;
             border: none;
             padding: 8px 16px;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
         }
@@ -56,9 +58,10 @@
         .course-header {
             background: white;
             padding: 30px;
-            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
             display: flex;
             align-items: center;
             gap: 30px;
@@ -99,7 +102,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 30px;
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .tab-btn {
@@ -107,6 +110,7 @@
             background: none;
             border: none;
             border-bottom: 3px solid transparent;
+            border-radius: 8px 8px 0 0;
             font-size: 1em;
             font-weight: 600;
             cursor: pointer;
@@ -116,6 +120,7 @@
 
         .tab-btn.active {
             color: #2563eb;
+            background: #eff6ff;
             border-bottom-color: #2563eb;
         }
 
@@ -131,8 +136,9 @@
         .notes-container {
             background: white;
             padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
             line-height: 1.8;
         }
 
@@ -216,8 +222,9 @@
         .quiz-container {
             background: white;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
         }
 
         .quiz-header {
@@ -258,8 +265,8 @@
         .option {
             padding: 12px;
             background: white;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -287,10 +294,10 @@
         .submit-quiz-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            background: #2563eb;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 1.1em;
             font-weight: 600;
             cursor: pointer;
