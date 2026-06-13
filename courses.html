@@ -970,6 +970,20 @@
             return { start: safeStart, end };
         }
 
+        function manualEnrollmentKey(courseId) {
+            return 'courseManualEnroll_' + courseId;
+        }
+
+        function isExplicitlyEnrolled(courseId) {
+            return StorageManager.get(manualEnrollmentKey(courseId)) === true ||
+                StorageManager.get('courseMaterialAccepted_' + courseId) === true ||
+                Boolean(StorageManager.get('courseResult_' + courseId));
+        }
+
+        function markManualEnrollment(courseId) {
+            StorageManager.set(manualEnrollmentKey(courseId), true);
+        }
+
         function getCourseUnlockInfo(courseId) {
             const rawStart = StorageManager.get('courseStartDate_' + courseId) ||
                 StorageManager.get('courseEnrolledAt_' + courseId);
@@ -1333,6 +1347,7 @@
             const result = StorageManager.get('courseResult_' + courseId);
             StorageManager.set('course_' + courseId, true);
             StorageManager.set('progress_' + courseId, result && result.passed ? 100 : 0);
+            markManualEnrollment(courseId);
             saveCourseSchedule(courseId, StorageManager.get('courseStartDate_' + courseId) || new Date());
             StorageManager.set('selectedCourseId', course.id);
             StorageManager.set('selectedCourseName', course.name);
@@ -1360,12 +1375,20 @@
                 rows.forEach(row => {
                     const courseId = row.courseId || row.id;
                     if (!courseId) return;
+                    const rowProgress = Number(row.progress || 0);
+                    const rowStatus = String(row.status || '').toLowerCase();
+                    const isCompleted = rowStatus === 'completed' || rowProgress >= 100;
+                    if (!isCompleted && rowProgress === 0 && rowStatus === 'enrolled' && !isExplicitlyEnrolled(courseId)) {
+                        StorageManager.remove('course_' + courseId);
+                        StorageManager.remove('progress_' + courseId);
+                        return;
+                    }
 
                     StorageManager.set('course_' + courseId, true);
-                    StorageManager.set('progress_' + courseId, Number(row.progress || 0));
+                    StorageManager.set('progress_' + courseId, rowProgress);
                     if (row.enrolledAt) saveCourseSchedule(courseId, row.enrolledAt);
 
-                    if (row.status === 'completed' || Number(row.progress || 0) >= 100) {
+                    if (isCompleted) {
                         const course = courses.find(item => String(item.id) === String(courseId)) || {};
                         let quizData = null;
                         try {

@@ -391,12 +391,6 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
                 );
             }
 
-            await connection.query(
-                `INSERT IGNORE INTO student_courses (studentId, courseId, enrolledAt, progress)
-                 VALUES (?, ?, NOW(), 0)`,
-                [studentId, courseId]
-            );
-
             await connection.commit();
             return {
                 success: true,
@@ -934,19 +928,6 @@ router.post('/verify', verifyToken, isStudent, async (req, res) => {
                 `UPDATE payments SET status = 'completed', completedAt = NOW() WHERE id = ? AND studentId = ?`,
                 [paymentId, req.user.id]
             );
-
-            const [paymentRows] = await connection.query(
-                'SELECT courseId FROM payments WHERE id = ? AND studentId = ?',
-                [paymentId, req.user.id]
-            );
-
-            if (paymentRows.length > 0) {
-                await connection.query(
-                    `INSERT IGNORE INTO student_courses (studentId, courseId, enrolledAt, progress)
-                     VALUES (?, ?, NOW(), 0)`,
-                    [req.user.id, paymentRows[0].courseId]
-                );
-            }
 
             await connection.commit();
         } catch (error) {

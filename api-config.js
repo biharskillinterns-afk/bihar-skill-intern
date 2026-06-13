@@ -150,8 +150,12 @@ class BSIAuthStorage {
             key.startsWith('courseResult_') ||
             key.startsWith('course_') ||
             key.startsWith('progress_') ||
+            key.startsWith('courseManualEnroll_') ||
             key.startsWith('courseMaterialAccepted_') ||
-            key.startsWith('courseQuizLocked_')
+            key.startsWith('courseQuizLocked_') ||
+            key.startsWith('courseStartDate_') ||
+            key.startsWith('courseEndDate_') ||
+            key.startsWith('courseEnrolledAt_')
         );
     }
 
