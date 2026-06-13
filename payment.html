@@ -214,19 +214,19 @@
             status.className = `status ${type}`;
         }
 
-        function redirectToLogin() {
-            const loginUrl = new URL('login.html', window.location.href).href;
+        function redirectToDocuments() {
+            const documentsUrl = new URL('registration-documents.html', window.location.href).href;
             const status = document.getElementById('paymentStatus');
-            status.innerHTML = `Payment successful. <a href="${loginUrl}" style="color: inherit; font-weight: 800;">Continue to Login</a>`;
+            status.innerHTML = `Payment successful. <a href="${documentsUrl}" style="color: inherit; font-weight: 800;">Download registration documents</a>`;
             status.className = 'status success';
             document.querySelectorAll('.razorpay-container').forEach(container => container.remove());
 
             setTimeout(() => {
-                window.location.replace(loginUrl);
+                window.location.replace(documentsUrl);
             }, 250);
 
             setTimeout(() => {
-                window.location.href = loginUrl;
+                window.location.href = documentsUrl;
             }, 900);
         }
 
@@ -266,7 +266,7 @@
                 if (status.student && typeof BSIAuthStorage !== 'undefined') {
                     BSIAuthStorage.saveStudent(status.student, status.student.passwordHash || '');
                 }
-                redirectToLogin();
+                redirectToDocuments();
                 return true;
             }
 
@@ -486,7 +486,7 @@
                     if (savedStudent) setStoredValue('student', savedStudent);
                 }
 
-                redirectToLogin();
+                redirectToDocuments();
             } catch (error) {
                 payButton.disabled = false;
                 payButton.textContent = 'Pay Securely';

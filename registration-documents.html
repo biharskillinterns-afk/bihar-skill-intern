@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Documents - Bihar Skill Interns</title>
+    <script src="api-config.js"></script>
+    <script src="assets/qrcode-generator.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #eef3f8;
+            color: #102033;
+            font-family: Arial, sans-serif;
+            padding: 24px 14px;
+        }
+
+        .page-shell {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .topbar h1 {
+            font-size: 1.45rem;
+        }
+
+        .topbar p {
+            color: #526173;
+            margin-top: 4px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button,
+        .link-btn {
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: 800;
+            padding: 11px 14px;
+            text-decoration: none;
+        }
+
+        .primary-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .secondary-btn {
+            background: #e2e8f0;
+            color: #102033;
+        }
+
+        .success-note {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-radius: 12px;
+            color: #14532d;
+            font-weight: 800;
+            margin-bottom: 18px;
+            padding: 14px 16px;
+        }
+
+        .document {
+            background: white;
+            border: 1px solid #dbe4ee;
+            border-radius: 12px;
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+            margin-bottom: 22px;
+            overflow: hidden;
+        }
+
+        .doc-header {
+            align-items: center;
+            background: linear-gradient(135deg, #173b78, #0f766e);
+            color: white;
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+            padding: 20px 24px;
+        }
+
+        .brand {
+            align-items: center;
+            display: flex;
+            gap: 14px;
+        }
+
+        .brand img {
+            background: white;
+            border-radius: 10px;
+            height: 64px;
+            object-fit: contain;
+            padding: 5px;
+            width: 64px;
+        }
+
+        .brand h2 {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+
+        .brand p,
+        .doc-code {
+            opacity: 0.9;
+        }
+
+        .doc-body {
+            padding: 24px;
+        }
+
+        .doc-title {
+            color: #173b78;
+            font-size: 1.35rem;
+            letter-spacing: 0;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        .grid {
+            border: 1px solid #dbe4ee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 230px 1fr;
+            min-height: 48px;
+        }
+
+        .row + .row {
+            border-top: 1px solid #dbe4ee;
+        }
+
+        .label {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 800;
+            padding: 14px 16px;
+        }
+
+        .value {
+            font-weight: 700;
+            padding: 14px 16px;
+            word-break: break-word;
+        }
+
+        .declaration {
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            border-radius: 8px;
+            color: #7c2d12;
+            line-height: 1.55;
+            margin-top: 18px;
+            padding: 14px 16px;
+        }
+
+        .receipt-status {
+            color: #15803d;
+            font-weight: 900;
+        }
+
+        .id-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .id-card {
+            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 55%, #eefdf6 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 18px;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.13);
+            overflow: hidden;
+            width: min(580px, 100%);
+        }
+
+        .id-top {
+            align-items: center;
+            background: #173b78;
+            color: white;
+            display: flex;
+            gap: 12px;
+            padding: 14px 18px;
+        }
+
+        .id-top img {
+            background: white;
+            border-radius: 8px;
+            height: 54px;
+            object-fit: contain;
+            padding: 4px;
+            width: 54px;
+        }
+
+        .id-top strong {
+            display: block;
+            font-size: 1.15rem;
+        }
+
+        .id-top span {
+            font-size: 0.86rem;
+            opacity: 0.88;
+        }
+
+        .id-main {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: 120px 1fr 116px;
+            padding: 18px;
+        }
+
+        .photo-box {
+            align-items: center;
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            display: flex;
+            height: 132px;
+            justify-content: center;
+            overflow: hidden;
+            width: 112px;
+        }
+
+        .photo-box img {
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .photo-placeholder {
+            color: #334155;
+            font-size: 2.6rem;
+            font-weight: 900;
+        }
+
+        .id-info h3 {
+            color: #102033;
+            font-size: 1.35rem;
+            margin-bottom: 10px;
+        }
+
+        .id-info p {
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .qr-box {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .qr-box img {
+            height: 96px;
+            width: 96px;
+        }
+
+        .qr-box span {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .id-footer {
+            align-items: center;
+            background: #f8fafc;
+            border-top: 1px solid #dbe4ee;
+            color: #475569;
+            display: flex;
+            font-size: 0.85rem;
+            justify-content: space-between;
+            padding: 12px 18px;
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        @media (max-width: 760px) {
+            .topbar,
+            .doc-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .row,
+            .id-main {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-box {
+                height: 140px;
+                width: 120px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .topbar,
+            .success-note {
+                display: none;
+            }
+
+            .document {
+                border: 0;
+                box-shadow: none;
+                break-after: page;
+                margin: 0;
+            }
+
+            .document:last-child {
+                break-after: auto;
+            }
+
+            .print-only {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page-shell">
+        <div class="topbar">
+            <div>
+                <h1>Registration Documents</h1>
+                <p>Download these documents as proof of enrollment and payment.</p>
+            </div>
+            <div class="actions">
+                <button class="primary-btn" onclick="window.print()">Download / Print All</button>
+                <button class="secondary-btn" onclick="downloadIdCardPng()">Download ID Card PNG</button>
+                <a class="link-btn secondary-btn" href="login.html">Continue to Login</a>
+            </div>
+        </div>
+
+        <div class="success-note">Payment successfully received. Your internship enrollment is active and your certificate will be available after course completion.</div>
+
+        <section class="document" id="admissionLetter">
+            <div class="doc-header">
+                <div class="brand">
+                    <img src="logo.png" alt="Bihar Skill Interns logo">
+                    <div>
+                        <h2>Bihar Skill Interns</h2>
+                        <p>Professional Internship Platform</p>
+                    </div>
+                </div>
+                <div class="doc-code" id="letterCode">Registration ID: -</div>
+            </div>
+            <div class="doc-body">
+                <h2 class="doc-title">PROVISIONAL INTERNSHIP ADMISSION LETTER</h2>
+                <div class="grid">
+                    <div class="row"><div class="label">Student Name</div><div class="value" data-field="studentName">-</div></div>
+                    <div class="row"><div class="label">Registration ID</div><div class="value" data-field="registrationId">-</div></div>
+                    <div class="row"><div class="label">Registration Date</div><div class="value" data-field="registrationDate">-</div></div>
+                    <div class="row"><div class="label">Internship Duration</div><div class="value">120 Hours</div></div>
+                    <div class="row"><div class="label">Course Name</div><div class="value" data-field="courseName">-</div></div>
+                    <div class="row"><div class="label">Status</div><div class="value">Enrolled</div></div>
+                    <div class="row"><div class="label">Certificate</div><div class="value">Pending (After Completion)</div></div>
+                </div>
+                <div class="declaration">
+                    This is a provisional confirmation that the student has successfully completed registration and payment for the Bihar Skill Interns internship program. The final certificate will be issued after successful course completion and required verification.
+                </div>
+            </div>
+        </section>
+
+        <section class="document" id="paymentReceipt">
+            <div class="doc-header">
+                <div class="brand">
+                    <img src="logo.png" alt="Bihar Skill Interns logo">
+                    <div>
+                        <h2>Bihar Skill Interns</h2>
+                        <p>Registration Payment Receipt</p>
+                    </div>
+                </div>
+                <div class="receipt-status">Payment Successfully Received</div>
+            </div>
+            <div class="doc-body">
+                <h2 class="doc-title">PAYMENT RECEIPT</h2>
+                <div class="grid">
+                    <div class="row"><div class="label">Receipt No.</div><div class="value" data-field="receiptNo">-</div></div>
+                    <div class="row"><div class="label">Student Name</div><div class="value" data-field="studentName">-</div></div>
+                    <div class="row"><div class="label">Amount Paid</div><div class="value" data-field="amountPaid">-</div></div>
+                    <div class="row"><div class="label">Date</div><div class="value" data-field="paymentDate">-</div></div>
+                    <div class="row"><div class="label">Transaction ID</div><div class="value" data-field="transactionId">-</div></div>
+                    <div class="row"><div class="label">Order ID</div><div class="value" data-field="orderId">-</div></div>
+                    <div class="row"><div class="label">Payment Method</div><div class="value" data-field="paymentMethod">Razorpay</div></div>
+                    <div class="row"><div class="label">Status</div><div class="value receipt-status">Payment Successfully Received</div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="document" id="digitalIdSection">
+            <div class="doc-body">
+                <h2 class="doc-title">DIGITAL INTERNSHIP ID CARD</h2>
+                <div class="id-wrapper">
+                    <div class="id-card" id="digitalIdCard">
+                        <div class="id-top">
+                            <img src="logo.png" alt="Bihar Skill Interns logo">
+                            <div>
+                                <strong>Bihar Skill Interns</strong>
+                                <span>Digital Internship ID Card</span>
+                            </div>
+                        </div>
+                        <div class="id-main">
+                            <div class="photo-box" id="photoBox">
+                                <div class="photo-placeholder" id="photoInitial">S</div>
+                            </div>
+                            <div class="id-info">
+                                <h3 data-field="studentName">Student</h3>
+                                <p><strong>Registration ID:</strong> <span data-field="registrationId">-</span></p>
+                                <p><strong>Course:</strong> <span data-field="courseName">-</span></p>
+                                <p><strong>Status:</strong> Enrolled</p>
+                                <p><strong>Duration:</strong> 120 Hours</p>
+                            </div>
+                            <div class="qr-box">
+                                <img id="qrImage" alt="Student QR code">
+                                <span>Scan to verify</span>
+                            </div>
+                        </div>
+                        <div class="id-footer">
+                            <span>Certificate Pending After Completion</span>
+                            <span data-field="registrationDate">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const docData = {};
+
+        function getStorageValue(key, fallback = '') {
+            const storage = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+            const value = storage.getItem(key);
+            return value === null || value === undefined || value === '' || value === 'null' || value === 'undefined'
+                ? fallback
+                : value;
+        }
+
+        function setStorageValue(key, value) {
+            const storage = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+            storage.setItem(key, value);
+        }
+
+        function safeDate(value) {
+            const date = value ? new Date(value) : new Date();
+            return Number.isNaN(date.getTime()) ? new Date() : date;
+        }
+
+        function formatDate(value) {
+            return safeDate(value).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function formatDateTime(value) {
+            return safeDate(value).toLocaleString('en-IN', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+        }
+
+        function formatAmount(value) {
+            const amount = Number(value);
+            if (!Number.isFinite(amount) || amount <= 0) return '-';
+            return '₹' + amount.toLocaleString('en-IN', {
+                minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function generateRegistrationId() {
+            const existing = getStorageValue('userRollNo', '') ||
+                getStorageValue('currentStudentId', '') ||
+                getStorageValue('pendingRegistrationId', '');
+            if (existing) return existing;
+
+            const generated = 'BSI-' + Date.now().toString().slice(-8);
+            setStorageValue('userRollNo', generated);
+            return generated;
+        }
+
+        function generateReceiptNo(paymentId) {
+            if (paymentId) return paymentId;
+            const existing = getStorageValue('receiptNo', '');
+            if (existing) return existing;
+
+            const generated = 'BSI-RCPT-' + Date.now().toString().slice(-8);
+            setStorageValue('receiptNo', generated);
+            return generated;
+        }
+
+        function generateQrDataUrl(payload) {
+            try {
+                const qr = qrcode(0, 'M');
+                qr.addData(payload);
+                qr.make();
+                return qr.createDataURL(5, 2);
+            } catch (error) {
+                console.warn('QR generation failed:', error.message);
+                return '';
+            }
+        }
+
+        function applyField(name, value) {
+            document.querySelectorAll(`[data-field="${name}"]`).forEach(node => {
+                node.textContent = value || '-';
+            });
+        }
+
+        function renderPhoto(studentName) {
+            const photo = getStorageValue('userProfileImage', '');
+            const initial = (studentName || 'S').trim().charAt(0).toUpperCase() || 'S';
+            const box = document.getElementById('photoBox');
+            if (photo) {
+                box.innerHTML = `<img id="studentPhoto" src="${photo}" alt="Student photo">`;
+            } else {
+                document.getElementById('photoInitial').textContent = initial;
+            }
+        }
+
+        function loadDocuments() {
+            const studentName = getStorageValue('userName', 'Student');
+            const registrationId = generateRegistrationId();
+            const registrationDateRaw = getStorageValue('paymentCompletedAt', '') ||
+                getStorageValue('registrationDate', '') ||
+                getStorageValue('paymentDate', '') ||
+                new Date().toISOString();
+            const paymentId = getStorageValue('razorpayPaymentId', '');
+            const orderId = getStorageValue('razorpayOrderId', getStorageValue('orderId', '-'));
+            const amount = getStorageValue('paymentAmount', getStorageValue('bsiPaymentAmount', ''));
+            const courseName = getStorageValue('selectedCourseName', '') ||
+                getStorageValue('userSkill', '') ||
+                'Not enrolled yet';
+            const receiptNo = generateReceiptNo(paymentId);
+
+            Object.assign(docData, {
+                studentName,
+                registrationId,
+                courseName,
+                registrationDate: formatDate(registrationDateRaw),
+                paymentDate: formatDateTime(registrationDateRaw),
+                receiptNo,
+                amountPaid: formatAmount(amount),
+                transactionId: paymentId || '-',
+                orderId,
+                paymentMethod: getStorageValue('paymentMethod', 'Razorpay')
+            });
+
+            applyField('studentName', docData.studentName);
+            applyField('registrationId', docData.registrationId);
+            applyField('registrationDate', docData.registrationDate);
+            applyField('courseName', docData.courseName);
+            applyField('receiptNo', docData.receiptNo);
+            applyField('amountPaid', docData.amountPaid);
+            applyField('paymentDate', docData.paymentDate);
+            applyField('transactionId', docData.transactionId);
+            applyField('orderId', docData.orderId);
+            applyField('paymentMethod', docData.paymentMethod);
+            document.getElementById('letterCode').textContent = `Registration ID: ${docData.registrationId}`;
+
+            renderPhoto(studentName);
+
+            const qrPayload = [
+                'Bihar Skill Interns',
+                `Name: ${docData.studentName}`,
+                `Registration ID: ${docData.registrationId}`,
+                `Status: Enrolled`,
+                `Certificate: Pending After Completion`
+            ].join('\n');
+            document.getElementById('qrImage').src = generateQrDataUrl(qrPayload);
+        }
+
+        function loadImage(src) {
+            return new Promise(resolve => {
+                if (!src) {
+                    resolve(null);
+                    return;
+                }
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => resolve(null);
+                image.src = src;
+            });
+        }
+
+        async function downloadIdCardPng() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1000;
+            canvas.height = 560;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#173b78';
+            ctx.fillRect(0, 0, canvas.width, 116);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 34px Arial';
+            ctx.fillText('Bihar Skill Interns', 150, 48);
+            ctx.font = '20px Arial';
+            ctx.fillText('Digital Internship ID Card', 150, 82);
+
+            const logo = await loadImage('logo.png');
+            if (logo) ctx.drawImage(logo, 32, 16, 88, 88);
+
+            ctx.strokeStyle = '#bfdbfe';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+
+            const photo = await loadImage(getStorageValue('userProfileImage', ''));
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(44, 156, 190, 228);
+            if (photo) {
+                ctx.drawImage(photo, 44, 156, 190, 228);
+            } else {
+                ctx.fillStyle = '#2563eb';
+                ctx.font = 'bold 96px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText((docData.studentName || 'S').charAt(0).toUpperCase(), 139, 295);
+                ctx.textAlign = 'left';
+            }
+
+            ctx.fillStyle = '#102033';
+            ctx.font = 'bold 40px Arial';
+            ctx.fillText(docData.studentName || 'Student', 280, 185);
+            ctx.font = '24px Arial';
+            ctx.fillText(`Registration ID: ${docData.registrationId || '-'}`, 280, 238);
+            ctx.fillText(`Course: ${docData.courseName || '-'}`, 280, 290);
+            ctx.fillText('Status: Enrolled', 280, 342);
+            ctx.fillText('Duration: 120 Hours', 280, 394);
+            ctx.fillText(`Date: ${docData.registrationDate || '-'}`, 280, 446);
+
+            const qr = await loadImage(document.getElementById('qrImage').src);
+            if (qr) ctx.drawImage(qr, 790, 188, 140, 140);
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 18px Arial';
+            ctx.fillText('Scan to verify', 802, 356);
+            ctx.fillText('Certificate Pending After Completion', 44, 520);
+
+            const link = document.createElement('a');
+            link.download = `bsi-id-card-${docData.registrationId || 'student'}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        window.addEventListener('load', loadDocuments);
+    </script>
+</body>
+</html>
