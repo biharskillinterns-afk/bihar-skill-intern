@@ -1255,16 +1255,17 @@
                 month: 'short',
                 year: 'numeric'
             });
-            
-            // ===== CALCULATE DATES FOR CONSENT FORM =====
+
             const todayDate = new Date();
-            
-            // End date = today (when certificate is issued)
-            const endDate = todayDate.toISOString().split('T')[0];
-            
-            // Start date = 15 days before end date
-            const startDate = new Date(todayDate);
-            startDate.setDate(startDate.getDate() - 15);
+            const courseId = result.courseId || localStorage.getItem('selectedCourseId') || sessionStorage.getItem('quizCourseId') || '';
+            const storedStart = courseId
+                ? (localStorage.getItem('courseStartDate_' + courseId) || localStorage.getItem('courseEnrolledAt_' + courseId))
+                : '';
+            const parsedStart = result.startDate ? new Date(result.startDate) : (storedStart ? new Date(storedStart) : null);
+            const startDate = parsedStart && !Number.isNaN(parsedStart.getTime()) ? parsedStart : todayDate;
+            const completionDate = result.completedAt ? new Date(result.completedAt) : todayDate;
+            const safeCompletionDate = Number.isNaN(completionDate.getTime()) ? todayDate : completionDate;
+            const endDate = safeCompletionDate.toISOString().split('T')[0];
             const startDateStr = startDate.toISOString().split('T')[0];
             
             // ===== STORE ALL DATA FOR CONSENT FORM =====

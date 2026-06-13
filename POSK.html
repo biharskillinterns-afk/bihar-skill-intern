@@ -1776,8 +1776,14 @@
             gradeLabelEl.textContent = gradeLabels[studentGrade] || 'Excellent';
 
             const today = new Date();
-            const startDate = new Date(today);
-            startDate.setDate(startDate.getDate() - 15);
+            const courseId = result.courseId || localStorage.getItem('selectedCourseId') || sessionStorage.getItem('quizCourseId') || '';
+            const storedStart = courseId
+                ? (localStorage.getItem('courseStartDate_' + courseId) || localStorage.getItem('courseEnrolledAt_' + courseId))
+                : '';
+            const parsedStart = result.startDate ? new Date(result.startDate) : (storedStart ? new Date(storedStart) : null);
+            const startDate = parsedStart && !Number.isNaN(parsedStart.getTime()) ? parsedStart : today;
+            const completedAt = result.completedAt ? new Date(result.completedAt) : today;
+            const endDate = Number.isNaN(completedAt.getTime()) ? today : completedAt;
 
             const formatDate = date => {
                 return date.toLocaleDateString('en-US', {
@@ -1788,7 +1794,7 @@
             };
 
             document.getElementById('certStartDate').textContent = formatDate(startDate);
-            document.getElementById('certEndDate').textContent = formatDate(today);
+            document.getElementById('certEndDate').textContent = formatDate(endDate);
             document.getElementById('issueDate').textContent = formatDate(today);
 
             const certId = result.certificateNumber || ('BSI-' + today.getFullYear() + '-' + String(Math.floor(Math.random() * 100000)).padStart(5, '0'));

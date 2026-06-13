@@ -1065,10 +1065,32 @@
             return `${year}-${month}-${day}`;
         }
 
-        function getCurrentTrainingDateRange() {
-            const end = new Date();
-            const start = new Date(end);
-            start.setDate(start.getDate() - 15);
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
+        function readValidDate(...values) {
+            for (const value of values) {
+                if (!value) continue;
+                const parsed = new Date(value);
+                if (!Number.isNaN(parsed.getTime())) return parsed;
+            }
+            return null;
+        }
+
+        function getCurrentTrainingDateRange(courseId = '') {
+            const start = readValidDate(
+                courseId ? localStorage.getItem('courseStartDate_' + courseId) : '',
+                courseId ? localStorage.getItem('courseEnrolledAt_' + courseId) : '',
+                localStorage.getItem('courseStartDate'),
+                localStorage.getItem('paymentCompletedAt'),
+                localStorage.getItem('registrationCompletedAt'),
+                localStorage.getItem('createdAt')
+            ) || new Date();
+
+            const end = addDays(start, 15);
 
             return {
                 startDate: formatDateForInput(start),
@@ -1120,7 +1142,8 @@
                 const requestedRollNo = getConsentRollFromUrl();
 
                 // ===== CHECK CERTIFICATE FIRST (HIGHEST PRIORITY) =====
-                const currentDateRange = getCurrentTrainingDateRange();
+                const selectedCourseId = localStorage.getItem('selectedCourseId') || sessionStorage.getItem('quizCourseId') || '';
+                const currentDateRange = getCurrentTrainingDateRange(selectedCourseId);
                 let courseName = '';
                 let startDate = currentDateRange.startDate;
                 let endDate = currentDateRange.endDate;
@@ -1151,6 +1174,9 @@
                 const latestResult = getLatestCompletedCourseResult(studentData);
                 if (latestResult) {
                     courseName = courseName || latestResult.courseName || latestResult.name || latestResult.title || '';
+                    const resultCourseId = latestResult.courseId || selectedCourseId;
+                    const resultRange = getCurrentTrainingDateRange(resultCourseId);
+                    startDate = latestResult.startDate || latestResult.courseStartDate || resultRange.startDate || startDate;
                     endDate = latestResult.completedAt ? formatDateForInput(new Date(latestResult.completedAt)) : endDate;
                 }
                 
@@ -1218,7 +1244,7 @@
                     startField.setAttribute('readonly', 'readonly');
                     startField.style.backgroundColor = '#f0f9ff';
                     startField.style.borderColor = '#0284c7';
-                    startField.title = 'Auto-filled: 15 days before course end';
+                    startField.title = 'Auto-filled from course enrollment date';
                     console.log('✓ Filled Start Date:', startDate);
                 } else {
                     console.log('✗ Start Date not filled');
@@ -1230,7 +1256,7 @@
                     endField.setAttribute('readonly', 'readonly');
                     endField.style.backgroundColor = '#f0f9ff';
                     endField.style.borderColor = '#0284c7';
-                    endField.title = 'Auto-filled from certificate';
+                    endField.title = 'Auto-filled from course completion date or 15-day planned end date';
                     console.log('✓ Filled End Date:', endDate);
                 } else {
                     console.log('✗ End Date not filled');

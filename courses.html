@@ -954,6 +954,42 @@
             }[char]));
         }
 
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
+        function saveCourseSchedule(courseId, startValue) {
+            const start = startValue ? new Date(startValue) : new Date();
+            const safeStart = Number.isNaN(start.getTime()) ? new Date() : start;
+            const end = addDays(safeStart, 15);
+            StorageManager.set('courseStartDate_' + courseId, safeStart.toISOString());
+            StorageManager.set('courseEnrolledAt_' + courseId, safeStart.toISOString());
+            StorageManager.set('courseEndDate_' + courseId, end.toISOString());
+            return { start: safeStart, end };
+        }
+
+        function getCourseUnlockInfo(courseId) {
+            const rawStart = StorageManager.get('courseStartDate_' + courseId) ||
+                StorageManager.get('courseEnrolledAt_' + courseId);
+            const schedule = saveCourseSchedule(courseId, rawStart || new Date());
+            const now = new Date();
+            return {
+                ...schedule,
+                unlocked: now.getTime() >= schedule.end.getTime(),
+                remainingDays: Math.ceil(Math.max(0, schedule.end.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+            };
+        }
+
+        function formatDisplayDate(date) {
+            return new Date(date).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
         function getEligibleCourseResults() {
             const keys = new Set(Object.keys(localStorage));
             if (typeof BSIAuthStorage !== 'undefined') {
@@ -1210,6 +1246,7 @@
                 const completed = result && result.passed && Number(result.scorePercentage) >= 60;
                 const enrolled = StorageManager.get('course_' + course.id) === true || completed;
                 const progress = result && result.passed ? 100 : (StorageManager.get('progress_' + course.id) || 0);
+                const unlockInfo = enrolled ? getCourseUnlockInfo(course.id) : null;
                 
                 const courseCard = document.createElement('div');
                 courseCard.className = 'course-card';
@@ -1222,6 +1259,13 @@
                             <h3>${escapeHTML(course.name)}</h3>
                             <p class="course-description">${escapeHTML(course.description)}</p>
                             <div class="course-duration">⏱️ ${course.duration}</div>
+                            ${!completed && unlockInfo ? `
+                                <div style="margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: ${unlockInfo.unlocked ? '#ecfdf5' : '#fff7ed'}; color: ${unlockInfo.unlocked ? '#065f46' : '#9a3412'}; font-weight: 700; font-size: 0.88em;">
+                                    ${unlockInfo.unlocked
+                                        ? 'Quiz is available now'
+                                        : `Quiz opens on ${formatDisplayDate(unlockInfo.end)} (${unlockInfo.remainingDays} day${unlockInfo.remainingDays === 1 ? '' : 's'} left)`}
+                                </div>
+                            ` : ''}
                             ${result && result.passed ? `<div style="margin-top: 10px; color: #065f46; font-weight: 700;">Passed: ${result.scorePercentage}% | Grade ${escapeHTML(result.grade)}</div>` : ''}
                             <div style="margin: 15px 0;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
@@ -1289,6 +1333,7 @@
             const result = StorageManager.get('courseResult_' + courseId);
             StorageManager.set('course_' + courseId, true);
             StorageManager.set('progress_' + courseId, result && result.passed ? 100 : 0);
+            saveCourseSchedule(courseId, StorageManager.get('courseStartDate_' + courseId) || new Date());
             StorageManager.set('selectedCourseId', course.id);
             StorageManager.set('selectedCourseName', course.name);
             logActivity(`Enrolled in "${course.name}" course`);
@@ -1318,6 +1363,7 @@
 
                     StorageManager.set('course_' + courseId, true);
                     StorageManager.set('progress_' + courseId, Number(row.progress || 0));
+                    if (row.enrolledAt) saveCourseSchedule(courseId, row.enrolledAt);
 
                     if (row.status === 'completed' || Number(row.progress || 0) >= 100) {
                         const course = courses.find(item => String(item.id) === String(courseId)) || {};

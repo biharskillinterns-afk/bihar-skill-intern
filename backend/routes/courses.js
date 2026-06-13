@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken, isStudent } = require('../middleware/auth');
 
+const QUIZ_UNLOCK_DAYS = 15;
+
+function addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+}
+
 // Get all courses
 router.get('/', async (req, res) => {
     try {
@@ -133,6 +141,25 @@ router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
             });
         }
 
+        const [existingEnrollment] = await connection.query(
+            'SELECT id, enrolledAt FROM student_courses WHERE studentId = ? AND courseId = ? LIMIT 1',
+            [req.user.id, courseId]
+        );
+
+        const enrolledAt = existingEnrollment[0]?.enrolledAt
+            ? new Date(existingEnrollment[0].enrolledAt)
+            : new Date();
+        const quizUnlockAt = addDays(enrolledAt, QUIZ_UNLOCK_DAYS);
+
+        if (finalStatus === 'completed' && Date.now() < quizUnlockAt.getTime()) {
+            return res.status(403).json({
+                success: false,
+                message: `Quiz can be completed only after ${QUIZ_UNLOCK_DAYS} days from enrollment.`,
+                quizUnlockAt: quizUnlockAt.toISOString(),
+                enrolledAt: enrolledAt.toISOString()
+            });
+        }
+
         await connection.query(
             `INSERT INTO student_courses
                 (studentId, courseId, enrolledAt, progress, status, marks, grade, certificateNumber, quizData, completedAt)
@@ -160,7 +187,9 @@ router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Course progress saved'
+            message: 'Course progress saved',
+            enrolledAt: enrolledAt.toISOString(),
+            quizUnlockAt: quizUnlockAt.toISOString()
         });
     } catch (error) {
         res.status(500).json({
