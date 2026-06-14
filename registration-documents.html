@@ -356,7 +356,7 @@
             <div class="actions">
                 <button class="primary-btn" onclick="window.print()">Download / Print All</button>
                 <button class="secondary-btn" onclick="downloadIdCardPng()">Download ID Card PNG</button>
-                <a class="link-btn secondary-btn" href="login.html">Continue to Login</a>
+                <a class="link-btn secondary-btn" id="nextActionButton" href="login.html">Continue to Login</a>
             </div>
         </div>
 
@@ -549,7 +549,23 @@
             }
         }
 
+        function updateNextActionButton() {
+            const button = document.getElementById('nextActionButton');
+            const params = new URLSearchParams(window.location.search);
+            const cameFromPayment = params.get('from') === 'payment';
+            const isLoggedIn = getStorageValue('isLoggedIn', '') === 'true';
+
+            if (isLoggedIn && !cameFromPayment) {
+                button.href = 'courses.html';
+                button.textContent = 'Go to Dashboard';
+            } else {
+                button.href = 'login.html';
+                button.textContent = 'Continue to Login';
+            }
+        }
+
         function loadDocuments() {
+            updateNextActionButton();
             const studentName = getStorageValue('userName', 'Student');
             const registrationId = generateRegistrationId();
             const registrationDateRaw = getStorageValue('paymentCompletedAt', '') ||

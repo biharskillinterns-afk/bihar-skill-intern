@@ -216,17 +216,19 @@
 
         function redirectToDocuments() {
             const documentsUrl = new URL('registration-documents.html', window.location.href).href;
+            const documentsWithSource = new URL(documentsUrl);
+            documentsWithSource.searchParams.set('from', 'payment');
             const status = document.getElementById('paymentStatus');
-            status.innerHTML = `Payment successful. <a href="${documentsUrl}" style="color: inherit; font-weight: 800;">Download registration documents</a>`;
+            status.innerHTML = `Payment successful. <a href="${documentsWithSource.href}" style="color: inherit; font-weight: 800;">Download registration documents</a>`;
             status.className = 'status success';
             document.querySelectorAll('.razorpay-container').forEach(container => container.remove());
 
             setTimeout(() => {
-                window.location.replace(documentsUrl);
+                window.location.replace(documentsWithSource.href);
             }, 250);
 
             setTimeout(() => {
-                window.location.href = documentsUrl;
+                window.location.href = documentsWithSource.href;
             }, 900);
         }
 
