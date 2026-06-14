@@ -975,12 +975,6 @@
             return 'courseManualEnroll_' + courseId;
         }
 
-        function isExplicitlyEnrolled(courseId) {
-            return StorageManager.get(manualEnrollmentKey(courseId)) === true ||
-                StorageManager.get('courseMaterialAccepted_' + courseId) === true ||
-                Boolean(StorageManager.get('courseResult_' + courseId));
-        }
-
         function markManualEnrollment(courseId) {
             StorageManager.set(manualEnrollmentKey(courseId), true);
         }
@@ -1342,9 +1336,23 @@
             }
         }
 
-        function enrollCourse(courseId) {
+        async function enrollCourse(courseId) {
             const course = courses.find(c => c.id == courseId);
             if (!course) return;
+            if (typeof APIService !== 'undefined') {
+                try {
+                    const response = await APIService.enrollCourse(courseId);
+                    if (!response || response.success === false) {
+                        throw new Error(response?.message || 'Course enrollment could not be saved.');
+                    }
+                } catch (error) {
+                    if (!String(error.message || '').toLowerCase().includes('already enrolled')) {
+                        alert('Course enroll save nahi ho paya. Please internet/backend check karke dobara try karein.');
+                        console.warn('Backend enrollment sync failed:', error.message);
+                        return;
+                    }
+                }
+            }
             const result = StorageManager.get('courseResult_' + courseId);
             StorageManager.set('course_' + courseId, true);
             StorageManager.set('progress_' + courseId, result && result.passed ? 100 : 0);
@@ -1353,13 +1361,6 @@
             StorageManager.set('selectedCourseId', course.id);
             StorageManager.set('selectedCourseName', course.name);
             logActivity(`Enrolled in "${course.name}" course`);
-            if (typeof APIService !== 'undefined') {
-                APIService.enrollCourse(courseId).catch(error => {
-                    if (!String(error.message || '').toLowerCase().includes('already enrolled')) {
-                        console.warn('Backend enrollment sync failed:', error.message);
-                    }
-                });
-            }
             alert('✓ Successfully enrolled in the course!');
             renderCourses();
             updateStats();
@@ -1379,12 +1380,8 @@
                     const rowProgress = Number(row.progress || 0);
                     const rowStatus = String(row.status || '').toLowerCase();
                     const isCompleted = rowStatus === 'completed' || rowProgress >= 100;
-                    if (!isCompleted && rowProgress === 0 && rowStatus === 'enrolled' && !isExplicitlyEnrolled(courseId)) {
-                        StorageManager.remove('course_' + courseId);
-                        StorageManager.remove('progress_' + courseId);
-                        return;
-                    }
 
+                    markManualEnrollment(courseId);
                     StorageManager.set('course_' + courseId, true);
                     StorageManager.set('progress_' + courseId, rowProgress);
                     if (row.enrolledAt) saveCourseSchedule(courseId, row.enrolledAt);
