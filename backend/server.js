@@ -34,9 +34,23 @@ function getOrigin(url) {
     }
 }
 
+function getConfiguredFrontendOrigins() {
+    const values = [
+        process.env.FRONTEND_URL,
+        process.env.FRONTEND_URLS
+    ].filter(Boolean);
+
+    return values
+        .flatMap(value => String(value).split(','))
+        .map(value => value.trim())
+        .filter(Boolean)
+        .flatMap(value => [value, getOrigin(value)]);
+}
+
 const allowedOrigins = new Set([
-    process.env.FRONTEND_URL,
-    process.env.FRONTEND_URL ? getOrigin(process.env.FRONTEND_URL) : '',
+    ...getConfiguredFrontendOrigins(),
+    'https://biharskillinterns.in',
+    'https://www.biharskillinterns.in',
     'https://biharskillinterns-afk.github.io',
     'http://localhost',
     'http://127.0.0.1',

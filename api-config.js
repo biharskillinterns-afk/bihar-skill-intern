@@ -4,9 +4,14 @@
 const API_PROTOCOL = window.location.protocol === 'file:' ? 'http:' : window.location.protocol;
 const API_HOST = window.location.hostname || 'localhost';
 const LIVE_API_BASE_URL = 'https://bihar-skill-intern-backend.onrender.com/api';
-const DEFAULT_API_BASE_URL = API_HOST.endsWith('.github.io')
-    ? LIVE_API_BASE_URL
-    : `${API_PROTOCOL}//${API_HOST}:5000/api`;
+const IS_LOCAL_FRONTEND = window.location.protocol === 'file:' ||
+    ['localhost', '127.0.0.1', ''].includes(API_HOST) ||
+    API_HOST.startsWith('192.168.') ||
+    API_HOST.startsWith('10.') ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(API_HOST);
+const DEFAULT_API_BASE_URL = IS_LOCAL_FRONTEND
+    ? `${API_PROTOCOL}//${API_HOST || 'localhost'}:5000/api`
+    : LIVE_API_BASE_URL;
 const API_BASE_URL = window.BSI_API_BASE_URL || localStorage.getItem('bsiApiBaseUrl') || DEFAULT_API_BASE_URL;
 
 // Shared auth storage for static file mode and normal hosted mode.
@@ -417,7 +422,11 @@ class APIService {
         }
 
         if (!response.ok) {
-            throw new Error((payload && payload.message) || 'API request failed');
+            const error = new Error((payload && payload.message) || 'API request failed');
+            error.status = response.status;
+            error.payload = payload;
+            error.url = url;
+            throw error;
         }
 
         return payload;
@@ -545,6 +554,17 @@ class APIService {
         return this.request('/students/progress');
     }
 
+    static async getStudentProofs() {
+        return this.request('/students/proofs');
+    }
+
+    static async uploadStudentProof(data) {
+        return this.request('/students/proofs', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
     static async updateCourseProgress(courseId, data) {
         return this.request(`/courses/${encodeURIComponent(courseId)}/progress`, {
             method: 'PUT',
@@ -572,6 +592,18 @@ class APIService {
 
     static async getDashboardStats() {
         return this.request('/admin/stats');
+    }
+
+    static async getInternshipProofs(status = '') {
+        const query = status ? `?status=${encodeURIComponent(status)}` : '';
+        return this.request(`/admin/proofs${query}`);
+    }
+
+    static async reviewInternshipProof(id, status, adminRemarks = '') {
+        return this.request(`/admin/proofs/${encodeURIComponent(id)}/review`, {
+            method: 'PUT',
+            body: JSON.stringify({ status, adminRemarks })
+        });
     }
 
     static async getAdminPaymentAmount() {
