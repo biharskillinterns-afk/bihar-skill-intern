@@ -463,6 +463,11 @@
             return enrolledCourseRows.find(row => String(row.courseId) === String(selectedId)) || null;
         }
 
+        function getSelectedCourseName() {
+            const row = getSelectedCourseRow();
+            return row?.courseName || row?.name || localStorage.getItem('selectedCourseName') || 'Selected course';
+        }
+
         function getSelectedStartDate() {
             const row = getSelectedCourseRow();
             const courseId = row?.courseId || document.getElementById('courseSelect').value;
@@ -497,7 +502,49 @@
             select.innerHTML = '<option value="">Select enrolled course</option>' + enrolledCourseRows.map(row => `
                 <option value="${escapeHTML(row.courseId)}" ${String(row.courseId) === String(selectedCourseId) ? 'selected' : ''}>${escapeHTML(row.courseName || row.name || 'Course')}</option>
             `).join('');
+
+            if (!select.value && enrolledCourseRows.length === 1) {
+                select.value = enrolledCourseRows[0].courseId;
+            }
+
             updateDateRangeHint();
+        }
+
+        function saveProofDashboardCache(uploadedCount = 0) {
+            const summaryByCourse = {};
+            proofRows.forEach(row => {
+                const courseId = row.courseId || 'unknown';
+                if (!summaryByCourse[courseId]) {
+                    summaryByCourse[courseId] = {
+                        courseId,
+                        courseName: row.courseName || 'Course not selected',
+                        total: 0,
+                        approved: 0,
+                        pending: 0,
+                        rejected: 0
+                    };
+                }
+
+                const bucket = summaryByCourse[courseId];
+                bucket.total += 1;
+                const status = String(row.status || 'pending').toLowerCase();
+                if (status === 'approved') bucket.approved += 1;
+                else if (status === 'rejected') bucket.rejected += 1;
+                else bucket.pending += 1;
+            });
+
+            localStorage.setItem('internshipProofCourseSummary', JSON.stringify(summaryByCourse));
+
+            if (uploadedCount > 0) {
+                const activities = JSON.parse(localStorage.getItem('studentActivities') || '[]');
+                activities.unshift({
+                    text: `Uploaded ${uploadedCount} activity proof screenshots for "${getSelectedCourseName()}"`,
+                    timestamp: new Date().toISOString(),
+                    date: new Date().toLocaleDateString('en-IN'),
+                    time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                });
+                localStorage.setItem('studentActivities', JSON.stringify(activities.slice(0, 10)));
+            }
         }
 
         function readFileAsDataUrl(file) {
@@ -625,6 +672,7 @@
             button.textContent = 'Uploading...';
 
             try {
+                const selectedCourseName = getSelectedCourseName();
                 const screenshots = [];
                 for (const file of files) {
                     screenshots.push({
@@ -642,6 +690,8 @@
                     screenshots
                 });
 
+                localStorage.setItem('selectedCourseId', courseId);
+                localStorage.setItem('selectedCourseName', selectedCourseName);
                 alert('Activity proof uploaded. Attendance will count after admin approval.');
                 document.getElementById('proofForm').reset();
                 document.getElementById('topic').value = 'Course Activity Proof';
@@ -649,6 +699,7 @@
                 document.getElementById('previewGrid').innerHTML = '';
                 await loadCourses();
                 await loadProofs();
+                saveProofDashboardCache(screenshots.length);
             } catch (error) {
                 alert(`Activity proof upload failed: ${error.message}`);
             } finally {

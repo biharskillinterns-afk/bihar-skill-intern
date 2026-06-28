@@ -937,6 +937,7 @@
             approvedDays: 0,
             certificateProofReady: false
         };
+        let internshipProofCourseSummary = {};
 
         function ensureCoursesVisible() {
             const coursesGrid = document.getElementById('coursesGrid');
@@ -977,12 +978,36 @@
             try {
                 const response = await APIService.getStudentProofs();
                 if (response && response.success) {
+                    const proofs = Array.isArray(response.proofs) ? response.proofs : [];
+                    internshipProofCourseSummary = proofs.reduce((summary, proof) => {
+                        const courseId = proof.courseId || 'unknown';
+                        if (!summary[courseId]) {
+                            summary[courseId] = {
+                                courseId,
+                                courseName: proof.courseName || 'Course not selected',
+                                total: 0,
+                                approved: 0,
+                                pending: 0,
+                                rejected: 0
+                            };
+                        }
+
+                        const item = summary[courseId];
+                        item.total += 1;
+                        const status = String(proof.status || 'pending').toLowerCase();
+                        if (status === 'approved') item.approved += 1;
+                        else if (status === 'rejected') item.rejected += 1;
+                        else item.pending += 1;
+                        return summary;
+                    }, {});
+
                     internshipProofSummary = {
                         requiredApprovedDays: Number(response.requiredApprovedDays || 5),
                         approvedDays: Number(response.approvedDays || 0),
                         certificateProofReady: response.certificateProofReady === true
                     };
                     StorageManager.set('internshipProofSummary', internshipProofSummary);
+                    StorageManager.set('internshipProofCourseSummary', internshipProofCourseSummary);
                     updateProofStatus();
                 }
             } catch (error) {
@@ -995,9 +1020,18 @@
                     };
                     updateProofStatus();
                 }
+
+                const cachedCourseSummary = StorageManager.get('internshipProofCourseSummary');
+                if (cachedCourseSummary && typeof cachedCourseSummary === 'object') {
+                    internshipProofCourseSummary = cachedCourseSummary;
+                }
             }
 
             return internshipProofSummary;
+        }
+
+        function getCourseProofSummary(courseId) {
+            return internshipProofCourseSummary[String(courseId)] || internshipProofCourseSummary[courseId] || null;
         }
 
         function updateProofStatus() {
@@ -1319,6 +1353,19 @@
                 courseCard.className = 'course-card';
                 
                 if (enrolled) {
+                    const proofSummary = getCourseProofSummary(course.id);
+                    const proofBlock = proofSummary ? `
+                        <div style="margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #f8fafc; color: #334155; font-size: 0.88em;">
+                            <strong>Activity Proof:</strong>
+                            ${Number(proofSummary.total || 0)} uploaded,
+                            ${Number(proofSummary.pending || 0)} pending,
+                            ${Number(proofSummary.approved || 0)} approved
+                        </div>
+                    ` : `
+                        <div style="margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #fff7ed; color: #9a3412; font-size: 0.88em;">
+                            Activity proof not uploaded yet
+                        </div>
+                    `;
                     // Show in enrolled section with progress
                     courseCard.innerHTML = `
                         <div class="course-header">${course.emoji}</div>
@@ -1334,6 +1381,7 @@
                                 </div>
                             ` : ''}
                             ${result && result.passed ? `<div style="margin-top: 10px; color: #065f46; font-weight: 700;">Passed: ${result.scorePercentage}% | Grade ${escapeHTML(result.grade)}</div>` : ''}
+                            ${proofBlock}
                             <div style="margin: 15px 0;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                     <span style="font-size: 0.8em; color: #666;">Progress</span>
@@ -1345,6 +1393,9 @@
                             </div>
                             <button class="enroll-btn enrolled" onclick="${completed ? `viewCompletedCourse(${course.id})` : `continueCourse(${course.id})`}">
                                 ${completed ? 'View Marksheet' : '📖 Continue Learning'}
+                            </button>
+                            <button class="enroll-btn" style="margin-top: 8px; background: linear-gradient(135deg, #0f766e, #0d9488);" onclick="uploadProofForCourse(${course.id})">
+                                Upload Activity Proof
                             </button>
                         </div>
                     `;
@@ -1478,6 +1529,16 @@
 
         function continueCourse(courseId) {
             window.location.href = 'course-learning.html?course=' + courseId;
+        }
+
+        function uploadProofForCourse(courseId) {
+            const course = courses.find(c => String(c.id) === String(courseId));
+            if (course) {
+                StorageManager.set('selectedCourseId', course.id);
+                StorageManager.set('selectedCourseName', course.name);
+                StorageManager.set('userSkill', course.name);
+            }
+            window.location.href = 'daily-proof.html';
         }
 
         function viewCompletedCourse(courseId) {
