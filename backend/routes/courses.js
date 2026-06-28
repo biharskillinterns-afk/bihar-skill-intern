@@ -24,10 +24,19 @@ async function ensureStudentCourseUnlockColumns(connection) {
     }
 }
 
+async function ensureCourseQuestionsColumn(connection) {
+    try {
+        await connection.query('ALTER TABLE courses ADD COLUMN questions LONGTEXT NULL');
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+    }
+}
+
 // Get all courses
 router.get('/', async (req, res) => {
     try {
         const connection = await req.db.getConnection();
+        await ensureCourseQuestionsColumn(connection);
         const [courses] = await connection.query("SELECT * FROM courses WHERE status = 'active'");
         connection.release();
         
@@ -48,6 +57,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const connection = await req.db.getConnection();
+        await ensureCourseQuestionsColumn(connection);
         const [courses] = await connection.query('SELECT * FROM courses WHERE id = ?', [req.params.id]);
         connection.release();
         

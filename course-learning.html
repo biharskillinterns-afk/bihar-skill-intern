@@ -3989,6 +3989,38 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             }).filter(Boolean);
         }
 
+        function findFallbackQuestions(courseId = currentCourse, courseName = '') {
+            const direct = builtInCourseContent[courseId]?.questions;
+            if (normalizeQuizQuestions(direct).length > 0) return direct;
+
+            const normalizedName = String(courseName || '').trim().toLowerCase();
+            if (!normalizedName) return [];
+
+            const matchingCourse = Object.values(builtInCourseContent).find(course =>
+                String(course?.name || '').trim().toLowerCase() === normalizedName
+            );
+            return normalizeQuizQuestions(matchingCourse?.questions).length > 0 ? matchingCourse.questions : [];
+        }
+
+        function restoreCourseQuestions(courseId = currentCourse, course = courseContent[courseId]) {
+            if (!course) return [];
+
+            const currentQuestions = normalizeQuizQuestions(course.questions);
+            if (currentQuestions.length > 0) {
+                course.questions = currentQuestions;
+                courseContent[courseId] = course;
+                return currentQuestions;
+            }
+
+            const fallbackQuestions = normalizeQuizQuestions(findFallbackQuestions(courseId, course.name));
+            if (fallbackQuestions.length > 0) {
+                course.questions = fallbackQuestions;
+                courseContent[courseId] = course;
+                StorageManager.set('courseContent', courseContent);
+            }
+            return fallbackQuestions;
+        }
+
         function materialAcceptedKey(courseId = currentCourse) {
             return 'courseMaterialAccepted_' + courseId;
         }
@@ -4118,6 +4150,12 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             );
         }
 
+        function acceptMaterialAndOpenQuiz() {
+            StorageManager.set(materialAcceptedKey(), true);
+            refreshMaterialConfirmation();
+            renderQuizState();
+        }
+
         async function hydrateCourseUnlocksFromBackend() {
             if (typeof APIService === 'undefined') return;
             try {
@@ -4175,14 +4213,24 @@ Mastering comprehensive corporate strategy and capstone integration is the final
                         const courseName = response.course.name || response.course.courseName || response.course.title || 'Course';
                         const material = response.course.material || response.course.syllabus || '';
                         const rawQuestions = response.course.questions || '[]';
+                        let parsedQuestions = [];
+                        try {
+                            parsedQuestions = typeof rawQuestions === 'string' ? JSON.parse(rawQuestions || '[]') : rawQuestions;
+                        } catch (error) {
+                            parsedQuestions = [];
+                        }
                         course = {
                             id: response.course.id,
                             name: courseName,
                             emoji: '📚',
                             description: response.course.description,
                             notes: material ? `<h3>${courseName}</h3><p>${material.replace(/\n/g, '</p><p>')}</p>` : '',
-                            questions: typeof rawQuestions === 'string' ? JSON.parse(rawQuestions || '[]') : rawQuestions
+                            questions: parsedQuestions
                         };
+                        const fallbackQuestions = findFallbackQuestions(courseId, courseName);
+                        if (normalizeQuizQuestions(course.questions).length === 0 && fallbackQuestions.length > 0) {
+                            course.questions = fallbackQuestions;
+                        }
                         // Cache it
                         courseContent[courseId] = course;
                         StorageManager.set('courseContent', courseContent);
@@ -4226,6 +4274,7 @@ Mastering comprehensive corporate strategy and capstone integration is the final
                 course.questions = Array.isArray(builtInFallback.questions) ? builtInFallback.questions : [];
                 courseContent[courseId] = course;
             }
+            restoreCourseQuestions(courseId, course);
 
             document.getElementById('courseEmoji').textContent = course.emoji;
             document.getElementById('courseName').textContent = course.name;
@@ -4268,6 +4317,7 @@ Mastering comprehensive corporate strategy and capstone integration is the final
                     <div class="quiz-lock-notice">
                         Please read the full course material and tick "I confirm" at the bottom of the material page before starting this quiz.
                         <br>
+                        <button type="button" class="inline-action" onclick="acceptMaterialAndOpenQuiz()">Accept Material and Open Quiz</button>
                         <button type="button" class="inline-action" onclick="focusMaterialConfirmation()">Go to Material Confirmation</button>
                     </div>
                 `;
@@ -4288,12 +4338,16 @@ Mastering comprehensive corporate strategy and capstone integration is the final
 
             // Load quiz questions
             let quizHTML = '';
-            const normalizedQuestions = normalizeQuizQuestions(course.questions);
+            const normalizedQuestions = restoreCourseQuestions(currentCourse, course);
             course.questions = normalizedQuestions;
             courseContent[currentCourse] = course;
 
             if (normalizedQuestions.length === 0) {
-                document.getElementById('quizContent').innerHTML = '<p style="text-align: center; color: #666;">Quiz questions are not added for this course yet.</p>';
+                document.getElementById('quizContent').innerHTML = `
+                    <div class="quiz-lock-notice">
+                        Quiz questions are not available for this course yet. Please ask admin to add quiz questions for this course.
+                    </div>
+                `;
                 if (submitButton) submitButton.style.display = 'none';
                 return;
             }
@@ -4437,7 +4491,7 @@ Mastering comprehensive corporate strategy and capstone integration is the final
                 return;
             }
 
-            const normalizedQuestions = normalizeQuizQuestions(course.questions);
+            const normalizedQuestions = restoreCourseQuestions(currentCourse, course);
             course.questions = normalizedQuestions;
             courseContent[currentCourse] = course;
 

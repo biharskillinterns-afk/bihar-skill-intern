@@ -45,6 +45,14 @@ async function ensureStudentCourseUnlockColumns(connection) {
     }
 }
 
+async function ensureCourseQuestionsColumn(connection) {
+    try {
+        await connection.query('ALTER TABLE courses ADD COLUMN questions LONGTEXT NULL');
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+    }
+}
+
 router.get('/settings/payment-amount', verifyToken, isAdmin, async (req, res) => {
     try {
         const amount = await getRegistrationAmount(req.db);
@@ -415,6 +423,7 @@ router.put('/proofs/:id/review', verifyToken, isAdmin, async (req, res) => {
 router.get('/courses', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
+        await ensureCourseQuestionsColumn(connection);
         const [courses] = await connection.query('SELECT * FROM courses ORDER BY createdAt DESC');
         connection.release();
         
@@ -441,11 +450,13 @@ router.post('/courses', verifyToken, isAdmin, async (req, res) => {
             duration,
             material,
             syllabus,
+            questions,
             prerequisites,
             status
         } = req.body;
         const finalCourseName = courseName || name;
         const finalSyllabus = syllabus || material || '';
+        const finalQuestions = Array.isArray(questions) ? JSON.stringify(questions) : (questions || null);
         
         if (!finalCourseName || !description) {
             return res.status(400).json({
@@ -455,11 +466,12 @@ router.post('/courses', verifyToken, isAdmin, async (req, res) => {
         }
         
         const connection = await req.db.getConnection();
+        await ensureCourseQuestionsColumn(connection);
         
         const [result] = await connection.query(
-            `INSERT INTO courses (courseName, description, duration, syllabus, prerequisites, status, createdAt)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [finalCourseName, description, duration || 30, finalSyllabus, prerequisites || '', status || 'active']
+            `INSERT INTO courses (courseName, description, duration, syllabus, questions, prerequisites, status, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [finalCourseName, description, duration || 30, finalSyllabus, finalQuestions, prerequisites || '', status || 'active']
         );
         
         connection.release();
@@ -488,19 +500,22 @@ router.put('/courses/:id', verifyToken, isAdmin, async (req, res) => {
             duration,
             material,
             syllabus,
+            questions,
             prerequisites,
             status
         } = req.body;
         const finalCourseName = courseName || name;
         const finalSyllabus = syllabus || material || '';
+        const finalQuestions = Array.isArray(questions) ? JSON.stringify(questions) : (questions || null);
         
         const connection = await req.db.getConnection();
+        await ensureCourseQuestionsColumn(connection);
         
         const [result] = await connection.query(
             `UPDATE courses
-             SET courseName = ?, description = ?, duration = ?, syllabus = ?, prerequisites = ?, status = ?
+             SET courseName = ?, description = ?, duration = ?, syllabus = ?, questions = COALESCE(?, questions), prerequisites = ?, status = ?
              WHERE id = ?`,
-            [finalCourseName, description, duration || 30, finalSyllabus, prerequisites || '', status || 'active', req.params.id]
+            [finalCourseName, description, duration || 30, finalSyllabus, finalQuestions, prerequisites || '', status || 'active', req.params.id]
         );
         
         connection.release();
