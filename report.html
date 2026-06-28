@@ -265,65 +265,60 @@
 
         .auto-proof-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 12px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 8px;
         }
 
         .auto-proof-shot {
-            min-height: 52mm;
-            border: 1.5px solid #1f2937;
+            min-height: 32mm;
+            border: 1px solid #1f2937;
             background: #f8fafc;
             overflow: hidden;
-        }
-
-        .auto-proof-shot.wide {
-            grid-column: 1 / -1;
-            min-height: 38mm;
         }
 
         .auto-shot-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 10px;
+            padding: 5px 6px;
             background: #0f766e;
             color: #ffffff;
-            font-size: 10px;
+            font-size: 8.5px;
             font-weight: 700;
         }
 
         .auto-shot-body {
-            padding: 9px;
+            padding: 6px;
         }
 
         .auto-shot-title {
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             color: #111827;
-            font-size: 13px;
+            font-size: 10.5px;
             font-weight: 800;
         }
 
         .auto-shot-meta {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 9px;
-            font-size: 9.5px;
+            grid-template-columns: 1fr;
+            gap: 2px;
+            margin-bottom: 5px;
+            font-size: 7.8px;
             color: #475569;
         }
 
         .auto-shot-panel {
             border: 1px solid #cbd5e1;
             background: #ffffff;
-            padding: 7px;
-            font-size: 10.5px;
-            line-height: 1.38;
+            padding: 5px;
+            font-size: 8.5px;
+            line-height: 1.28;
         }
 
         .auto-shot-progress {
-            height: 8px;
-            margin-top: 8px;
+            height: 5px;
+            margin-top: 5px;
             border-radius: 999px;
             background: #dbeafe;
             overflow: hidden;
@@ -714,12 +709,12 @@
         <section class="page">
             <div class="page-content">
                 <h2>Daily Activity Screenshot Proof</h2>
-                <p>As required for university submission, this page automatically attaches five course-wise daily activity screenshot records. These records are generated from the student's dashboard report data and selected course details.</p>
+                <p>As required for university submission, this page automatically attaches fifteen course-wise daily activity screenshot records. These records are generated from the student's dashboard report data and selected course details.</p>
                 <div class="auto-proof-grid" id="autoProofGrid"></div>
                 <div class="box">
                     <strong>Final Status:</strong> Completed<br>
                     <strong>Certificate Status:</strong> Ready / Issued<br>
-                    <strong>Screenshot Proof:</strong> 5 daily activity records attached<br>
+                    <strong>Screenshot Proof:</strong> 15 daily activity records attached<br>
                     <strong>Report Generated On:</strong> <span data-field="reportDate">N/A</span>
                 </div>
             </div>
@@ -861,13 +856,23 @@
                 'Course learning material reviewed and important points noted.',
                 'Module practice activity completed for the selected course.',
                 'Revision, self-practice, and daily progress update completed.',
-                'Assessment preparation and internship report documentation completed.'
+                'Daily learning notes and module summary updated.',
+                'Practical concept review completed for the selected course.',
+                'Skill activity completed with dashboard progress update.',
+                'Mid-program revision and doubt review completed.',
+                'Advanced module reading and examples reviewed.',
+                'Workplace application of course concepts studied.',
+                'Remaining course content and notes completed.',
+                'Assessment preparation and final revision completed.',
+                'Final quiz/evaluation activity completed.',
+                'Marksheet, attendance, and certificate details reviewed.',
+                'Internship report documentation completed.'
             ];
             const today = new Date();
 
             grid.innerHTML = activities.map((activity, index) => {
                 const date = new Date(today);
-                date.setDate(today.getDate() - (4 - index));
+                date.setDate(today.getDate() - (14 - index));
                 const dateText = date.toLocaleDateString('en-IN', {
                     day: '2-digit',
                     month: 'short',
@@ -877,10 +882,10 @@
                     hour: '2-digit',
                     minute: '2-digit'
                 });
-                const progress = 20 * (index + 1);
+                const progress = Math.min(100, Math.round(((index + 1) / activities.length) * 100));
 
                 return `
-                    <div class="auto-proof-shot ${index === 4 ? 'wide' : ''}">
+                    <div class="auto-proof-shot">
                         <div class="auto-shot-top">
                             <span>Bihar Skill Intern Dashboard</span>
                             <span>Screenshot ${index + 1}</span>
@@ -888,15 +893,14 @@
                         <div class="auto-shot-body">
                             <div class="auto-shot-title">Day ${index + 1} Activity Proof</div>
                             <div class="auto-shot-meta">
-                                <span><strong>Student:</strong> ${escapeHTML(studentName)}</span>
                                 <span><strong>Date:</strong> ${dateText}</span>
                                 <span><strong>Course:</strong> ${escapeHTML(courseName)}</span>
                                 <span><strong>Time:</strong> ${timeText}</span>
                             </div>
                             <div class="auto-shot-panel">
                                 <strong>Activity:</strong> ${escapeHTML(activity)}<br>
-                                <strong>Status:</strong> Completed through student dashboard record.<br>
-                                <strong>Progress:</strong> ${progress}% course activity record.
+                                <strong>Status:</strong> Completed<br>
+                                <strong>Progress:</strong> ${progress}%
                                 <div class="auto-shot-progress"><span style="width:${progress}%"></span></div>
                             </div>
                         </div>
