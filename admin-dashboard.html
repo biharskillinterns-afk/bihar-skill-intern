@@ -2111,6 +2111,14 @@
                     alert('Early unlock backend route live nahi hai. Render me Manual Deploy > Deploy latest commit karo, phir dobara Unlock Quiz + Certificate dabao.');
                     return;
                 }
+                if (error.status === 401 || message.toLowerCase().includes('token') || message.toLowerCase().includes('expired')) {
+                    alert('Admin session expire ho gaya hai. Please logout/login karke admin panel dobara kholo, phir Unlock Quiz + Certificate dabao.');
+                    return;
+                }
+                if (error.status === 403) {
+                    alert('Ye admin account unlock permission ke saath verify nahi ho raha. Please admin login dobara karo.');
+                    return;
+                }
                 alert(`Unable to update unlock: ${message}`);
             }
         }
