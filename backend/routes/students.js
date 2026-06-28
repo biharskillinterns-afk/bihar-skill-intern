@@ -28,6 +28,30 @@ function estimateDataUrlBytes(value) {
     return Math.floor((base64.length * 3) / 4) - padding;
 }
 
+async function ensureInternshipProofsTable(connection) {
+    await connection.query(`
+        CREATE TABLE IF NOT EXISTS internship_proofs (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            studentId INT NOT NULL,
+            courseId INT NULL,
+            proofDate DATE NOT NULL,
+            internshipMode ENUM('online', 'offline') DEFAULT 'online',
+            topic VARCHAR(255) NOT NULL,
+            workDescription TEXT,
+            screenshot LONGTEXT NOT NULL,
+            fileName VARCHAR(255),
+            status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+            adminRemarks TEXT,
+            uploadedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            reviewedAt TIMESTAMP NULL,
+            reviewedBy INT NULL,
+            INDEX idx_student_proof_status (studentId, status),
+            INDEX idx_proof_date (proofDate),
+            INDEX idx_proof_status (status)
+        )
+    `);
+}
+
 // Get student profile
 router.get('/profile', verifyToken, isStudent, async (req, res) => {
     try {
@@ -267,6 +291,7 @@ router.post('/proofs', verifyToken, isStudent, async (req, res) => {
         }
 
         connection = await req.db.getConnection();
+        await ensureInternshipProofsTable(connection);
         const [result] = await connection.query(
             `INSERT INTO internship_proofs
                 (studentId, courseId, proofDate, internshipMode, topic, workDescription, screenshot, fileName, status)
@@ -357,6 +382,7 @@ router.post('/proofs/bulk', verifyToken, isStudent, async (req, res) => {
         }
 
         connection = await req.db.getConnection();
+        await ensureInternshipProofsTable(connection);
         const [courses] = await connection.query(
             `SELECT sc.enrolledAt, c.courseName
              FROM student_courses sc
@@ -375,35 +401,39 @@ router.post('/proofs/bulk', verifyToken, isStudent, async (req, res) => {
 
         const enrollmentDate = normalizeDateInput(courses[0].enrolledAt);
         const baseDate = enrollmentDate || safeStartDate;
-        const values = screenshots.map((item, index) => [
-            req.user.id,
-            safeCourseId,
-            addDays(baseDate, index),
-            safeMode,
-            `${safeTopic} - Day ${index + 1}`,
-            workDescription || `Activity proof for ${courses[0].courseName || 'selected course'} - Day ${index + 1}`,
-            item.screenshot,
-            item.fileName || `activity-proof-${index + 1}.jpg`
-        ]);
-
-        const [result] = await connection.query(
-            `INSERT INTO internship_proofs
-                (studentId, courseId, proofDate, internshipMode, topic, workDescription, screenshot, fileName, status)
-             VALUES ?`,
-            [values]
-        );
+        const insertedIds = [];
+        for (const [index, item] of screenshots.entries()) {
+            const [result] = await connection.query(
+                `INSERT INTO internship_proofs
+                    (studentId, courseId, proofDate, internshipMode, topic, workDescription, screenshot, fileName, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+                [
+                    req.user.id,
+                    safeCourseId,
+                    addDays(baseDate, index),
+                    safeMode,
+                    `${safeTopic} - Day ${index + 1}`,
+                    workDescription || `Activity proof for ${courses[0].courseName || 'selected course'} - Day ${index + 1}`,
+                    item.screenshot,
+                    item.fileName || `activity-proof-${index + 1}.jpg`
+                ]
+            );
+            insertedIds.push(result.insertId);
+        }
 
         res.json({
             success: true,
-            message: `${screenshots.length} activity proof screenshots uploaded. Dates were set from ${baseDate}. Admin approval ke baad attendance count hoga.`,
-            inserted: result.affectedRows,
+            message: `${screenshots.length} activity proof screenshots uploaded. Dates were set from ${baseDate}. Attendance will count after admin approval.`,
+            inserted: insertedIds.length,
+            proofIds: insertedIds,
             attendanceStartDate: baseDate,
             attendanceEndDate: addDays(baseDate, ACTIVITY_PROOF_DAYS - 1)
         });
     } catch (error) {
+        console.error('Activity proof bulk upload failed:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to upload activity proofs',
+            message: error.message ? `Failed to upload activity proofs: ${error.message}` : 'Failed to upload activity proofs',
             error: error.message
         });
     } finally {

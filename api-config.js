@@ -423,7 +423,10 @@ class APIService {
         }
 
         if (!response.ok) {
-            const error = new Error((payload && payload.message) || 'API request failed');
+            const detail = payload && payload.error && payload.error !== payload.message
+                ? `${payload.message || 'API request failed'} (${payload.error})`
+                : (payload && payload.message) || 'API request failed';
+            const error = new Error(detail);
             error.status = response.status;
             error.payload = payload;
             error.url = url;

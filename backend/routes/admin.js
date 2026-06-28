@@ -7,6 +7,30 @@ function normalizeProofStatus(status) {
     return ['pending', 'approved', 'rejected'].includes(status) ? status : 'pending';
 }
 
+async function ensureInternshipProofsTable(connection) {
+    await connection.query(`
+        CREATE TABLE IF NOT EXISTS internship_proofs (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            studentId INT NOT NULL,
+            courseId INT NULL,
+            proofDate DATE NOT NULL,
+            internshipMode ENUM('online', 'offline') DEFAULT 'online',
+            topic VARCHAR(255) NOT NULL,
+            workDescription TEXT,
+            screenshot LONGTEXT NOT NULL,
+            fileName VARCHAR(255),
+            status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+            adminRemarks TEXT,
+            uploadedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            reviewedAt TIMESTAMP NULL,
+            reviewedBy INT NULL,
+            INDEX idx_student_proof_status (studentId, status),
+            INDEX idx_proof_date (proofDate),
+            INDEX idx_proof_status (status)
+        )
+    `);
+}
+
 router.get('/settings/payment-amount', verifyToken, isAdmin, async (req, res) => {
     try {
         const amount = await getRegistrationAmount(req.db);
@@ -204,6 +228,7 @@ router.get('/proofs', verifyToken, isAdmin, async (req, res) => {
     try {
         const status = req.query.status ? normalizeProofStatus(req.query.status) : null;
         const connection = await req.db.getConnection();
+        await ensureInternshipProofsTable(connection);
         const params = [];
         const statusClause = status ? 'WHERE p.status = ?' : '';
         if (status) params.push(status);
@@ -252,6 +277,7 @@ router.put('/proofs/:id/review', verifyToken, isAdmin, async (req, res) => {
         }
 
         connection = await req.db.getConnection();
+        await ensureInternshipProofsTable(connection);
         const [proofRows] = await connection.query(
             'SELECT * FROM internship_proofs WHERE id = ? LIMIT 1',
             [req.params.id]
