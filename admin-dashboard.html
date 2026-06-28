@@ -552,6 +552,52 @@
             margin-bottom: 24px;
         }
 
+        .admin-control-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 10px;
+            margin: 0 0 16px;
+        }
+
+        .admin-tab-btn {
+            border: 1px solid #dbe3ef;
+            background: #ffffff;
+            color: #334155;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-weight: 800;
+            cursor: pointer;
+            min-height: 44px;
+            text-align: left;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+        }
+
+        .admin-tab-btn:hover {
+            transform: translateY(-1px);
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+
+        .admin-tab-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
+        }
+
+        .admin-panel-tab {
+            display: none;
+        }
+
+        .admin-panel-tab.active {
+            display: block;
+        }
+
+        .admin-control-stage {
+            margin-bottom: 18px;
+        }
+
         .admin-panel {
             background: white;
             padding: 24px;
@@ -1455,43 +1501,51 @@
                 <button class="search-btn" style="background: #8b5cf6;" onclick="downloadReportCSV('certificates')">Export Certificates CSV</button>
             </div>
 
-            <div class="admin-grid">
-                <div class="admin-panel">
+            <div class="admin-control-tabs" role="tablist" aria-label="Admin control sections">
+                <button class="admin-tab-btn active" type="button" data-admin-tab="payments" onclick="switchAdminControlTab('payments')">Payment Overview</button>
+                <button class="admin-tab-btn" type="button" data-admin-tab="progress" onclick="switchAdminControlTab('progress')">Student Progress</button>
+                <button class="admin-tab-btn" type="button" data-admin-tab="quiz" onclick="switchAdminControlTab('quiz')">Quiz Report</button>
+                <button class="admin-tab-btn" type="button" data-admin-tab="certificates" onclick="switchAdminControlTab('certificates')">Certificate Verification</button>
+                <button class="admin-tab-btn" type="button" data-admin-tab="analytics" onclick="switchAdminControlTab('analytics')">Course Analytics</button>
+                <button class="admin-tab-btn" type="button" data-admin-tab="pending" onclick="switchAdminControlTab('pending')">Pending Actions</button>
+                <button class="admin-tab-btn" type="button" data-admin-tab="activity" onclick="switchAdminControlTab('activity')">Activity Log</button>
+            </div>
+
+            <div class="admin-control-stage">
+                <div class="admin-panel admin-panel-tab active" data-admin-panel="payments">
                     <h3>Payment Overview</h3>
                     <div id="paymentOverviewPanel"></div>
                 </div>
 
-                <div class="admin-panel">
+                <div class="admin-panel admin-panel-tab" data-admin-panel="progress">
                     <h3>Student Progress Tracker</h3>
                     <div id="progressTrackerPanel"></div>
                 </div>
 
-                <div class="admin-panel">
+                <div class="admin-panel admin-panel-tab" data-admin-panel="quiz">
                     <h3>Quiz Attempt Report</h3>
                     <div id="quizReportPanel"></div>
                 </div>
 
-                <div class="admin-panel">
+                <div class="admin-panel admin-panel-tab" data-admin-panel="certificates">
                     <h3>Certificate Verification</h3>
                     <div class="certificate-search">
                         <input id="certificateSearchInput" type="text" placeholder="Search certificate no., student, or course" oninput="renderCertificatePanel()">
                     </div>
                     <div id="certificatePanel" style="margin-top: 12px;"></div>
                 </div>
-            </div>
 
-            <div class="admin-grid">
-                <div class="admin-panel">
+                <div class="admin-panel admin-panel-tab" data-admin-panel="analytics">
                     <h3>Course Completion Analytics</h3>
                     <div id="courseAnalyticsPanel"></div>
                 </div>
 
-                <div class="admin-panel">
+                <div class="admin-panel admin-panel-tab" data-admin-panel="pending">
                     <h3>Pending Actions</h3>
                     <div id="pendingActionsPanel"></div>
                 </div>
 
-                <div class="admin-panel">
+                <div class="admin-panel admin-panel-tab" data-admin-panel="activity">
                     <h3>Admin Activity Log</h3>
                     <div id="activityLogPanel"></div>
                 </div>
@@ -2403,6 +2457,18 @@
             renderPendingActions();
             renderNoticePanel();
             renderActivityLog();
+        }
+
+        function switchAdminControlTab(tabName) {
+            document.querySelectorAll('.admin-tab-btn').forEach(button => {
+                const isActive = button.dataset.adminTab === tabName;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-selected', String(isActive));
+            });
+
+            document.querySelectorAll('.admin-panel-tab').forEach(panel => {
+                panel.classList.toggle('active', panel.dataset.adminPanel === tabName);
+            });
         }
 
         function renderPaymentOverview() {
