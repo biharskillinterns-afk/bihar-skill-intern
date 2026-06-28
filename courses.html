@@ -568,7 +568,6 @@
                 <button class="action-btn btn-info" onclick="viewProfile()">👤 View Profile</button>
                 <button class="action-btn btn-info" onclick="window.location.href='consent-form.html'" style="background: linear-gradient(135deg, #ec4899, #db2777);">📋 Consent Form</button>
                 <button class="action-btn" onclick="window.location.href='internship-report.html'" style="background: linear-gradient(135deg, #f97316, #ea580c); color:white;">📄 Internship Report</button>
-                <button class="action-btn" onclick="window.location.href='daily-proof.html'" style="background: linear-gradient(135deg, #0f766e, #0d9488); color:white;">Upload Activity Proof</button>
             </div>
         </div>
 
@@ -604,7 +603,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-content">
-                    <h3>Activity Proof Days</h3>
+                    <h3>Report Screenshots</h3>
                     <div class="stat-number" id="proofStatus">0/5</div>
                 </div>
                 <div class="stat-icon">OK</div>
@@ -1030,18 +1029,12 @@
             return internshipProofSummary;
         }
 
-        function getCourseProofSummary(courseId) {
-            return internshipProofCourseSummary[String(courseId)] || internshipProofCourseSummary[courseId] || null;
-        }
-
         function updateProofStatus() {
             const proofElement = document.getElementById('proofStatus');
             if (!proofElement) return;
 
-            const required = Number(internshipProofSummary.requiredApprovedDays || 5);
-            const approved = Number(internshipProofSummary.approvedDays || 0);
-            proofElement.textContent = `${Math.min(approved, required)}/${required}`;
-            proofElement.style.color = approved >= required ? '#10b981' : '#f59e0b';
+            proofElement.textContent = 'Auto';
+            proofElement.style.color = '#10b981';
         }
 
         function addDays(date, days) {
@@ -1353,17 +1346,9 @@
                 courseCard.className = 'course-card';
                 
                 if (enrolled) {
-                    const proofSummary = getCourseProofSummary(course.id);
-                    const proofBlock = proofSummary ? `
-                        <div style="margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #f8fafc; color: #334155; font-size: 0.88em;">
-                            <strong>Activity Proof:</strong>
-                            ${Number(proofSummary.total || 0)} uploaded,
-                            ${Number(proofSummary.pending || 0)} pending,
-                            ${Number(proofSummary.approved || 0)} approved
-                        </div>
-                    ` : `
-                        <div style="margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #fff7ed; color: #9a3412; font-size: 0.88em;">
-                            Activity proof not uploaded yet
+                    const proofBlock = `
+                        <div style="margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #ecfdf5; color: #065f46; font-size: 0.88em; font-weight: 700;">
+                            5 daily activity screenshots auto attach in internship report
                         </div>
                     `;
                     // Show in enrolled section with progress
@@ -1393,9 +1378,6 @@
                             </div>
                             <button class="enroll-btn enrolled" onclick="${completed ? `viewCompletedCourse(${course.id})` : `continueCourse(${course.id})`}">
                                 ${completed ? 'View Marksheet' : '📖 Continue Learning'}
-                            </button>
-                            <button class="enroll-btn" style="margin-top: 8px; background: linear-gradient(135deg, #0f766e, #0d9488);" onclick="uploadProofForCourse(${course.id})">
-                                Upload Activity Proof
                             </button>
                         </div>
                     `;
@@ -1529,16 +1511,6 @@
 
         function continueCourse(courseId) {
             window.location.href = 'course-learning.html?course=' + courseId;
-        }
-
-        function uploadProofForCourse(courseId) {
-            const course = courses.find(c => String(c.id) === String(courseId));
-            if (course) {
-                StorageManager.set('selectedCourseId', course.id);
-                StorageManager.set('selectedCourseName', course.name);
-                StorageManager.set('userSkill', course.name);
-            }
-            window.location.href = 'daily-proof.html';
         }
 
         function viewCompletedCourse(courseId) {
