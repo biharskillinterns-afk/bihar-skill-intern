@@ -292,6 +292,28 @@
             font-weight: 600;
         }
 
+        .quiz-lock-notice .inline-action {
+            margin-top: 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .material-confirmation.needs-attention {
+            animation: attentionPulse 1.2s ease-in-out 3;
+            border-color: #f97316 !important;
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
+        }
+
+        @keyframes attentionPulse {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
         /* Quiz Section */
         .quiz-container {
             background: white;
@@ -3891,10 +3913,21 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             });
         }
 
+        const builtInCourseContent = JSON.parse(JSON.stringify(courseContent));
         const savedCourseContent = StorageManager.get('courseContent', {});
         if (savedCourseContent && typeof savedCourseContent === 'object') {
             courseContent = { ...courseContent, ...savedCourseContent };
         }
+        Object.keys(builtInCourseContent).forEach(courseId => {
+            const savedQuestions = courseContent[courseId]?.questions;
+            const builtInQuestions = builtInCourseContent[courseId]?.questions;
+            if ((!Array.isArray(savedQuestions) || savedQuestions.length === 0) && Array.isArray(builtInQuestions) && builtInQuestions.length > 0) {
+                courseContent[courseId] = {
+                    ...(courseContent[courseId] || builtInCourseContent[courseId]),
+                    questions: builtInQuestions
+                };
+            }
+        });
 
         let currentCourse = null;
         let quizAnswers = {};
@@ -4051,6 +4084,17 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             }
         }
 
+        function focusMaterialConfirmation() {
+            switchTab('notes', { silent: true });
+            const panel = document.getElementById('materialConfirmation');
+            if (!panel) return;
+
+            panel.classList.remove('needs-attention');
+            void panel.offsetWidth;
+            panel.classList.add('needs-attention');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
         function acceptCourseMaterial() {
             const checkbox = document.getElementById('materialReadCheck');
             if (!checkbox || !checkbox.checked) {
@@ -4148,6 +4192,12 @@ Mastering comprehensive corporate strategy and capstone integration is the final
                 return;
             }
 
+            const builtInFallback = builtInCourseContent[courseId];
+            if (builtInFallback && (!Array.isArray(course.questions) || course.questions.length === 0)) {
+                course.questions = Array.isArray(builtInFallback.questions) ? builtInFallback.questions : [];
+                courseContent[courseId] = course;
+            }
+
             document.getElementById('courseEmoji').textContent = course.emoji;
             document.getElementById('courseName').textContent = course.name;
             document.getElementById('courseDescription').textContent = course.description;
@@ -4186,7 +4236,9 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             if (!accepted) {
                 document.getElementById('quizContent').innerHTML = `
                     <div class="quiz-lock-notice">
-                        Please read the full course material and tick “I confirm” at the bottom of the material page before starting this quiz.
+                        Please read the full course material and tick "I confirm" at the bottom of the material page before starting this quiz.
+                        <br>
+                        <button type="button" class="inline-action" onclick="focusMaterialConfirmation()">Go to Material Confirmation</button>
                     </div>
                 `;
                 return;
@@ -4525,10 +4577,12 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             window.location.href = 'marksheet.html';
         }
 
-        function switchTab(tabName) {
+        function switchTab(tabName, options = {}) {
+            const silent = options && options.silent === true;
             if (tabName === 'quiz' && !isMaterialAccepted()) {
-                alert('Please read the full course material and accept it before opening the quiz.');
-                tabName = 'notes';
+                if (!silent) {
+                    renderQuizState();
+                }
             }
             if (tabName === 'quiz' && isMaterialAccepted()) {
                 const unlockInfo = getQuizUnlockInfo();
