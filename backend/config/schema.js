@@ -159,6 +159,30 @@ async function ensureRuntimeSchema(pool) {
             )
         `);
 
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS internship_proofs (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                studentId INT NOT NULL,
+                courseId INT NULL,
+                proofDate DATE NOT NULL,
+                internshipMode ENUM('online', 'offline') DEFAULT 'online',
+                topic VARCHAR(255) NOT NULL,
+                workDescription TEXT,
+                screenshot LONGTEXT NOT NULL,
+                fileName VARCHAR(255),
+                status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+                adminRemarks TEXT,
+                uploadedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                reviewedAt TIMESTAMP NULL,
+                reviewedBy INT NULL,
+                FOREIGN KEY (studentId) REFERENCES students(id) ON DELETE CASCADE,
+                FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE SET NULL,
+                INDEX idx_student_proof_status (studentId, status),
+                INDEX idx_proof_date (proofDate),
+                INDEX idx_proof_status (status)
+            )
+        `);
+
         const defaultCourses = [
             [1, 'Skill Development', 'Comprehensive training to develop practical and technical skills for professional growth.', 50],
             [2, 'Social Work', 'Learn social welfare, community development, and making positive impact in society.', 50],

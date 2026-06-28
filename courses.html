@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -535,6 +535,7 @@
             <li><a href="profile.html">Profile</a></li>
             <li><a href="courses.html">Course</a></li>
             <li><a href="#" onclick="downloadCertificate(); return false;">Certificate</a></li>
+            <li><a href="internship-report.html" style="color:#f97316; font-weight:700;">📄 Internship Report</a></li>
         </ul>
         <div class="nav-right">
             <a href="https://wa.me/917079952655" target="_blank" rel="noopener" class="helpline-pill" title="WhatsApp helpline">Helpline: +91 70799 52655</a>
@@ -566,6 +567,8 @@
                 <button class="action-btn btn-primary" onclick="window.location.href='registration-documents.html'">🪪 Enrollment Docs</button>
                 <button class="action-btn btn-info" onclick="viewProfile()">👤 View Profile</button>
                 <button class="action-btn btn-info" onclick="window.location.href='consent-form.html'" style="background: linear-gradient(135deg, #ec4899, #db2777);">📋 Consent Form</button>
+                <button class="action-btn" onclick="window.location.href='internship-report.html'" style="background: linear-gradient(135deg, #f97316, #ea580c); color:white;">📄 Internship Report</button>
+                <button class="action-btn" onclick="window.location.href='daily-proof.html'" style="background: linear-gradient(135deg, #0f766e, #0d9488); color:white;">Upload Activity Proof</button>
             </div>
         </div>
 
@@ -598,6 +601,13 @@
                     <div class="stat-number" id="progressStatus">0%</div>
                 </div>
                 <div class="stat-icon">⚡</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Activity Proof Days</h3>
+                    <div class="stat-number" id="proofStatus">0/5</div>
+                </div>
+                <div class="stat-icon">OK</div>
             </div>
         </div>
 
@@ -640,6 +650,7 @@
                     <button class="action-btn btn-success" style="width: 100%;" onclick="viewAttendance()">📊 View Attendance</button>
                     <button class="action-btn btn-success" style="width: 100%;" onclick="viewMarksheet()">📋 View Marksheet</button>
                     <button class="action-btn btn-info" style="width: 100%;" onclick="generateReport()">📄 Generate Report</button>
+                    <button class="action-btn" style="width: 100%; background: linear-gradient(135deg, #f97316, #ea580c); color:white;" onclick="window.location.href='internship-report.html'">📋 Internship Completion Report</button>
                 </div>
             </div>
 
@@ -921,6 +932,11 @@
         }
 
         let courses = [];
+        let internshipProofSummary = {
+            requiredApprovedDays: 5,
+            approvedDays: 0,
+            certificateProofReady: false
+        };
 
         function ensureCoursesVisible() {
             const coursesGrid = document.getElementById('coursesGrid');
@@ -953,6 +969,45 @@
                 '"': '&quot;',
                 "'": '&#39;'
             }[char]));
+        }
+
+        async function hydrateProofSummaryFromBackend() {
+            if (typeof APIService === 'undefined') return internshipProofSummary;
+
+            try {
+                const response = await APIService.getStudentProofs();
+                if (response && response.success) {
+                    internshipProofSummary = {
+                        requiredApprovedDays: Number(response.requiredApprovedDays || 5),
+                        approvedDays: Number(response.approvedDays || 0),
+                        certificateProofReady: response.certificateProofReady === true
+                    };
+                    StorageManager.set('internshipProofSummary', internshipProofSummary);
+                    updateProofStatus();
+                }
+            } catch (error) {
+                const cached = StorageManager.get('internshipProofSummary');
+                if (cached && typeof cached === 'object') {
+                    internshipProofSummary = {
+                        requiredApprovedDays: Number(cached.requiredApprovedDays || 5),
+                        approvedDays: Number(cached.approvedDays || 0),
+                        certificateProofReady: cached.certificateProofReady === true
+                    };
+                    updateProofStatus();
+                }
+            }
+
+            return internshipProofSummary;
+        }
+
+        function updateProofStatus() {
+            const proofElement = document.getElementById('proofStatus');
+            if (!proofElement) return;
+
+            const required = Number(internshipProofSummary.requiredApprovedDays || 5);
+            const approved = Number(internshipProofSummary.approvedDays || 0);
+            proofElement.textContent = `${Math.min(approved, required)}/${required}`;
+            proofElement.style.color = approved >= required ? '#10b981' : '#f59e0b';
         }
 
         function addDays(date, days) {
@@ -1217,6 +1272,7 @@
             }
 
             await hydrateProgressFromBackend();
+            await hydrateProofSummaryFromBackend();
             syncCompletedCourseSelection();
             refreshSelectedSkillDisplay();
             renderCourses();
@@ -1229,10 +1285,12 @@
                     if (Array.isArray(loadedCourses) && loadedCourses.length > 0) {
                         courses = loadedCourses;
                         hydrateProgressFromBackend().finally(() => {
-                            syncCompletedCourseSelection();
-                            refreshSelectedSkillDisplay();
-                            renderCourses();
-                            updateStats();
+                            hydrateProofSummaryFromBackend().finally(() => {
+                                syncCompletedCourseSelection();
+                                refreshSelectedSkillDisplay();
+                                renderCourses();
+                                updateStats();
+                            });
                         });
                     }
                 })
@@ -1454,6 +1512,7 @@
             document.getElementById('completionStatus').textContent = enrolledCount > 0 ? `${avgProgress}%` : '0%';
             document.getElementById('certStatus').textContent = completedCourses > 0 ? '✅ Ready' : 'Pending';
             document.getElementById('progressStatus').textContent = `${avgProgress}%`;
+            updateProofStatus();
         }
 
         function downloadCertificate() {

@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Proof Upload - Bihar Skill Interns</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="api-config.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background: #eef3f9;
+            color: #172033;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 28px 18px 52px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #0f4c81, #0f766e);
+            color: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.15);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand img {
+            width: 74px;
+            height: 74px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 10px;
+            padding: 6px;
+        }
+
+        .brand h1 {
+            margin: 0 0 6px;
+            font-size: 1.65rem;
+        }
+
+        .brand p {
+            margin: 0;
+            opacity: 0.9;
+            line-height: 1.45;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 6px;
+            padding: 11px 16px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            color: #fff;
+            background: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.38);
+        }
+
+        .btn.success { background: #059669; }
+        .btn.warning { background: #f59e0b; color: #111827; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .notice {
+            margin-top: 20px;
+            background: #fff7ed;
+            color: #7c2d12;
+            border-left: 4px solid #f97316;
+            border-radius: 6px;
+            padding: 15px 18px;
+            line-height: 1.55;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 22px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .card h2 {
+            margin: 0 0 14px;
+            font-size: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin: 12px 0 7px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        small {
+            display: block;
+            margin-top: 6px;
+            color: #64748b;
+            line-height: 1.45;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .summary-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .summary-box strong {
+            display: block;
+            font-size: 1.55rem;
+            color: #2563eb;
+            margin-top: 4px;
+        }
+
+        .preview-grid,
+        .proof-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .preview-grid {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            margin-top: 14px;
+        }
+
+        .preview-card {
+            border: 1px solid #dbe4f0;
+            border-radius: 8px;
+            padding: 8px;
+            background: #f8fafc;
+        }
+
+        .preview-card img {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #dbe4f0;
+        }
+
+        .proof-list {
+            max-height: 690px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .proof-item {
+            display: grid;
+            grid-template-columns: 96px 1fr;
+            gap: 12px;
+            border: 1px solid #dbe4f0;
+            border-left: 4px solid #64748b;
+            border-radius: 8px;
+            padding: 12px;
+            background: #fff;
+        }
+
+        .proof-item.approved { border-left-color: #10b981; }
+        .proof-item.pending { border-left-color: #f59e0b; }
+        .proof-item.rejected { border-left-color: #ef4444; }
+
+        .proof-item img {
+            width: 96px;
+            height: 74px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #dbe4f0;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status.approved { color: #065f46; background: #d1fae5; }
+        .status.pending { color: #92400e; background: #fef3c7; }
+        .status.rejected { color: #991b1b; background: #fee2e2; }
+
+        #reportArea {
+            display: none;
+            background: #fff;
+            color: #111827;
+            width: 210mm;
+            padding: 12mm;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #0f766e;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .report-logo {
+            width: 74px;
+            height: 74px;
+            object-fit: contain;
+        }
+
+        .report-title {
+            text-align: center;
+            color: #0f4c81;
+            margin: 16px 0;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+
+        .report-table th,
+        .report-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .report-proof-frame {
+            position: relative;
+            width: 150px;
+            min-height: 96px;
+            border: 1px solid #cbd5e1;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+
+        .report-proof-frame img {
+            display: block;
+            width: 150px;
+            max-height: 110px;
+            object-fit: contain;
+        }
+
+        .report-stamp {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.82);
+            color: #fff;
+            font-size: 9px;
+            padding: 3px 4px;
+            text-align: center;
+        }
+
+        @media (max-width: 860px) {
+            .hero,
+            .brand {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .grid,
+            .summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <section class="hero">
+            <div class="brand">
+                <img src="logo.png" alt="Bihar Skill Interns logo">
+                <div>
+                    <h1>Upload Activity Proof</h1>
+                    <p>Upload screenshots once. The system maps them to your 15-day internship attendance record.</p>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="btn secondary" href="courses.html">Back to Dashboard</a>
+                <button class="btn success" onclick="downloadProofReport()">Download Activity Report</button>
+            </div>
+        </section>
+
+        <div class="notice">
+            Upload 5 to 15 learning screenshots in one submission. Each image must be between 20 KB and 30 KB. Dates are auto-set from your course enrollment date, and admin approval is required before it counts for attendance.
+        </div>
+
+        <section class="grid">
+            <div class="card">
+                <h2>Activity Screenshot Upload</h2>
+                <form id="proofForm">
+                    <label for="courseSelect">Course</label>
+                    <select id="courseSelect" required>
+                        <option value="">Select enrolled course</option>
+                    </select>
+                    <small id="dateRangeHint">Select a course to see the 15-day attendance range.</small>
+
+                    <label for="internshipMode">Internship Mode</label>
+                    <select id="internshipMode">
+                        <option value="online">Online Internship</option>
+                        <option value="offline">Offline Internship / GPS Photo</option>
+                    </select>
+
+                    <label for="topic">Activity Title</label>
+                    <input type="text" id="topic" maxlength="255" placeholder="Example: Course learning screenshot proof" value="Course Activity Proof" required>
+
+                    <label for="workDescription">Activity Description</label>
+                    <textarea id="workDescription" placeholder="Write what these screenshots prove.">Student completed learning activity and submitted screenshots for internship attendance verification.</textarea>
+
+                    <label for="screenshots">Screenshots</label>
+                    <input type="file" id="screenshots" accept="image/png,image/jpeg,image/webp" multiple required>
+                    <small>Minimum 5 screenshots, maximum 15 screenshots. Each image must be 20 KB to 30 KB.</small>
+
+                    <div id="previewGrid" class="preview-grid"></div>
+
+                    <div style="margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn success" id="uploadBtn" type="submit">Upload Activity Proof</button>
+                        <button class="btn warning" type="button" onclick="loadProofs()">Refresh Status</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Verification Status</h2>
+                <div class="summary">
+                    <div class="summary-box">Required<strong id="requiredCount">5</strong></div>
+                    <div class="summary-box">Approved<strong id="approvedCount">0</strong></div>
+                    <div class="summary-box">Pending<strong id="pendingCount">0</strong></div>
+                </div>
+                <div id="proofList" class="proof-list"></div>
+            </div>
+        </section>
+
+        <section id="reportArea"></section>
+    </main>
+
+    <script>
+        const storage = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+        const MIN_FILE_BYTES = 20 * 1024;
+        const MAX_FILE_BYTES = 30 * 1024;
+        const MIN_SCREENSHOTS = 5;
+        const MAX_SCREENSHOTS = 15;
+        let proofRows = [];
+        let proofSummary = { requiredApprovedDays: 5, approvedDays: 0 };
+        let enrolledCourseRows = [];
+
+        function getItem(key, fallback = '') {
+            try {
+                return storage.getItem(key) || fallback;
+            } catch (error) {
+                return fallback;
+            }
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function toInputDate(value) {
+            if (!value) return '';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '';
+            return date.toISOString().slice(0, 10);
+        }
+
+        function addDays(value, days) {
+            const date = new Date(value);
+            date.setDate(date.getDate() + days);
+            return date;
+        }
+
+        function formatDate(value) {
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return '-';
+            return date.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function formatDateTime(value) {
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return '-';
+            return date.toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function getStudentName() {
+            return getItem('userName') || [getItem('userFirstName'), getItem('userLastName')].filter(Boolean).join(' ') || 'Student';
+        }
+
+        function getSelectedCourseRow() {
+            const selectedId = document.getElementById('courseSelect').value;
+            return enrolledCourseRows.find(row => String(row.courseId) === String(selectedId)) || null;
+        }
+
+        function getSelectedStartDate() {
+            const row = getSelectedCourseRow();
+            const courseId = row?.courseId || document.getElementById('courseSelect').value;
+            return toInputDate(row?.enrolledAt) ||
+                toInputDate(localStorage.getItem('courseStartDate_' + courseId)) ||
+                toInputDate(localStorage.getItem('courseEnrolledAt_' + courseId)) ||
+                toInputDate(new Date());
+        }
+
+        function updateDateRangeHint() {
+            const hint = document.getElementById('dateRangeHint');
+            const start = getSelectedStartDate();
+            if (!start) {
+                hint.textContent = 'Select a course to see the 15-day attendance range.';
+                return;
+            }
+            const end = addDays(start, 14);
+            hint.textContent = `Attendance dates will be auto-set from ${formatDate(start)} to ${formatDate(end)}.`;
+        }
+
+        async function loadCourses() {
+            const select = document.getElementById('courseSelect');
+            const selectedCourseId = getItem('selectedCourseId');
+
+            try {
+                const response = await APIService.getStudentProgress();
+                enrolledCourseRows = response.success ? (response.progress || []) : [];
+            } catch (error) {
+                enrolledCourseRows = [];
+            }
+
+            select.innerHTML = '<option value="">Select enrolled course</option>' + enrolledCourseRows.map(row => `
+                <option value="${escapeHTML(row.courseId)}" ${String(row.courseId) === String(selectedCourseId) ? 'selected' : ''}>${escapeHTML(row.courseName || row.name || 'Course')}</option>
+            `).join('');
+            updateDateRangeHint();
+        }
+
+        function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function validateFiles(files) {
+            if (files.length < MIN_SCREENSHOTS || files.length > MAX_SCREENSHOTS) {
+                return `Please select ${MIN_SCREENSHOTS} to ${MAX_SCREENSHOTS} screenshots.`;
+            }
+
+            for (const file of files) {
+                if (file.size < MIN_FILE_BYTES || file.size > MAX_FILE_BYTES) {
+                    return `${file.name} size is ${(file.size / 1024).toFixed(1)} KB. Every screenshot must be between 20 KB and 30 KB.`;
+                }
+            }
+
+            return '';
+        }
+
+        async function previewFiles() {
+            const files = Array.from(document.getElementById('screenshots').files || []);
+            const preview = document.getElementById('previewGrid');
+            preview.innerHTML = '';
+
+            if (!files.length) return;
+
+            const validationError = validateFiles(files);
+            files.slice(0, MAX_SCREENSHOTS).forEach((file, index) => {
+                const url = URL.createObjectURL(file);
+                const start = getSelectedStartDate();
+                const proofDate = start ? addDays(start, index) : new Date();
+                const sizeKb = (file.size / 1024).toFixed(1);
+                const card = document.createElement('div');
+                card.className = 'preview-card';
+                card.innerHTML = `
+                    <img src="${url}" alt="Screenshot preview">
+                    <strong>Day ${index + 1}</strong>
+                    <small>${formatDate(proofDate)} | ${sizeKb} KB</small>
+                `;
+                preview.appendChild(card);
+            });
+
+            if (validationError) {
+                const error = document.createElement('div');
+                error.style.cssText = 'grid-column:1/-1; color:#b91c1c; font-weight:700;';
+                error.textContent = validationError;
+                preview.prepend(error);
+            }
+        }
+
+        async function loadProofs() {
+            const list = document.getElementById('proofList');
+            list.innerHTML = '<p style="text-align:center; color:#64748b;">Loading proofs...</p>';
+
+            try {
+                const response = await APIService.getStudentProofs();
+                proofRows = response.proofs || [];
+                proofSummary = response;
+                localStorage.setItem('internshipProofSummary', JSON.stringify({
+                    requiredApprovedDays: response.requiredApprovedDays || 5,
+                    approvedDays: response.approvedDays || 0,
+                    certificateProofReady: response.certificateProofReady === true
+                }));
+                renderProofs();
+            } catch (error) {
+                list.innerHTML = `<p style="color:#b91c1c;">Unable to load proofs: ${escapeHTML(error.message)}</p>`;
+            }
+        }
+
+        function renderProofs() {
+            const required = Number(proofSummary.requiredApprovedDays || 5);
+            const approved = Number(proofSummary.approvedDays || 0);
+            const pending = proofRows.filter(row => row.status === 'pending').length;
+
+            document.getElementById('requiredCount').textContent = required;
+            document.getElementById('approvedCount').textContent = approved;
+            document.getElementById('pendingCount').textContent = pending;
+
+            const list = document.getElementById('proofList');
+            if (proofRows.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#64748b;">No activity proof uploaded yet.</p>';
+                return;
+            }
+
+            list.innerHTML = proofRows.map(row => `
+                <div class="proof-item ${escapeHTML(row.status || 'pending')}">
+                    <img src="${escapeHTML(row.screenshot)}" alt="Activity proof screenshot">
+                    <div>
+                        <strong>${escapeHTML(row.topic)}</strong>
+                        <div style="margin:6px 0;">
+                            <span class="status ${escapeHTML(row.status || 'pending')}">${escapeHTML(row.status || 'pending')}</span>
+                        </div>
+                        <div style="color:#475569; font-size:0.92rem;">${formatDate(row.proofDate)} | ${escapeHTML(row.courseName || 'Course not selected')}</div>
+                        <div style="color:#64748b; margin-top:5px;">${escapeHTML(row.workDescription || '')}</div>
+                        ${row.adminRemarks ? `<div style="color:#991b1b; margin-top:5px;">Admin remark: ${escapeHTML(row.adminRemarks)}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function uploadProof(event) {
+            event.preventDefault();
+            const courseId = document.getElementById('courseSelect').value;
+            const files = Array.from(document.getElementById('screenshots').files || []);
+            const validationError = validateFiles(files);
+
+            if (!courseId) {
+                alert('Please select an enrolled course.');
+                return;
+            }
+
+            if (validationError) {
+                alert(validationError);
+                return;
+            }
+
+            const button = document.getElementById('uploadBtn');
+            button.disabled = true;
+            button.textContent = 'Uploading...';
+
+            try {
+                const screenshots = [];
+                for (const file of files) {
+                    screenshots.push({
+                        screenshot: await readFileAsDataUrl(file),
+                        fileName: file.name
+                    });
+                }
+
+                await APIService.uploadActivityProofs({
+                    courseId,
+                    startDate: getSelectedStartDate(),
+                    internshipMode: document.getElementById('internshipMode').value,
+                    topic: document.getElementById('topic').value,
+                    workDescription: document.getElementById('workDescription').value,
+                    screenshots
+                });
+
+                alert('Activity proof uploaded. Admin approval ke baad attendance count hoga.');
+                document.getElementById('proofForm').reset();
+                document.getElementById('topic').value = 'Course Activity Proof';
+                document.getElementById('workDescription').value = 'Student completed learning activity and submitted screenshots for internship attendance verification.';
+                document.getElementById('previewGrid').innerHTML = '';
+                await loadCourses();
+                await loadProofs();
+            } catch (error) {
+                alert(`Activity proof upload failed: ${error.message}`);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Upload Activity Proof';
+            }
+        }
+
+        function buildReportHTML() {
+            const approvedRows = proofRows.filter(row => row.status === 'approved').slice(0, 15);
+            const reportRows = approvedRows.length ? approvedRows : proofRows.slice(0, 15);
+            const studentName = getStudentName();
+            const registrationId = getItem('currentStudentId') || getItem('userRollNo') || '-';
+            const rollNo = getItem('userRollNo') || '-';
+            const courseName = reportRows[0]?.courseName || getItem('selectedCourseName') || getItem('userSkill') || '-';
+            const firstDate = reportRows[0]?.proofDate || getSelectedStartDate();
+            const lastDate = firstDate ? addDays(firstDate, 14) : '';
+
+            return `
+                <div class="report-header">
+                    <img class="report-logo" src="logo.png" alt="Bihar Skill Interns logo">
+                    <div style="text-align:right;">
+                        <strong>Bihar Skill Interns</strong><br>
+                        Professional Internship Platform<br>
+                        Generated: ${formatDateTime(new Date())}
+                    </div>
+                </div>
+                <h2 class="report-title">INTERNSHIP ACTIVITY PROOF AND ATTENDANCE REPORT</h2>
+                <table class="report-table">
+                    <tr><th>Student Name</th><td>${escapeHTML(studentName)}</td><th>Registration ID</th><td>${escapeHTML(registrationId)}</td></tr>
+                    <tr><th>Roll No</th><td>${escapeHTML(rollNo)}</td><th>Course Name</th><td>${escapeHTML(courseName)}</td></tr>
+                    <tr><th>Attendance Period</th><td>${formatDate(firstDate)} to ${formatDate(lastDate)}</td><th>Total Duration</th><td>15 Days / 120 Hours</td></tr>
+                    <tr><th>Approved Proof Days</th><td>${Number(proofSummary.approvedDays || 0)}/${Number(proofSummary.requiredApprovedDays || 5)}</td><th>Status</th><td>${Number(proofSummary.approvedDays || 0) >= Number(proofSummary.requiredApprovedDays || 5) ? 'Verified for certificate review' : 'Pending admin approval'}</td></tr>
+                </table>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Attendance Date</th>
+                            <th>Activity</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Screenshot With Date-Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${reportRows.map(row => `
+                            <tr>
+                                <td>${formatDate(row.proofDate)}</td>
+                                <td>${escapeHTML(row.topic)}</td>
+                                <td>${escapeHTML(row.workDescription || '')}</td>
+                                <td>${escapeHTML(row.status || 'pending')}</td>
+                                <td>
+                                    <div class="report-proof-frame">
+                                        <img src="${escapeHTML(row.screenshot)}" alt="Proof">
+                                        <div class="report-stamp">${formatDateTime(row.uploadedAt || new Date())}</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <p style="margin-top:18px; line-height:1.55;">
+                    This report is generated from student-submitted activity screenshots. Date-time labels are printed on the proof images for college verification. Approved entries are counted as internship attendance after admin verification.
+                </p>
+            `;
+        }
+
+        async function downloadProofReport() {
+            if (proofRows.length === 0) {
+                await loadProofs();
+            }
+
+            if (proofRows.length === 0) {
+                alert('Please upload activity screenshots first.');
+                return;
+            }
+
+            const reportArea = document.getElementById('reportArea');
+            reportArea.innerHTML = buildReportHTML();
+            reportArea.style.display = 'block';
+
+            await html2pdf().set({
+                margin: 4,
+                filename: `Activity_Proof_Report_${getStudentName().replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(reportArea).save();
+
+            reportArea.style.display = 'none';
+        }
+
+        window.addEventListener('load', async () => {
+            if (typeof BSIAuthStorage !== 'undefined' && !BSIAuthStorage.requireCompletedStudent()) return;
+            document.getElementById('proofForm').addEventListener('submit', uploadProof);
+            document.getElementById('screenshots').addEventListener('change', previewFiles);
+            document.getElementById('courseSelect').addEventListener('change', () => {
+                updateDateRangeHint();
+                previewFiles();
+            });
+            await loadCourses();
+            await loadProofs();
+        });
+    </script>
+</body>
+</html>

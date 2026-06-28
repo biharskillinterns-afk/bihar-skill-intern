@@ -12,7 +12,8 @@ const IS_LOCAL_FRONTEND = window.location.protocol === 'file:' ||
 const DEFAULT_API_BASE_URL = IS_LOCAL_FRONTEND
     ? `${API_PROTOCOL}//${API_HOST || 'localhost'}:5000/api`
     : LIVE_API_BASE_URL;
-const API_BASE_URL = window.BSI_API_BASE_URL || localStorage.getItem('bsiApiBaseUrl') || DEFAULT_API_BASE_URL;
+const STORED_API_BASE_URL = IS_LOCAL_FRONTEND ? localStorage.getItem('bsiApiBaseUrl') : '';
+const API_BASE_URL = window.BSI_API_BASE_URL || STORED_API_BASE_URL || DEFAULT_API_BASE_URL;
 
 // Shared auth storage for static file mode and normal hosted mode.
 // window.name survives file:// page navigation in the same tab, so it backs up localStorage.
@@ -560,6 +561,13 @@ class APIService {
 
     static async uploadStudentProof(data) {
         return this.request('/students/proofs', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    static async uploadActivityProofs(data) {
+        return this.request('/students/proofs/bulk', {
             method: 'POST',
             body: JSON.stringify(data)
         });

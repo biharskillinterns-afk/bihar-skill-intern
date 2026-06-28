@@ -3,6 +3,10 @@ const router = express.Router();
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const { getRegistrationAmount, setRegistrationAmount, DEFAULT_REGISTRATION_AMOUNT } = require('../config/settings');
 
+function normalizeProofStatus(status) {
+    return ['pending', 'approved', 'rejected'].includes(status) ? status : 'pending';
+}
+
 router.get('/settings/payment-amount', verifyToken, isAdmin, async (req, res) => {
     try {
         const amount = await getRegistrationAmount(req.db);
@@ -192,6 +196,111 @@ router.get('/stats', verifyToken, isAdmin, async (req, res) => {
             message: 'Failed to fetch stats',
             error: error.message
         });
+    }
+});
+
+// Get internship work proofs for verification
+router.get('/proofs', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const status = req.query.status ? normalizeProofStatus(req.query.status) : null;
+        const connection = await req.db.getConnection();
+        const params = [];
+        const statusClause = status ? 'WHERE p.status = ?' : '';
+        if (status) params.push(status);
+
+        const [proofs] = await connection.query(
+            `SELECT p.id, p.studentId, p.courseId, p.proofDate, p.internshipMode, p.topic,
+                    p.workDescription, p.screenshot, p.fileName, p.status, p.adminRemarks,
+                    p.uploadedAt, p.reviewedAt, c.courseName,
+                    CONCAT(s.firstName, ' ', s.lastName) AS studentName,
+                    s.email, s.phone, s.rollNo
+             FROM internship_proofs p
+             JOIN students s ON s.id = p.studentId
+             LEFT JOIN courses c ON c.id = p.courseId
+             ${statusClause}
+             ORDER BY
+                CASE p.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+                p.uploadedAt DESC
+             LIMIT 200`,
+            params
+        );
+        connection.release();
+
+        res.json({
+            success: true,
+            proofs
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch internship proofs',
+            error: error.message
+        });
+    }
+});
+
+// Approve or reject an internship work proof
+router.put('/proofs/:id/review', verifyToken, isAdmin, async (req, res) => {
+    let connection;
+    try {
+        const status = normalizeProofStatus(req.body.status);
+        if (status === 'pending') {
+            return res.status(400).json({
+                success: false,
+                message: 'Review status must be approved or rejected.'
+            });
+        }
+
+        connection = await req.db.getConnection();
+        const [proofRows] = await connection.query(
+            'SELECT * FROM internship_proofs WHERE id = ? LIMIT 1',
+            [req.params.id]
+        );
+
+        if (proofRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Proof not found'
+            });
+        }
+
+        const proof = proofRows[0];
+        await connection.query(
+            `UPDATE internship_proofs
+             SET status = ?, adminRemarks = ?, reviewedAt = NOW(), reviewedBy = ?
+             WHERE id = ?`,
+            [status, req.body.adminRemarks || '', req.user.id, req.params.id]
+        );
+
+        if (status === 'approved' && proof.courseId) {
+            await connection.query(
+                `INSERT INTO attendance (studentId, courseId, attendanceDate, status, remarks, markedAt)
+                 VALUES (?, ?, ?, 'present', ?, NOW())
+                 ON DUPLICATE KEY UPDATE
+                    status = 'present',
+                    remarks = VALUES(remarks),
+                    markedAt = NOW()`,
+                [
+                    proof.studentId,
+                    proof.courseId,
+                    proof.proofDate,
+                    `Approved work proof #${proof.id}`
+                ]
+            );
+        }
+
+        res.json({
+            success: true,
+            message: `Proof ${status}.`
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to review proof',
+            error: error.message
+        });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
