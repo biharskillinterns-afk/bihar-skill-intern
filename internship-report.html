@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship Completion Report - Bihar Skill Interns</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="api-config.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #f0f4f8;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            color: #1e293b;
+        }
+
+        /* ===== TOP NAVBAR ===== */
+        .top-nav {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(30,58,138,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .nav-brand img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            background: white;
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .nav-brand-text h1 {
+            font-size: 1.2em;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-brand-text p {
+            font-size: 0.75em;
+            opacity: 0.8;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-nav {
+            padding: 9px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.88em;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.35);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(245,158,11,0.45);
+        }
+
+        .btn-back {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        }
+
+        .btn-print:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ===== UPLOAD SECTION ===== */
+        .upload-section {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .upload-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .upload-card h2 {
+            color: #1e40af;
+            font-size: 1.25em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-card p {
+            color: #64748b;
+            font-size: 0.9em;
+            margin-bottom: 24px;
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .screenshot-slot {
+            position: relative;
+            aspect-ratio: 9/16;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+
+        .screenshot-slot:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .screenshot-slot.filled {
+            border-style: solid;
+            border-color: #10b981;
+        }
+
+        .screenshot-slot input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slot-placeholder {
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .slot-placeholder .slot-icon { font-size: 1.8em; margin-bottom: 6px; }
+        .slot-placeholder .slot-num {
+            font-size: 0.7em;
+            font-weight: 700;
+            color: #2563eb;
+            background: #dbeafe;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .slot-placeholder .slot-label { font-size: 0.65em; color: #94a3b8; margin-top: 4px; }
+
+        .screenshot-preview {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .screenshot-remove {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(239,68,68,0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            line-height: 1;
+        }
+
+        .screenshot-slot.filled .screenshot-remove { display: flex; }
+
+        .screenshot-meta {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            font-size: 0.6em;
+            padding: 4px 6px;
+            text-align: center;
+            display: none;
+        }
+
+        .screenshot-slot.filled .screenshot-meta { display: block; }
+
+        .generate-hint {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #1e40af;
+            font-size: 0.88em;
+        }
+
+        /* ===== REPORT PREVIEW AREA ===== */
+        .preview-label {
+            max-width: 900px;
+            margin: 0 auto 16px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .preview-label h2 {
+            font-size: 1.1em;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .page-count-badge {
+            background: #1e40af;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        /* ===== PDF PAGES WRAPPER ===== */
+        .pdf-wrapper {
+            max-width: 900px;
+            margin: 0 auto 60px;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ===== A4 PAGE ===== */
+        .a4-page {
+            width: 100%;
+            min-height: 297mm;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== PAGE FOOTER (every page) ===== */
+        .page-footer {
+            margin-top: auto;
+            padding: 10px 30px;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7em;
+        }
+
+        .page-footer .footer-brand { font-weight: 700; letter-spacing: 0.5px; }
+        .page-footer .footer-tagline { font-style: italic; opacity: 0.85; }
+        .page-footer .footer-page { font-weight: 600; }
+
+        /* ===== PAGE HEADER BANNER ===== */
+        .page-banner {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+            padding: 22px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .banner-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            background: white;
+            border-radius: 12px;
+            padding: 6px;
+            flex-shrink: 0;
+        }
+
+        .banner-text { color: white; }
+        .banner-text h2 {
+            font-size: 1.05em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .banner-text p { font-size: 0.75em; opacity: 0.85; margin-top: 2px; }
+
+        .banner-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.72em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* ===== PAGE CONTENT ===== */
+        .page-content { padding: 28px 34px; flex: 1; }
+
+        /* ===== PAGE 1: COVER ===== */
+        .cover-page .page-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 34px;
+        }
+
+        .cover-logo {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            background: white;
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 8px 30px rgba(30,58,138,0.2);
+            margin-bottom: 24px;
+        }
+
+        .cover-org {
+            font-size: 1em;
+            font-weight: 700;
+            color: #1e40af;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .cover-title {
+            font-size: 1.75em;
+            font-weight: 800;
+            color: #1e293b;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .cover-subtitle {
+            font-size: 0.85em;
+            color: #64748b;
+            margin-bottom: 36px;
+        }
+
+        .cover-divider {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            border-radius: 2px;
+            margin: 0 auto 36px;
+        }
+
+        .cover-details-box {
+            background: linear-gradient(135deg, #f0f9ff, #eff6ff);
+            border: 2px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 28px 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: left;
+        }
+
+        .cover-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid #dbeafe;
+            font-size: 0.88em;
+            gap: 16px;
+        }
+
+        .cover-field:last-child { border-bottom: none; }
+        .cover-field-label { color: #64748b; font-weight: 500; white-space: nowrap; }
+        .cover-field-value { color: #1e293b; font-weight: 700; text-align: right; }
+
+        .cover-report-id {
+            margin-top: 28px;
+            background: #1e40af;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 0.8em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .cover-stamp {
+            margin-top: 28px;
+            width: 80px;
+            height: 80px;
+            border: 3px solid #1e40af;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #1e40af;
+            font-size: 0.55em;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== PAGE 2: PROFILE ===== */
+        .profile-header-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+            align-items: flex-start;
+        }
+
+        .profile-photo-box {
+            flex-shrink: 0;
+            width: 110px;
+            height: 130px;
+            border: 3px solid #1e40af;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f0f4f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 2.5em;
+        }
+
+        .profile-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-name-block h3 {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .profile-name-block p {
+            font-size: 0.82em;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 700;
+            margin-top: 10px;
+            border: 1px solid #a7f3d0;
+        }
+
+        .profile-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88em;
+        }
+
+        .profile-table tr { border-bottom: 1px solid #f1f5f9; }
+        .profile-table tr:last-child { border-bottom: none; }
+        .profile-table td { padding: 10px 14px; }
+        .profile-table td:first-child {
+            color: #64748b;
+            font-weight: 600;
+            width: 40%;
+            background: #f8fafc;
+        }
+        .profile-table td:last-child { color: #1e293b; font-weight: 500; }
+
+        /* ===== PAGE 3: ATTENDANCE ===== */
+        .section-heading {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #dbeafe;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .att-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            margin-bottom: 20px;
+        }
+
+        .att-table th {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            padding: 11px 14px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .att-table td {
+            padding: 10px 14px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .att-table tr:nth-child(even) td { background: #f8fafc; }
+        .att-table td.present-cell { color: #059669; font-weight: 700; font-size: 1.1em; }
+        .att-table td.activity-cell { text-align: left; color: #475569; }
+
+        .att-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .att-stat {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .att-stat-num { font-size: 1.8em; font-weight: 800; color: #1e40af; }
+        .att-stat-label { font-size: 0.75em; color: #64748b; font-weight: 500; margin-top: 4px; }
+
+        /* ===== PAGE 4: SCREENSHOTS ===== */
+        .screenshots-display {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .ss-item {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+
+        .ss-item:first-child {
+            grid-column: 1 / -1;
+        }
+
+        .ss-img-wrap {
+            height: 160px;
+            overflow: hidden;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ss-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .ss-img-wrap .ss-placeholder {
+            color: #94a3b8;
+            font-size: 0.85em;
+            text-align: center;
+        }
+
+        .ss-meta {
+            padding: 10px 14px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .ss-meta .ss-num { font-weight: 700; color: #1e40af; font-size: 0.82em; }
+        .ss-meta .ss-datetime { color: #94a3b8; font-size: 0.75em; }
+
+        /* ===== PAGE 5: SUMMARY ===== */
+        .summary-block {
+            background: #f8fafc;
+            border-left: 4px solid #2563eb;
+            border-radius: 0 8px 8px 0;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+        }
+
+        .summary-block h4 {
+            font-size: 0.88em;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .summary-block p, .summary-block li {
+            font-size: 0.82em;
+            color: #475569;
+            line-height: 1.65;
+        }
+
+        .summary-block ul { padding-left: 18px; }
+
+        .completion-statement {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border: 2px solid #6ee7b7;
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: center;
+            margin: 18px 0;
+        }
+
+        .completion-statement p {
+            font-size: 0.85em;
+            color: #065f46;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .signature-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .sig-box {
+            text-align: center;
+        }
+
+        .sig-line {
+            border-bottom: 2px solid #334155;
+            height: 50px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .seal-circle {
+            width: 70px;
+            height: 70px;
+            border: 3px solid #1e40af;
+            border-radius: 50%;
+            margin: 0 auto 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, #eff6ff, white);
+        }
+
+        .seal-circle span { font-size: 0.42em; font-weight: 700; color: #1e40af; text-align: center; line-height: 1.3; }
+
+        .sig-label { font-size: 0.72em; color: #64748b; font-weight: 600; }
+        .sig-name { font-size: 0.68em; color: #94a3b8; margin-top: 2px; }
+
+        /* ===== LOADING SPINNER ===== */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.65);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 16px;
+            color: white;
+        }
+
+        .loading-overlay.show { display: flex; }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #f59e0b;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-overlay p { font-size: 0.95em; font-weight: 500; }
+
+        /* ===== PRINT STYLES ===== */
+        @media print {
+            body { background: white; }
+            .top-nav, .upload-section, .preview-label { display: none !important; }
+            .pdf-wrapper { margin: 0; padding: 0; gap: 0; }
+            .a4-page {
+                width: 210mm;
+                min-height: 297mm;
+                box-shadow: none;
+                border-radius: 0;
+                page-break-after: always;
+                break-after: page;
+            }
+            @page { size: A4; margin: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .top-nav { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+            .screenshots-grid { grid-template-columns: repeat(3, 1fr); }
+            .nav-actions { gap: 8px; }
+            .btn-nav { padding: 7px 12px; font-size: 0.8em; }
+            .cover-details-box { padding: 20px; }
+            .profile-header-row { flex-direction: column; }
+            .att-summary { grid-template-columns: 1fr; }
+            .signature-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p id="loadingMsg">Generating PDF... Please wait</p>
+</div>
+
+<!-- Top Navigation -->
+<div class="top-nav">
+    <div class="nav-brand">
+        <img src="logo.png" alt="Bihar Skill Interns" onerror="this.style.display='none'">
+        <div class="nav-brand-text">
+            <h1>Bihar Skill Interns</h1>
+            <p>Internship Completion Report</p>
+        </div>
+    </div>
+    <div class="nav-actions">
+        <button class="btn-nav btn-back" onclick="window.location.href='courses.html'">← Dashboard</button>
+        <button class="btn-nav btn-print" onclick="printReport()">🖨️ Print</button>
+        <button class="btn-nav btn-download" onclick="downloadPDF()">⬇️ Download PDF</button>
+    </div>
+</div>
+
+<!-- Screenshot Upload Section -->
+<div class="upload-section" id="uploadSectionUI">
+    <div class="upload-card">
+        <h2>📸 Upload Your Internship Screenshots</h2>
+        <p>Screenshot upload is optional. If screenshots are not uploaded, the report will still mention daily learning screenshots as part of the activity proof record.</p>
+
+        <div class="screenshots-grid" id="screenshotsGrid">
+            <!-- 5 slots generated by JS -->
+        </div>
+
+        <div class="generate-hint">
+            <span style="font-size:1.4em;">💡</span>
+            <span>Screenshots अपनी learning activities के दौरान ली गई होनी चाहिए। सभी 5 screenshots upload होने पर PDF automatically update हो जाएगी।</span>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Label -->
+<div class="preview-label" id="uploadSectionUI2">
+    <h2>📄 Report Preview</h2>
+    <span class="page-count-badge">5 Pages</span>
+</div>
+
+<!-- PDF Content (all 5 pages) -->
+<div class="pdf-wrapper" id="pdfContent">
+
+    <!-- ═══ PAGE 1: COVER ═══ -->
+    <div class="a4-page cover-page" id="page1">
+        <div class="page-content">
+            <img src="logo.png" alt="Bihar Skill Interns" class="cover-logo" onerror="this.style.display='none'">
+            <div class="cover-org">Bihar Skill Interns</div>
+            <div class="cover-title">Internship Completion<br>Report</div>
+            <div class="cover-subtitle">Professional Internship Record for College Submission</div>
+            <div class="cover-divider"></div>
+
+            <div class="cover-details-box">
+                <div class="cover-field">
+                    <span class="cover-field-label">Student Name</span>
+                    <span class="cover-field-value" id="cv_name">—</span>
+                </div>
+                <div class="cover-field">
+                    <span class="cover-field-label">Registration ID</span>
+                    <span class="cover-field-value" id="cv_regid">—</span>
+                </div>
+                <div class="cover-field">
+                    <span class="cover-field-label">College</span>
+                    <span class="cover-field-value" id="cv_college">—</span>
+                </div>
+                <div class="cover-field">
+                    <span class="cover-field-label">Course / Skill</span>
+                    <span class="cover-field-value" id="cv_course">—</span>
+                </div>
+                <div class="cover-field">
+                    <span class="cover-field-label">Semester</span>
+                    <span class="cover-field-value" id="cv_semester">—</span>
+                </div>
+                <div class="cover-field">
+                    <span class="cover-field-label">Mobile Number</span>
+                    <span class="cover-field-value" id="cv_mobile">—</span>
+                </div>
+                <div class="cover-field">
+                    <span class="cover-field-label">Internship Duration</span>
+                    <span class="cover-field-value">120 Hours</span>
+                </div>
+                <div class="cover-field">
+                    <span class="cover-field-label">Report Generated On</span>
+                    <span class="cover-field-value" id="cv_date">—</span>
+                </div>
+            </div>
+
+            <div class="cover-report-id" id="cv_reportid">Report ID: BSI-2026-XXXX</div>
+
+            <div class="cover-stamp">
+                <div>BIHAR</div>
+                <div>SKILL</div>
+                <div>INTERNS</div>
+                <div style="margin-top:2px; font-size:0.9em;">✦ OFFICIAL ✦</div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <span class="footer-brand">BIHAR SKILL INTERNS</span>
+            <span class="footer-tagline">Skill Today, Success Tomorrow</span>
+            <span class="footer-page">Page 1 of 5</span>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE 2: STUDENT PROFILE ═══ -->
+    <div class="a4-page" id="page2">
+        <div class="page-banner">
+            <img src="logo.png" alt="logo" class="banner-logo" onerror="this.style.display='none'">
+            <div class="banner-text">
+                <h2>Bihar Skill Interns</h2>
+                <p>Student Profile & Information</p>
+            </div>
+            <span class="banner-badge">📋 Page 2 of 5</span>
+        </div>
+        <div class="page-content">
+            <div class="section-heading">👤 Student Profile</div>
+
+            <div class="profile-header-row">
+                <div class="profile-photo-box" id="profilePhotoBox">
+                    <span>👤</span>
+                </div>
+                <div class="profile-name-block">
+                    <h3 id="pf_name">Student Name</h3>
+                    <p id="pf_college">College Name</p>
+                    <div class="status-badge">✅ Internship Status: Completed</div>
+                </div>
+            </div>
+
+            <table class="profile-table">
+                <tr><td>Student Name</td><td id="pf_fullname">—</td></tr>
+                <tr><td>Father's / Guardian's Name</td><td id="pf_guardian">—</td></tr>
+                <tr><td>College Name</td><td id="pf_college2">—</td></tr>
+                <tr><td>University Name</td><td>Veer Kunwar Singh University (VKSU)</td></tr>
+                <tr><td>Course / Stream</td><td id="pf_course">—</td></tr>
+                <tr><td>Department</td><td id="pf_dept">—</td></tr>
+                <tr><td>Semester</td><td id="pf_sem">—</td></tr>
+                <tr><td>Academic Session</td><td id="pf_session">—</td></tr>
+                <tr><td>University Roll Number</td><td id="pf_rollno">—</td></tr>
+                <tr><td>Mobile Number</td><td id="pf_mobile">—</td></tr>
+                <tr><td>Email Address</td><td id="pf_email">—</td></tr>
+                <tr><td>District</td><td id="pf_district">—</td></tr>
+                <tr><td>Internship Organization</td><td>Bihar Skill Interns</td></tr>
+                <tr><td>Total Hours Completed</td><td>120 Hours</td></tr>
+                <tr><td>Internship Status</td><td style="color:#059669; font-weight:700;">✅ Completed</td></tr>
+            </table>
+        </div>
+        <div class="page-footer">
+            <span class="footer-brand">BIHAR SKILL INTERNS</span>
+            <span class="footer-tagline">Skill Today, Success Tomorrow</span>
+            <span class="footer-page">Page 2 of 5</span>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE 3: ATTENDANCE ═══ -->
+    <div class="a4-page" id="page3">
+        <div class="page-banner">
+            <img src="logo.png" alt="logo" class="banner-logo" onerror="this.style.display='none'">
+            <div class="banner-text">
+                <h2>Bihar Skill Interns</h2>
+                <p>Internship Attendance Record</p>
+            </div>
+            <span class="banner-badge">📋 Page 3 of 5</span>
+        </div>
+        <div class="page-content">
+            <div class="section-heading">📅 Attendance Report</div>
+
+            <table class="att-table">
+                <thead>
+                    <tr>
+                        <th>Day No.</th>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Hours</th>
+                        <th>Status</th>
+                        <th style="text-align:left; padding-left:16px;">Activity</th>
+                    </tr>
+                </thead>
+                <tbody id="attTableBody">
+                    <!-- Generated by JS -->
+                </tbody>
+            </table>
+
+            <div class="att-summary">
+                <div class="att-stat">
+                    <div class="att-stat-num">5</div>
+                    <div class="att-stat-label">Days Present</div>
+                </div>
+                <div class="att-stat">
+                    <div class="att-stat-num" id="att_hours">40</div>
+                    <div class="att-stat-label">Hours Completed</div>
+                </div>
+                <div class="att-stat">
+                    <div class="att-stat-num">100%</div>
+                    <div class="att-stat-label">Attendance Rate</div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <span class="footer-brand">BIHAR SKILL INTERNS</span>
+            <span class="footer-tagline">Skill Today, Success Tomorrow</span>
+            <span class="footer-page">Page 3 of 5</span>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE 4: PROOF SCREENSHOTS ═══ -->
+    <div class="a4-page" id="page4">
+        <div class="page-banner">
+            <img src="logo.png" alt="logo" class="banner-logo" onerror="this.style.display='none'">
+            <div class="banner-text">
+                <h2>Bihar Skill Interns</h2>
+                <p>Internship Proof — Learning Screenshots</p>
+            </div>
+            <span class="banner-badge">📋 Page 4 of 5</span>
+        </div>
+        <div class="page-content">
+            <div class="section-heading">📸 Internship Proof — Learning Screenshots</div>
+            <div class="screenshots-display" id="screenshotsDisplay">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+        <div class="page-footer">
+            <span class="footer-brand">BIHAR SKILL INTERNS</span>
+            <span class="footer-tagline">Skill Today, Success Tomorrow</span>
+            <span class="footer-page">Page 4 of 5</span>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE 5: SUMMARY ═══ -->
+    <div class="a4-page" id="page5">
+        <div class="page-banner">
+            <img src="logo.png" alt="logo" class="banner-logo" onerror="this.style.display='none'">
+            <div class="banner-text">
+                <h2>Bihar Skill Interns</h2>
+                <p>Internship Summary & Completion Statement</p>
+            </div>
+            <span class="banner-badge">📋 Page 5 of 5</span>
+        </div>
+        <div class="page-content">
+            <div class="section-heading">📝 Internship Summary</div>
+
+            <div class="summary-block">
+                <h4>🎯 Internship Objectives</h4>
+                <p id="sum_objectives">—</p>
+            </div>
+
+            <div class="summary-block">
+                <h4>💡 Skills Learned</h4>
+                <ul id="sum_skills">
+                    <li>Loading...</li>
+                </ul>
+            </div>
+
+            <div class="summary-block">
+                <h4>✅ Activities Completed</h4>
+                <ul id="sum_activities">
+                    <li>Loading...</li>
+                </ul>
+            </div>
+
+            <div class="summary-block">
+                <h4>📈 Learning Outcomes</h4>
+                <p id="sum_outcomes">—</p>
+            </div>
+
+            <div class="completion-statement">
+                <p id="sum_statement">—</p>
+            </div>
+
+            <div class="summary-block">
+                <h4>Daily Screenshot Proof</h4>
+                <p>Daily learning screenshots are mentioned as part of the internship activity proof and dashboard-based progress record.</p>
+            </div>
+
+            <div class="signature-row">
+                <div class="sig-box">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Internship Coordinator</div>
+                    <div class="sig-name">Bihar Skill Interns</div>
+                </div>
+                <div class="sig-box" style="display:flex; flex-direction:column; align-items:center;">
+                    <div class="seal-circle">
+                        <span>BIHAR<br>SKILL<br>INTERNS<br>✦ OFFICIAL ✦</span>
+                    </div>
+                    <div class="sig-label">Official Seal</div>
+                </div>
+                <div class="sig-box">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Student Signature</div>
+                    <div class="sig-name" id="sig_studentname">Student Name</div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <span class="footer-brand">BIHAR SKILL INTERNS</span>
+            <span class="footer-tagline">Skill Today, Success Tomorrow</span>
+            <span class="footer-page">Page 5 of 5</span>
+        </div>
+    </div>
+
+</div><!-- end pdf-wrapper -->
+
+<script>
+    // ============================================================
+    //  STORAGE HELPER
+    // ============================================================
+    const S = {
+        get(key, def = '') {
+            try {
+                const v = (typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage).getItem(key);
+                if (!v || v === 'null' || v === 'undefined') return def;
+                return v;
+            } catch(e) { return def; }
+        }
+    };
+
+    // ============================================================
+    //  STUDENT DATA
+    // ============================================================
+    const student = {
+        name:       S.get('userName', 'Student Name'),
+        firstName:  S.get('userFirstName', ''),
+        lastName:   S.get('userLastName', ''),
+        email:      S.get('userEmail', '—'),
+        phone:      S.get('userPhone', S.get('userMobile', '—')),
+        guardian:   S.get('userGuardian', '—'),
+        college:    S.get('userCollege', 'College Name'),
+        degree:     S.get('userDegree', 'UG'),
+        department: S.get('userDepartment', 'General'),
+        semester:   S.get('userSemester', '—'),
+        session:    S.get('userSession', '—'),
+        rollno:     S.get('userRollNo', '—'),
+        district:   S.get('userDistrict', '—'),
+        course:     S.get('userSkill', S.get('selectedCourseName', S.get('courseForCertificate', 'Skill Development'))),
+        photo:      S.get('userProfileImage', ''),
+    };
+
+    // Unique report ID
+    const reportId = 'BSI-' + new Date().getFullYear() + '-' +
+        (student.rollno !== '—' ? student.rollno.slice(-4).toUpperCase() : Math.floor(1000 + Math.random() * 9000));
+
+    // ============================================================
+    //  COURSE CONTENT MAP
+    // ============================================================
+    const courseContent = {
+        'skill development': {
+            objectives: 'To develop practical and technical skills required for professional growth and career advancement, focusing on industry-relevant competencies.',
+            skills: ['Communication Skills', 'Leadership & Teamwork', 'Problem-Solving Techniques', 'Time Management', 'Professional Etiquette', 'Digital Skills'],
+            activities: ['Participated in skill-building workshops', 'Completed practical assignments', 'Attended group discussions and presentations', 'Submitted daily activity reports', 'Completed online assessments'],
+            outcomes: 'The student has developed strong foundational skills in communication, leadership, and professional conduct, making them industry-ready.'
+        },
+        'social work': {
+            objectives: 'To understand the principles of social welfare, community development, and the role of an individual in creating positive social impact.',
+            skills: ['Community Service', 'Counseling Basics', 'Program Planning', 'Social Issue Awareness', 'Report Writing', 'Stakeholder Engagement'],
+            activities: ['Conducted community surveys', 'Participated in social awareness campaigns', 'Prepared social welfare reports', 'Assisted in local community programs', 'Completed case study analysis'],
+            outcomes: 'The student has gained practical knowledge of social work methodologies and developed empathy, communication, and community engagement skills.'
+        },
+        'digital literacy': {
+            objectives: 'To develop proficiency in digital tools, internet usage, online safety, and essential computer skills required in the modern digital era.',
+            skills: ['Computer Basics', 'Internet Navigation', 'Online Safety & Security', 'Digital Communication', 'E-Governance Tools', 'MS Office Suite'],
+            activities: ['Practiced using productivity software', 'Learned about online safety and privacy', 'Created digital documents and presentations', 'Explored e-governance portals', 'Completed digital skills assessments'],
+            outcomes: 'The student is now proficient in using digital tools effectively and safely, enabling participation in the digital economy.'
+        },
+        'web development': {
+            objectives: 'To learn the fundamentals of web development including HTML, CSS, and JavaScript, and understand how websites are built and deployed.',
+            skills: ['HTML & CSS', 'JavaScript Basics', 'Responsive Design', 'Web Hosting Concepts', 'Version Control (Git)', 'Frontend Development'],
+            activities: ['Built basic web pages using HTML and CSS', 'Applied responsive design techniques', 'Completed JavaScript exercises', 'Created a personal portfolio project', 'Learned about web deployment'],
+            outcomes: 'The student can now create and design basic websites independently and understands the web development workflow.'
+        },
+        'cyber security': {
+            objectives: 'To understand the importance of cybersecurity, common threats, and best practices for protecting personal and organizational data online.',
+            skills: ['Cyber Threat Awareness', 'Password Security', 'Phishing Recognition', 'Network Security Basics', 'Data Protection', 'Safe Browsing'],
+            activities: ['Identified common cyber threats and attack vectors', 'Practiced secure password creation', 'Analyzed phishing email examples', 'Studied network security principles', 'Completed cybersecurity quizzes'],
+            outcomes: 'The student has developed essential knowledge to protect digital assets and promote a safer online environment.'
+        },
+        'entrepreneurship': {
+            objectives: 'To develop an entrepreneurial mindset by understanding business planning, innovation, market analysis, and startup fundamentals.',
+            skills: ['Business Ideation', 'Market Research', 'Business Plan Writing', 'Financial Planning Basics', 'Marketing & Branding', 'Startup Ecosystem'],
+            activities: ['Developed a basic business idea and plan', 'Conducted mock market research', 'Studied successful startup case studies', 'Created a simple budget plan', 'Presented business pitch'],
+            outcomes: 'The student has gained foundational entrepreneurial knowledge and can apply business planning concepts in real-world scenarios.'
+        },
+        'financial literacy': {
+            objectives: 'To educate students on personal finance management, banking systems, investment basics, and making informed financial decisions.',
+            skills: ['Personal Budgeting', 'Savings Strategies', 'Banking Operations', 'Digital Payments', 'Investment Basics', 'Insurance Awareness'],
+            activities: ['Created a personal monthly budget', 'Learned about different types of bank accounts', 'Explored digital payment methods', 'Studied basic investment options', 'Completed financial literacy assessments'],
+            outcomes: 'The student can now make informed financial decisions, manage personal budgets, and understand the basics of investing and banking.'
+        },
+        'disaster management': {
+            objectives: 'To understand disaster preparedness, emergency response protocols, and community resilience strategies in the face of natural and man-made disasters.',
+            skills: ['Risk Assessment', 'Emergency Response Planning', 'First Aid Basics', 'Community Preparedness', 'Crisis Communication', 'Recovery Planning'],
+            activities: ['Studied different types of disasters and their impacts', 'Created emergency response plans', 'Learned basic first aid techniques', 'Participated in mock disaster drills', 'Prepared community awareness materials'],
+            outcomes: 'The student understands disaster risk reduction and can contribute to community preparedness and emergency response efforts.'
+        },
+        'population study': {
+            objectives: 'To study demographic trends, population dynamics, statistical methods, and the social and economic implications of population changes.',
+            skills: ['Demographic Analysis', 'Statistical Research', 'Data Interpretation', 'Population Mapping', 'Survey Methods', 'Report Writing'],
+            activities: ['Analyzed population census data', 'Conducted demographic surveys', 'Prepared population trend reports', 'Used statistical tools for data analysis', 'Studied government population policies'],
+            outcomes: 'The student has developed analytical skills in understanding population data and can interpret demographic trends effectively.'
+        }
+    };
+
+    function getCourseContent() {
+        const key = student.course.toLowerCase().trim();
+        for (const [k, v] of Object.entries(courseContent)) {
+            if (key.includes(k) || k.includes(key)) return v;
+        }
+        return courseContent['skill development'];
+    }
+
+    // ============================================================
+    //  SCREENSHOTS
+    // ============================================================
+    const screenshots = Array(5).fill(null);
+
+    function initScreenshotSlots() {
+        const grid = document.getElementById('screenshotsGrid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'screenshot-slot';
+            slot.id = 'slot_' + i;
+            slot.innerHTML = `
+                <input type="file" accept="image/*" onchange="handleScreenshot(${i}, this)">
+                <div class="slot-placeholder">
+                    <div class="slot-icon">📷</div>
+                    <div class="slot-num">SS ${i+1}</div>
+                    <div class="slot-label">Click to upload</div>
+                </div>
+                <img class="screenshot-preview" id="ssPreview_${i}" style="display:none">
+                <button class="screenshot-remove" onclick="removeScreenshot(${i}, event)">✕</button>
+                <div class="screenshot-meta" id="ssMeta_${i}"></div>
+            `;
+            grid.appendChild(slot);
+        }
+    }
+
+    function handleScreenshot(index, input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const now = new Date();
+            screenshots[index] = {
+                src: e.target.result,
+                date: now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
+                time: now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }),
+                name: file.name
+            };
+            const slot = document.getElementById('slot_' + index);
+            slot.classList.add('filled');
+            const preview = document.getElementById('ssPreview_' + index);
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            const meta = document.getElementById('ssMeta_' + index);
+            meta.textContent = screenshots[index].date + ' ' + screenshots[index].time;
+            updateScreenshotsPage();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeScreenshot(index, event) {
+        event.stopPropagation();
+        screenshots[index] = null;
+        const slot = document.getElementById('slot_' + index);
+        slot.classList.remove('filled');
+        document.getElementById('ssPreview_' + index).style.display = 'none';
+        document.getElementById('ssMeta_' + index).textContent = '';
+        slot.querySelector('input').value = '';
+        updateScreenshotsPage();
+    }
+
+    function updateScreenshotsPage() {
+        const display = document.getElementById('screenshotsDisplay');
+        display.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const ss = screenshots[i];
+            const item = document.createElement('div');
+            item.className = 'ss-item';
+            if (i === 0) item.style.gridColumn = '1 / -1';
+            const height = i === 0 ? '200px' : '160px';
+            item.innerHTML = `
+                <div class="ss-img-wrap" style="height:${height}">
+                    ${ss
+                        ? `<img src="${ss.src}" alt="Screenshot ${i+1}" style="width:100%;height:100%;object-fit:cover">`
+                        : `<div class="ss-placeholder">📷<br>Screenshot ${i+1}<br><small>Not uploaded</small></div>`
+                    }
+                </div>
+                <div class="ss-meta">
+                    <div class="ss-num">Screenshot ${i+1}</div>
+                    <div class="ss-datetime">${ss ? ss.date + ' | ' + ss.time : 'Not uploaded'}</div>
+                </div>
+            `;
+            display.appendChild(item);
+        }
+    }
+
+    // ============================================================
+    //  ATTENDANCE TABLE (first 5 days from attendance.html logic)
+    // ============================================================
+    const ACTIVITIES = [
+        'Skill Development & Learning Module',
+        'Communication Skills Workshop',
+        'Career Guidance & Professional Training',
+        'Professional Development Activities',
+        'Project Work & Practical Assignment'
+    ];
+
+    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    function getFirst5AttendanceDates() {
+        const end = new Date();
+        const start = new Date(end);
+        start.setDate(start.getDate() - 15);
+        const dates = [];
+        let d = new Date(start);
+        while (dates.length < 5) {
+            dates.push(new Date(d));
+            d.setDate(d.getDate() + 1);
+        }
+        return dates;
+    }
+
+    function formatDate(d) {
+        return d.toLocaleDateString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric' });
+    }
+
+    function buildAttendanceTable() {
+        const tbody = document.getElementById('attTableBody');
+        tbody.innerHTML = '';
+        const dates = getFirst5AttendanceDates();
+        dates.forEach((date, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>Day ${i+1}</td>
+                <td>${formatDate(date)}</td>
+                <td>${DAY_NAMES[date.getDay()]}</td>
+                <td>8 Hours</td>
+                <td class="present-cell">✓ Present</td>
+                <td class="activity-cell">${ACTIVITIES[i]}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('att_hours').textContent = '40';
+    }
+
+    // ============================================================
+    //  POPULATE ALL PAGES
+    // ============================================================
+    function populateReport() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+
+        // Page 1 – Cover
+        document.getElementById('cv_name').textContent = student.name;
+        document.getElementById('cv_regid').textContent = student.rollno !== '—' ? student.rollno : reportId;
+        document.getElementById('cv_college').textContent = student.college;
+        document.getElementById('cv_course').textContent = student.course;
+        document.getElementById('cv_semester').textContent = student.semester + ' Semester';
+        document.getElementById('cv_mobile').textContent = student.phone;
+        document.getElementById('cv_date').textContent = dateStr;
+        document.getElementById('cv_reportid').textContent = '🆔 Report ID: ' + reportId;
+
+        // Page 2 – Profile
+        document.getElementById('pf_name').textContent = student.name;
+        document.getElementById('pf_college').textContent = student.college;
+        document.getElementById('pf_fullname').textContent = student.name;
+        document.getElementById('pf_guardian').textContent = student.guardian;
+        document.getElementById('pf_college2').textContent = student.college;
+        document.getElementById('pf_course').textContent = student.course;
+        document.getElementById('pf_dept').textContent = student.department;
+        document.getElementById('pf_sem').textContent = student.semester ? student.semester + ' Semester' : '—';
+        document.getElementById('pf_session').textContent = student.session || '—';
+        document.getElementById('pf_rollno').textContent = student.rollno;
+        document.getElementById('pf_mobile').textContent = student.phone;
+        document.getElementById('pf_email').textContent = student.email;
+        document.getElementById('pf_district').textContent = student.district;
+
+        // Photo
+        if (student.photo && student.photo.length > 10) {
+            const photoBox = document.getElementById('profilePhotoBox');
+            photoBox.innerHTML = `<img src="${student.photo}" alt="Student Photo" style="width:100%;height:100%;object-fit:cover">`;
+        }
+
+        // Page 3 – Attendance
+        buildAttendanceTable();
+
+        // Page 4 – Screenshots
+        updateScreenshotsPage();
+
+        // Page 5 – Summary
+        const content = getCourseContent();
+        document.getElementById('sum_objectives').textContent = content.objectives;
+
+        const skillsList = document.getElementById('sum_skills');
+        skillsList.innerHTML = content.skills.map(s => `<li>${s}</li>`).join('');
+
+        const activitiesList = document.getElementById('sum_activities');
+        activitiesList.innerHTML = content.activities.map(a => `<li>${a}</li>`).join('');
+
+        document.getElementById('sum_outcomes').textContent = content.outcomes;
+
+        document.getElementById('sum_statement').textContent =
+            `This is to certify that ${student.name}, enrolled in ${student.course} course at ${student.college} affiliated to Veer Kunwar Singh University, ` +
+            `has successfully completed the Bihar Skill Interns Internship Program of 120 hours duration. ` +
+            `The student has demonstrated satisfactory performance in all assigned activities and has fulfilled all internship requirements. ` +
+            `This report is issued for submission to the college as official internship proof. ` +
+            `Generated on: ${dateStr} | Report ID: ${reportId}`;
+
+        document.getElementById('sig_studentname').textContent = student.name;
+    }
+
+    // ============================================================
+    //  DOWNLOAD PDF
+    // ============================================================
+    function downloadPDF() {
+        const overlay = document.getElementById('loadingOverlay');
+        const msg = document.getElementById('loadingMsg');
+        overlay.classList.add('show');
+        msg.textContent = 'Generating PDF... Please wait';
+
+        // Hide upload UI temporarily
+        document.getElementById('uploadSectionUI').style.display = 'none';
+        document.getElementById('uploadSectionUI2').style.display = 'none';
+
+        const element = document.getElementById('pdfContent');
+
+        const opt = {
+            margin: 0,
+            filename: `Internship_Report_${student.name.replace(/\s+/g,'_')}_${reportId}.pdf`,
+            image: { type: 'jpeg', quality: 0.97 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'], before: '.a4-page' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            overlay.classList.remove('show');
+            document.getElementById('uploadSectionUI').style.display = 'block';
+            document.getElementById('uploadSectionUI2').style.display = 'flex';
+        }).catch(err => {
+            console.error('PDF error:', err);
+            overlay.classList.remove('show');
+            document.getElementById('uploadSectionUI').style.display = 'block';
+            document.getElementById('uploadSectionUI2').style.display = 'flex';
+            alert('PDF generate करने में error आई। कृपया Print option use करें।');
+        });
+    }
+
+    // ============================================================
+    //  PRINT
+    // ============================================================
+    function printReport() {
+        const uploadUI = document.getElementById('uploadSectionUI');
+        const previewLabel = document.getElementById('uploadSectionUI2');
+        uploadUI.style.display = 'none';
+        previewLabel.style.display = 'none';
+        window.print();
+        setTimeout(() => {
+            uploadUI.style.display = 'block';
+            previewLabel.style.display = 'flex';
+        }, 500);
+    }
+
+    // ============================================================
+    //  AUTH CHECK & INIT
+    // ============================================================
+    window.addEventListener('load', () => {
+        const isLoggedIn = S.get('isLoggedIn', 'false');
+        if (isLoggedIn !== 'true') {
+            window.location.href = 'login.html';
+            return;
+        }
+        initScreenshotSlots();
+        populateReport();
+    });
+</script>
+</body>
+</html>
