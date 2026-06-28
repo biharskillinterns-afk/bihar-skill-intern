@@ -631,14 +631,10 @@
         .auto-ss-card {
             width: 100%;
             height: 100%;
-            padding: 18px;
             color: #0f172a;
-            background:
-                radial-gradient(circle at top right, rgba(37, 99, 235, 0.16), transparent 28%),
-                linear-gradient(135deg, #eff6ff 0%, #f8fafc 58%, #ecfeff 100%);
+            background: #f8fafc;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
         }
 
         .auto-ss-top {
@@ -646,40 +642,50 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-        }
-
-        .auto-ss-badge {
-            background: #2563eb;
+            padding: 8px 10px;
+            background: #0f766e;
             color: white;
-            border-radius: 999px;
-            padding: 6px 10px;
-            font-size: 0.72em;
+            font-size: 0.78em;
             font-weight: 800;
         }
 
-        .auto-ss-course {
-            font-size: 1.15em;
+        .auto-ss-body {
+            flex: 1;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auto-ss-title {
+            margin-bottom: 9px;
+            color: #111827;
+            font-size: 1.05em;
             font-weight: 800;
-            color: #1e40af;
-            margin: 14px 0 6px;
         }
 
-        .auto-ss-activity {
-            color: #334155;
-            font-size: 0.86em;
-            line-height: 1.45;
-        }
-
-        .auto-ss-footer {
+        .auto-ss-meta {
             display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: center;
-            gap: 12px;
-            margin-top: 12px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 9px;
+            color: #475569;
+            font-size: 0.75em;
+        }
+
+        .auto-ss-panel {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 10px;
+            color: #334155;
+            font-size: 0.82em;
+            line-height: 1.45;
         }
 
         .auto-ss-progress {
             height: 8px;
+            margin-top: 8px;
             background: #dbeafe;
             border-radius: 999px;
             overflow: hidden;
@@ -689,13 +695,6 @@
             display: block;
             height: 100%;
             background: linear-gradient(90deg, #10b981, #2563eb);
-        }
-
-        .auto-ss-date {
-            color: #64748b;
-            font-size: 0.78em;
-            font-weight: 700;
-            white-space: nowrap;
         }
 
         .ss-meta {
@@ -1318,16 +1317,22 @@
     }
 
     function getAutoScreenshot(index) {
-        const dates = getFirst5AttendanceDates();
-        const date = dates[index] || new Date();
-        const activities = getCourseContent().activities || ACTIVITIES;
-        const activity = activities[index % activities.length] || ACTIVITIES[index % ACTIVITIES.length];
-        const progress = Math.min(100, 20 + (index * 20));
+        const activities = [
+            'Dashboard login, course overview, and internship orientation completed.',
+            'Course learning material reviewed and important points noted.',
+            'Module practice activity completed for the selected course.',
+            'Revision, self-practice, and daily progress update completed.',
+            'Daily learning notes and module summary updated.'
+        ];
+        const today = new Date();
+        const date = new Date(today);
+        date.setDate(today.getDate() - (4 - index));
+        const progress = Math.min(100, Math.round(((index + 1) / activities.length) * 100));
         return {
-            date: formatDate(date),
-            time: 'Auto generated',
+            date: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+            time: date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
             course: student.course || 'Selected Course',
-            activity,
+            activity: activities[index],
             progress
         };
     }
@@ -1335,17 +1340,23 @@
     function buildAutoScreenshotCard(auto, index) {
         return `
             <div class="auto-ss-card">
-                <div>
-                    <div class="auto-ss-top">
-                        <span class="auto-ss-badge">Day ${index + 1}</span>
-                        <span class="auto-ss-date">${auto.date}</span>
-                    </div>
-                    <div class="auto-ss-course">${auto.course}</div>
-                    <div class="auto-ss-activity">${auto.activity}</div>
+                <div class="auto-ss-top">
+                    <span>Bihar Skill Intern Dashboard</span>
+                    <span>Screenshot ${index + 1}</span>
                 </div>
-                <div class="auto-ss-footer">
-                    <div class="auto-ss-progress"><span style="width:${auto.progress}%"></span></div>
-                    <span class="auto-ss-date">${auto.progress}%</span>
+                <div class="auto-ss-body">
+                    <div class="auto-ss-title">Day ${index + 1} Activity Proof</div>
+                    <div class="auto-ss-meta">
+                        <span><strong>Date:</strong> ${auto.date}</span>
+                        <span><strong>Course:</strong> ${auto.course}</span>
+                        <span><strong>Time:</strong> ${auto.time}</span>
+                    </div>
+                    <div class="auto-ss-panel">
+                        <strong>Activity:</strong> ${auto.activity}<br>
+                        <strong>Status:</strong> Completed<br>
+                        <strong>Progress:</strong> ${auto.progress}%
+                        <div class="auto-ss-progress"><span style="width:${auto.progress}%"></span></div>
+                    </div>
                 </div>
             </div>
         `;
