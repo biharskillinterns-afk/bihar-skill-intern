@@ -1,0 +1,331 @@
+/* Shared premium UI layer for Bihar Skill Intern pages. */
+:root {
+    --premium-primary: #2563eb;
+    --premium-primary-dark: #1e40af;
+    --premium-accent: #0f766e;
+    --premium-ink: #172033;
+    --premium-muted: #64748b;
+    --premium-border: #dbe5f0;
+    --premium-surface: rgba(255, 255, 255, 0.94);
+    --premium-shadow: 0 22px 58px rgba(15, 23, 42, 0.11);
+    --premium-shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.07);
+    --premium-radius: 16px;
+    --premium-radius-sm: 10px;
+}
+
+body {
+    background:
+        radial-gradient(circle at 12% 0%, rgba(37, 99, 235, 0.12), transparent 30%),
+        radial-gradient(circle at 88% 4%, rgba(15, 118, 110, 0.12), transparent 28%),
+        linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%) !important;
+    color: var(--premium-ink);
+    font-family: "Inter", "Segoe UI", Arial, sans-serif !important;
+}
+
+.top-nav {
+    background: rgba(255, 255, 255, 0.90) !important;
+    border-bottom: 1px solid rgba(219, 229, 240, 0.95) !important;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08) !important;
+    backdrop-filter: blur(16px);
+}
+
+.nav-logo {
+    color: var(--premium-primary) !important;
+    letter-spacing: 0;
+}
+
+.nav-menu a {
+    border-radius: var(--premium-radius-sm) !important;
+    font-weight: 700 !important;
+}
+
+.nav-menu a:hover,
+.nav-menu a.active {
+    background: #eff6ff !important;
+    color: var(--premium-primary) !important;
+}
+
+.dashboard-container,
+.profile-container,
+.course-container,
+.registration-container,
+.login-container,
+.forgot-container,
+.reset-container,
+.page {
+    position: relative;
+}
+
+.welcome-section,
+.profile-header,
+.course-header,
+.registration-container,
+.login-box,
+.forgot-box,
+.reset-box,
+.payment-box,
+.card,
+.dashboard-card,
+.profile-card,
+.course-card,
+.notes-container,
+.quiz-container,
+.terms-section,
+.form-section,
+.notice,
+.summary-box {
+    border: 1px solid var(--premium-border) !important;
+    border-radius: var(--premium-radius) !important;
+    box-shadow: var(--premium-shadow-soft) !important;
+}
+
+.welcome-section,
+.profile-header,
+.course-header,
+.login-box,
+.forgot-box,
+.reset-box,
+.payment-box,
+.notes-container,
+.quiz-container,
+.form-section {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%) !important;
+}
+
+.registration-container,
+.payment-box,
+.login-box,
+.forgot-box,
+.reset-box {
+    box-shadow: var(--premium-shadow) !important;
+}
+
+.registration-header {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 84% 12%, rgba(255, 255, 255, 0.24), transparent 20%),
+        linear-gradient(135deg, #173b78 0%, #2563eb 58%, #0f766e 100%) !important;
+}
+
+.registration-header::after,
+.course-header::after,
+.profile-header::after,
+.welcome-section::after {
+    content: "";
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    right: -72px;
+    top: -76px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.08);
+    pointer-events: none;
+}
+
+.profile-header,
+.course-header,
+.welcome-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-avatar-large,
+.user-avatar,
+.course-emoji,
+.section-number {
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
+}
+
+.action-btn,
+.submit-btn,
+.login-box button,
+.forgot-box button,
+.reset-box button,
+.pay-btn,
+.back-btn,
+.photo-btn,
+.tab-btn,
+.btn,
+button {
+    border-radius: var(--premium-radius-sm) !important;
+}
+
+.submit-btn,
+.login-box button,
+.forgot-box button,
+.reset-box button,
+.pay-btn,
+.btn-primary,
+.photo-btn,
+.btn:not(.secondary):not(.warning):not(.success) {
+    background: linear-gradient(135deg, var(--premium-primary), var(--premium-primary-dark)) !important;
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.20) !important;
+}
+
+.submit-btn:hover,
+.login-box button:hover,
+.forgot-box button:hover,
+.reset-box button:hover,
+.pay-btn:hover:not(:disabled),
+.action-btn:hover,
+.photo-btn:hover,
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px rgba(37, 99, 235, 0.24) !important;
+}
+
+input,
+select,
+textarea {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: var(--premium-radius-sm) !important;
+    background: #ffffff !important;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none !important;
+    border-color: var(--premium-primary) !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.13) !important;
+    background: #fbfdff !important;
+}
+
+.tabs {
+    gap: 8px !important;
+    border-bottom: 0 !important;
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid var(--premium-border);
+    border-radius: var(--premium-radius);
+    padding: 8px;
+    box-shadow: var(--premium-shadow-soft);
+}
+
+.tab-btn {
+    border-bottom: 0 !important;
+    background: transparent !important;
+}
+
+.tab-btn.active {
+    background: #eff6ff !important;
+    color: var(--premium-primary) !important;
+}
+
+.progress-bar {
+    background: #e2e8f0 !important;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, #10b981, #0f766e) !important;
+}
+
+.status-badge,
+.helpline-pill,
+.payment-badge,
+.course-status,
+.badge {
+    border-radius: 999px !important;
+}
+
+.course-card,
+.dashboard-card,
+.profile-card,
+.card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.course-card:hover,
+.dashboard-card:hover,
+.profile-card:hover,
+.card:hover {
+    transform: translateY(-3px);
+    border-color: #bfdbfe !important;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12) !important;
+}
+
+.daily-card,
+.proof-card,
+.summary-box,
+.detail-box {
+    background: rgba(255, 255, 255, 0.92) !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .welcome-section,
+    .profile-header,
+    .course-header,
+    .registration-container,
+    .login-box,
+    .forgot-box,
+    .reset-box,
+    .payment-box,
+    .card,
+    .notes-container,
+    .quiz-container {
+        animation: premiumFadeUp 0.45s ease both;
+    }
+}
+
+@keyframes premiumFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .top-nav {
+        padding: 12px 14px !important;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center !important;
+    }
+
+    .nav-menu {
+        gap: 6px !important;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        order: 3;
+    }
+
+    .nav-right {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px !important;
+        order: 4;
+    }
+
+    .nav-logo {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .nav-menu a {
+        padding: 8px 10px !important;
+        font-size: 0.88rem;
+    }
+
+    .welcome-section,
+    .profile-header,
+    .course-header,
+    .registration-body,
+    .notes-container,
+    .quiz-container {
+        padding: 22px !important;
+    }
+
+    .tabs {
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+}
