@@ -2106,7 +2106,12 @@
                 renderAdminExtras();
                 openStudentDetailModal(index);
             } catch (error) {
-                alert(`Unable to update unlock: ${error.message}`);
+                const message = String(error.message || '');
+                if (error.status === 404 || message.toLowerCase().includes('route not found')) {
+                    alert('Early unlock backend route live nahi hai. Render me Manual Deploy > Deploy latest commit karo, phir dobara Unlock Quiz + Certificate dabao.');
+                    return;
+                }
+                alert(`Unable to update unlock: ${message}`);
             }
         }
 
