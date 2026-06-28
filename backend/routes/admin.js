@@ -53,6 +53,41 @@ async function ensureCourseQuestionsColumn(connection) {
     }
 }
 
+function parseQuestions(value) {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function mergeQuestions(existingQuestions, incomingQuestions) {
+    const merged = [];
+    const seen = new Set();
+    [...parseQuestions(existingQuestions), ...parseQuestions(incomingQuestions)].forEach(question => {
+        if (!question || typeof question !== 'object') return;
+        const text = String(question.q || question.question || question.text || '').trim().toLowerCase();
+        const options = Array.isArray(question.options) ? question.options.join('|').toLowerCase() : '';
+        const key = `${text}::${options}`;
+        if (!text || seen.has(key)) return;
+        seen.add(key);
+        merged.push(question);
+    });
+    return merged;
+}
+
+function mergeCourseMaterial(existingMaterial = '', incomingMaterial = '') {
+    const current = String(existingMaterial || '').trim();
+    const next = String(incomingMaterial || '').trim();
+    if (!next) return current;
+    if (!current) return next;
+    if (current.includes(next)) return current;
+    return `${current}\n\n--- Added Material ---\n\n${next}`;
+}
+
 router.get('/settings/payment-amount', verifyToken, isAdmin, async (req, res) => {
     try {
         const amount = await getRegistrationAmount(req.db);
@@ -504,18 +539,46 @@ router.put('/courses/:id', verifyToken, isAdmin, async (req, res) => {
             prerequisites,
             status
         } = req.body;
-        const finalCourseName = courseName || name;
-        const finalSyllabus = syllabus || material || '';
         const finalQuestions = Array.isArray(questions) ? JSON.stringify(questions) : (questions || null);
         
         const connection = await req.db.getConnection();
         await ensureCourseQuestionsColumn(connection);
+
+        const [existingRows] = await connection.query(
+            'SELECT courseName, description, duration, syllabus, questions, prerequisites, status FROM courses WHERE id = ? LIMIT 1',
+            [req.params.id]
+        );
+
+        if (existingRows.length === 0) {
+            connection.release();
+            return res.status(404).json({
+                success: false,
+                message: 'Course not found'
+            });
+        }
+
+        const existing = existingRows[0];
+        const finalCourseName = courseName || name || existing.courseName;
+        const finalSyllabus = syllabus || material || '';
+        const mergedSyllabus = mergeCourseMaterial(existingRows[0].syllabus, finalSyllabus);
+        const mergedQuestions = finalQuestions
+            ? JSON.stringify(mergeQuestions(existingRows[0].questions, finalQuestions))
+            : existingRows[0].questions;
         
         const [result] = await connection.query(
             `UPDATE courses
-             SET courseName = ?, description = ?, duration = ?, syllabus = ?, questions = COALESCE(?, questions), prerequisites = ?, status = ?
+             SET courseName = ?, description = ?, duration = ?, syllabus = ?, questions = ?, prerequisites = ?, status = ?
              WHERE id = ?`,
-            [finalCourseName, description, duration || 30, finalSyllabus, finalQuestions, prerequisites || '', status || 'active', req.params.id]
+            [
+                finalCourseName,
+                description || existing.description,
+                duration || existing.duration || 30,
+                mergedSyllabus,
+                mergedQuestions,
+                prerequisites || existing.prerequisites || '',
+                status || existing.status || 'active',
+                req.params.id
+            ]
         );
         
         connection.release();

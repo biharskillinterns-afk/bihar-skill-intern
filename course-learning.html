@@ -4021,6 +4021,20 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             return fallbackQuestions;
         }
 
+        function mergeCourseNotes(baseNotes = '', addedNotes = '', heading = 'Additional Course Material') {
+            const base = String(baseNotes || '').trim();
+            const added = String(addedNotes || '').trim();
+            if (!added) return base;
+
+            const formattedAdded = added.startsWith('<')
+                ? added
+                : `<h3>${escapeHTML(heading)}</h3>${added.split(/\n\n+/).map(paragraph => `<p>${escapeHTML(paragraph)}</p>`).join('')}`;
+
+            if (!base) return formattedAdded;
+            if (base.includes(added) || base.includes(formattedAdded)) return base;
+            return `${base}<hr style="margin:28px 0;border:0;border-top:1px solid #dbeafe;">${formattedAdded}`;
+        }
+
         function materialAcceptedKey(courseId = currentCourse) {
             return 'courseMaterialAccepted_' + courseId;
         }
@@ -4224,7 +4238,11 @@ Mastering comprehensive corporate strategy and capstone integration is the final
                             name: courseName,
                             emoji: '📚',
                             description: response.course.description,
-                            notes: material ? `<h3>${courseName}</h3><p>${material.replace(/\n/g, '</p><p>')}</p>` : '',
+                            notes: mergeCourseNotes(
+                                builtInCourseContent[courseId]?.notes || '',
+                                material,
+                                courseName
+                            ),
                             questions: parsedQuestions
                         };
                         const fallbackQuestions = findFallbackQuestions(courseId, courseName);
@@ -4251,7 +4269,11 @@ Mastering comprehensive corporate strategy and capstone integration is the final
                             name: storedCourse.name || storedCourse.courseName || storedCourse.title || 'Course',
                             emoji: storedCourse.emoji || '📘',
                             description: storedCourse.description || 'Course material will be added by admin.',
-                            notes: storedCourse.material || storedCourse.syllabus || `<p>${escapeHTML(storedCourse.description || 'Course material will be added by admin.')}</p>`,
+                            notes: mergeCourseNotes(
+                                builtInCourseContent[courseId]?.notes || '',
+                                storedCourse.material || storedCourse.syllabus || `<p>${escapeHTML(storedCourse.description || 'Course material will be added by admin.')}</p>`,
+                                storedCourse.name || storedCourse.courseName || storedCourse.title || 'Course'
+                            ),
                             questions: Array.isArray(storedCourse.questions) ? storedCourse.questions : []
                         };
                     }
