@@ -628,6 +628,76 @@
             text-align: center;
         }
 
+        .auto-ss-card {
+            width: 100%;
+            height: 100%;
+            padding: 18px;
+            color: #0f172a;
+            background:
+                radial-gradient(circle at top right, rgba(37, 99, 235, 0.16), transparent 28%),
+                linear-gradient(135deg, #eff6ff 0%, #f8fafc 58%, #ecfeff 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .auto-ss-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .auto-ss-badge {
+            background: #2563eb;
+            color: white;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.72em;
+            font-weight: 800;
+        }
+
+        .auto-ss-course {
+            font-size: 1.15em;
+            font-weight: 800;
+            color: #1e40af;
+            margin: 14px 0 6px;
+        }
+
+        .auto-ss-activity {
+            color: #334155;
+            font-size: 0.86em;
+            line-height: 1.45;
+        }
+
+        .auto-ss-footer {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .auto-ss-progress {
+            height: 8px;
+            background: #dbeafe;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .auto-ss-progress span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #2563eb);
+        }
+
+        .auto-ss-date {
+            color: #64748b;
+            font-size: 0.78em;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
         .ss-meta {
             padding: 10px 14px;
             background: white;
@@ -1247,11 +1317,46 @@
         updateScreenshotsPage();
     }
 
+    function getAutoScreenshot(index) {
+        const dates = getFirst5AttendanceDates();
+        const date = dates[index] || new Date();
+        const activities = getCourseContent().activities || ACTIVITIES;
+        const activity = activities[index % activities.length] || ACTIVITIES[index % ACTIVITIES.length];
+        const progress = Math.min(100, 20 + (index * 20));
+        return {
+            date: formatDate(date),
+            time: 'Auto generated',
+            course: student.course || 'Selected Course',
+            activity,
+            progress
+        };
+    }
+
+    function buildAutoScreenshotCard(auto, index) {
+        return `
+            <div class="auto-ss-card">
+                <div>
+                    <div class="auto-ss-top">
+                        <span class="auto-ss-badge">Day ${index + 1}</span>
+                        <span class="auto-ss-date">${auto.date}</span>
+                    </div>
+                    <div class="auto-ss-course">${auto.course}</div>
+                    <div class="auto-ss-activity">${auto.activity}</div>
+                </div>
+                <div class="auto-ss-footer">
+                    <div class="auto-ss-progress"><span style="width:${auto.progress}%"></span></div>
+                    <span class="auto-ss-date">${auto.progress}%</span>
+                </div>
+            </div>
+        `;
+    }
+
     function updateScreenshotsPage() {
         const display = document.getElementById('screenshotsDisplay');
         display.innerHTML = '';
         for (let i = 0; i < 5; i++) {
             const ss = screenshots[i];
+            const auto = getAutoScreenshot(i);
             const item = document.createElement('div');
             item.className = 'ss-item';
             if (i === 0) item.style.gridColumn = '1 / -1';
@@ -1260,12 +1365,12 @@
                 <div class="ss-img-wrap" style="height:${height}">
                     ${ss
                         ? `<img src="${ss.src}" alt="Screenshot ${i+1}" style="width:100%;height:100%;object-fit:cover">`
-                        : `<div class="ss-placeholder">📷<br>Screenshot ${i+1}<br><small>Not uploaded</small></div>`
+                        : buildAutoScreenshotCard(auto, i)
                     }
                 </div>
                 <div class="ss-meta">
                     <div class="ss-num">Screenshot ${i+1}</div>
-                    <div class="ss-datetime">${ss ? ss.date + ' | ' + ss.time : 'Not uploaded'}</div>
+                    <div class="ss-datetime">${ss ? ss.date + ' | ' + ss.time : auto.date + ' | ' + auto.time}</div>
                 </div>
             `;
             display.appendChild(item);
