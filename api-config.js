@@ -567,10 +567,53 @@ class APIService {
     }
 
     static async uploadActivityProofs(data) {
-        return this.request('/students/proofs/bulk', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        try {
+            return await this.request('/students/proofs/bulk', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+        } catch (error) {
+            const isMissingBulkRoute = error.status === 404 ||
+                String(error.message || '').toLowerCase().includes('route not found');
+
+            if (!isMissingBulkRoute) {
+                throw error;
+            }
+
+            const screenshots = Array.isArray(data?.screenshots) ? data.screenshots : [];
+            if (!screenshots.length) {
+                throw error;
+            }
+
+            const baseDate = data.startDate ? new Date(data.startDate) : new Date();
+            if (Number.isNaN(baseDate.getTime())) {
+                baseDate.setTime(Date.now());
+            }
+
+            const uploadedProofIds = [];
+            for (let index = 0; index < screenshots.length; index += 1) {
+                const proofDate = new Date(baseDate);
+                proofDate.setDate(baseDate.getDate() + index);
+                const proof = screenshots[index];
+                const response = await this.uploadStudentProof({
+                    courseId: data.courseId,
+                    proofDate: proofDate.toISOString().slice(0, 10),
+                    internshipMode: data.internshipMode || 'online',
+                    topic: `${data.topic || 'Activity Proof'} - Day ${index + 1}`,
+                    workDescription: data.workDescription || '',
+                    screenshot: proof.screenshot,
+                    fileName: proof.fileName || `activity-proof-day-${index + 1}.jpg`
+                });
+                if (response?.proofId) uploadedProofIds.push(response.proofId);
+            }
+
+            return {
+                success: true,
+                message: 'Activity proofs uploaded with compatibility mode.',
+                proofIds: uploadedProofIds,
+                uploadedCount: uploadedProofIds.length
+            };
+        }
     }
 
     static async updateCourseProgress(courseId, data) {
