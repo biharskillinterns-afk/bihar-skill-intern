@@ -4005,6 +4005,10 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             return 'courseEndDate_' + courseId;
         }
 
+        function adminUnlockKey(courseId = currentCourse) {
+            return 'courseAdminUnlocked_' + courseId;
+        }
+
         function addDays(date, days) {
             const result = new Date(date);
             result.setDate(result.getDate() + days);
@@ -4034,10 +4038,12 @@ Mastering comprehensive corporate strategy and capstone integration is the final
         function getQuizUnlockInfo(courseId = currentCourse) {
             const { start, end } = ensureCourseSchedule(courseId);
             const now = new Date();
-            const unlocked = now.getTime() >= end.getTime();
+            const adminUnlocked = StorageManager.get(adminUnlockKey(courseId)) === true ||
+                StorageManager.get(adminUnlockKey(courseId)) === 'true';
+            const unlocked = adminUnlocked || now.getTime() >= end.getTime();
             const remainingMs = Math.max(0, end.getTime() - now.getTime());
             const remainingDays = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
-            return { start, unlockAt: end, unlocked, remainingDays };
+            return { start, unlockAt: end, unlocked, remainingDays, adminUnlocked };
         }
 
         function formatDisplayDate(date) {
@@ -4112,7 +4118,29 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             );
         }
 
-        window.addEventListener('load', () => {
+        async function hydrateCourseUnlocksFromBackend() {
+            if (typeof APIService === 'undefined') return;
+            try {
+                const response = await APIService.getStudentProgress();
+                const rows = response && response.success && Array.isArray(response.progress)
+                    ? response.progress
+                    : [];
+
+                rows.forEach(row => {
+                    const courseId = row.courseId || row.id;
+                    if (!courseId) return;
+                    if (row.enrolledAt) {
+                        StorageManager.set('courseEnrolledAt_' + courseId, new Date(row.enrolledAt).toISOString());
+                        StorageManager.set(courseStartKey(courseId), new Date(row.enrolledAt).toISOString());
+                    }
+                    StorageManager.set(adminUnlockKey(courseId), Boolean(row.adminUnlockedAt));
+                });
+            } catch (error) {
+                console.warn('Course unlock sync failed:', error.message);
+            }
+        }
+
+        window.addEventListener('load', async () => {
             if (typeof BSIAuthStorage !== 'undefined') {
                 if (!BSIAuthStorage.requireCompletedStudent({ alert: false })) return;
             } else {
@@ -4132,6 +4160,7 @@ Mastering comprehensive corporate strategy and capstone integration is the final
 
             const courseId = new URLSearchParams(window.location.search).get('course');
             currentCourse = parseInt(courseId) || 1;
+            await hydrateCourseUnlocksFromBackend();
             loadCourse(currentCourse);
         });
 
@@ -4213,6 +4242,7 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             const course = courseContent[currentCourse];
             const submitButton = document.querySelector('.submit-quiz-btn');
             const lockedResult = getLockedCourseResult();
+            const unlockInfo = getQuizUnlockInfo();
             if (lockedResult && !isMaterialAccepted()) {
                 StorageManager.set(materialAcceptedKey(), true);
                 refreshMaterialConfirmation();

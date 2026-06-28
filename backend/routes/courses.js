@@ -10,6 +10,20 @@ function addDays(date, days) {
     return result;
 }
 
+async function ensureStudentCourseUnlockColumns(connection) {
+    try {
+        await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedAt TIMESTAMP NULL');
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+    }
+
+    try {
+        await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedBy INT NULL');
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+    }
+}
+
 // Get all courses
 router.get('/', async (req, res) => {
     try {
@@ -128,6 +142,7 @@ router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
         const finalStatus = status || (safeProgress >= 100 ? 'completed' : safeProgress > 0 ? 'in_progress' : 'enrolled');
 
         connection = await req.db.getConnection();
+        await ensureStudentCourseUnlockColumns(connection);
 
         const [courses] = await connection.query(
             "SELECT id FROM courses WHERE id = ? AND status = 'active'",
@@ -142,7 +157,7 @@ router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
         }
 
         const [existingEnrollment] = await connection.query(
-            'SELECT id, enrolledAt FROM student_courses WHERE studentId = ? AND courseId = ? LIMIT 1',
+            'SELECT id, enrolledAt, adminUnlockedAt FROM student_courses WHERE studentId = ? AND courseId = ? LIMIT 1',
             [req.user.id, courseId]
         );
 
@@ -151,7 +166,8 @@ router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
             : new Date();
         const quizUnlockAt = addDays(enrolledAt, QUIZ_UNLOCK_DAYS);
 
-        if (finalStatus === 'completed' && Date.now() < quizUnlockAt.getTime()) {
+        const adminUnlocked = Boolean(existingEnrollment[0]?.adminUnlockedAt);
+        if (finalStatus === 'completed' && !adminUnlocked && Date.now() < quizUnlockAt.getTime()) {
             return res.status(403).json({
                 success: false,
                 message: `Quiz can be completed only after ${QUIZ_UNLOCK_DAYS} days from enrollment.`,
@@ -189,7 +205,8 @@ router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
             success: true,
             message: 'Course progress saved',
             enrolledAt: enrolledAt.toISOString(),
-            quizUnlockAt: quizUnlockAt.toISOString()
+            quizUnlockAt: quizUnlockAt.toISOString(),
+            adminUnlocked
         });
     } catch (error) {
         res.status(500).json({

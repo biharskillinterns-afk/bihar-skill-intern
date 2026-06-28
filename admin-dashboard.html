@@ -2046,6 +2046,19 @@
             return overrides[`${studentId}_${courseId}`] || 'auto';
         }
 
+        function getEarlyUnlockOverride(studentId, courseId) {
+            const overrides = getStoredObject('adminEarlyCourseUnlocks');
+            return overrides[`${studentId}_${courseId}`] || null;
+        }
+
+        function setEarlyUnlockOverride(studentId, courseId, value) {
+            const overrides = getStoredObject('adminEarlyCourseUnlocks');
+            const key = `${studentId}_${courseId}`;
+            if (value) overrides[key] = value;
+            else delete overrides[key];
+            StorageManager.set('adminEarlyCourseUnlocks', overrides);
+        }
+
         function setCertificateOverride(studentId, courseId, status) {
             const overrides = getStoredObject('adminCertificateOverrides');
             overrides[`${studentId}_${courseId}`] = status;
@@ -2067,6 +2080,36 @@
             setCertificateOverride(student.id, courseId, status);
         }
 
+        async function unlockStudentCourseByIndex(index, unlock = true) {
+            const student = allStudents[index];
+            if (!student) return;
+            const courseId = getCourseIdByName(student.course);
+            if (!courseId) {
+                alert('Please assign a course first.');
+                return;
+            }
+
+            try {
+                if (typeof APIService === 'undefined') {
+                    throw new Error('API service is not available.');
+                }
+                const response = await APIService.updateStudentCourseUnlock(student.id, courseId, unlock);
+                if (!response || response.success === false) {
+                    throw new Error(response?.message || 'Unlock update failed.');
+                }
+
+                setEarlyUnlockOverride(student.id, courseId, unlock ? new Date().toISOString() : null);
+                if (unlock) setCertificateOverride(student.id, courseId, 'approved');
+                else setCertificateOverride(student.id, courseId, 'auto');
+                addActivityLog(`${unlock ? 'Unlocked' : 'Removed unlock for'} quiz and certificate for ${student.name}`);
+                alert(response.message || (unlock ? 'Student unlocked successfully.' : 'Student unlock removed.'));
+                renderAdminExtras();
+                openStudentDetailModal(index);
+            } catch (error) {
+                alert(`Unable to update unlock: ${error.message}`);
+            }
+        }
+
         function getStudentCourseSummary(student) {
             const courseId = getCourseIdByName(student.course);
             if (!courseId) {
@@ -2082,8 +2125,10 @@
 
             const result = getCourseResult(courseId);
             const override = getCertificateOverride(student.id, courseId);
+            const earlyUnlock = getEarlyUnlockOverride(student.id, courseId);
             let certificateStatus = 'Pending';
-            if (override === 'approved') certificateStatus = 'Approved by admin';
+            if (earlyUnlock) certificateStatus = 'Unlocked by admin';
+            else if (override === 'approved') certificateStatus = 'Approved by admin';
             if (override === 'blocked') certificateStatus = 'Blocked by admin';
             if (override === 'auto' && result?.passed) certificateStatus = 'Auto approved';
 
@@ -2093,6 +2138,7 @@
                 materialAccepted: isCourseMaterialAccepted(courseId),
                 quizLocked: isCourseQuizLocked(courseId),
                 result,
+                earlyUnlock,
                 certificateStatus
             };
         }
@@ -2123,7 +2169,7 @@
         }
 
         function statusClass(status) {
-            if (/approved|pass|complete|locked/i.test(status)) return 'success';
+            if (/approved|pass|complete|locked|unlocked/i.test(status)) return 'success';
             if (/block|fail|pending/i.test(status)) return /block|fail/i.test(status) ? 'danger' : 'warning';
             return 'info';
         }
@@ -2544,6 +2590,11 @@
                     <div class="detail-box"><strong>Quiz</strong>${summary.quizLocked ? 'Submitted and locked' : 'Not locked'}</div>
                     <div class="detail-box"><strong>Score</strong>${escapeHTML(result.scorePercentage ?? 'N/A')}${result.scorePercentage !== undefined ? '%' : ''}</div>
                     <div class="detail-box"><strong>Certificate</strong>${escapeHTML(summary.certificateStatus)}</div>
+                </div>
+                <h3 style="margin-top:18px;">Early Unlock Control</h3>
+                <div class="quick-report-row">
+                    <button class="search-btn" style="background:#0f766e;" onclick="unlockStudentCourseByIndex(${index}, true)" ${!summary.courseId ? 'disabled' : ''}>Unlock Quiz + Certificate</button>
+                    <button class="search-btn" style="background:#64748b;" onclick="unlockStudentCourseByIndex(${index}, false)" ${!summary.courseId ? 'disabled' : ''}>Remove Early Unlock</button>
                 </div>
                 <h3 style="margin-top:18px;">Manual Certificate Control</h3>
                 <div class="quick-report-row">

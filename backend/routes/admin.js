@@ -31,6 +31,20 @@ async function ensureInternshipProofsTable(connection) {
     `);
 }
 
+async function ensureStudentCourseUnlockColumns(connection) {
+    try {
+        await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedAt TIMESTAMP NULL');
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+    }
+
+    try {
+        await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedBy INT NULL');
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+    }
+}
+
 router.get('/settings/payment-amount', verifyToken, isAdmin, async (req, res) => {
     try {
         const amount = await getRegistrationAmount(req.db);
@@ -190,6 +204,71 @@ router.delete('/students/:id', verifyToken, isAdmin, async (req, res) => {
             message: 'Failed to delete student',
             error: error.message
         });
+    }
+});
+
+router.put('/students/:studentId/courses/:courseId/unlock', verifyToken, isAdmin, async (req, res) => {
+    let connection;
+    try {
+        const { studentId, courseId } = req.params;
+        const unlock = req.body.unlock !== false;
+
+        connection = await req.db.getConnection();
+        await ensureStudentCourseUnlockColumns(connection);
+
+        const [students] = await connection.query('SELECT id FROM students WHERE id = ? LIMIT 1', [studentId]);
+        if (students.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        const [courses] = await connection.query('SELECT id, courseName FROM courses WHERE id = ? LIMIT 1', [courseId]);
+        if (courses.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Course not found'
+            });
+        }
+
+        if (unlock) {
+            await connection.query(
+                `INSERT INTO student_courses
+                    (studentId, courseId, enrolledAt, progress, status, adminUnlockedAt, adminUnlockedBy)
+                 VALUES (?, ?, NOW(), 0, 'enrolled', NOW(), ?)
+                 ON DUPLICATE KEY UPDATE
+                    adminUnlockedAt = NOW(),
+                    adminUnlockedBy = VALUES(adminUnlockedBy)`,
+                [studentId, courseId, req.user.id]
+            );
+        } else {
+            await connection.query(
+                `UPDATE student_courses
+                 SET adminUnlockedAt = NULL, adminUnlockedBy = NULL
+                 WHERE studentId = ? AND courseId = ?`,
+                [studentId, courseId]
+            );
+        }
+
+        res.json({
+            success: true,
+            message: unlock
+                ? 'Quiz, marksheet, certificate, and report unlocked for this student.'
+                : 'Admin early unlock removed for this student.',
+            studentId,
+            courseId,
+            courseName: courses[0].courseName,
+            adminUnlocked: unlock
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update student course unlock',
+            error: error.message
+        });
+    } finally {
+        if (connection) connection.release();
     }
 });
 

@@ -1066,9 +1066,12 @@
                 StorageManager.get('courseEnrolledAt_' + courseId);
             const schedule = saveCourseSchedule(courseId, rawStart || new Date());
             const now = new Date();
+            const adminUnlocked = StorageManager.get('courseAdminUnlocked_' + courseId) === true ||
+                StorageManager.get('courseAdminUnlocked_' + courseId) === 'true';
             return {
                 ...schedule,
-                unlocked: now.getTime() >= schedule.end.getTime(),
+                unlocked: adminUnlocked || now.getTime() >= schedule.end.getTime(),
+                adminUnlocked,
                 remainingDays: Math.ceil(Math.max(0, schedule.end.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
             };
         }
@@ -1361,7 +1364,7 @@
                             ${!completed && unlockInfo ? `
                                 <div style="margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: ${unlockInfo.unlocked ? '#ecfdf5' : '#fff7ed'}; color: ${unlockInfo.unlocked ? '#065f46' : '#9a3412'}; font-weight: 700; font-size: 0.88em;">
                                     ${unlockInfo.unlocked
-                                        ? 'Quiz is available now'
+                                        ? (unlockInfo.adminUnlocked ? 'Quiz unlocked early by admin' : 'Quiz is available now')
                                         : `Quiz opens on ${formatDisplayDate(unlockInfo.end)} (${unlockInfo.remainingDays} day${unlockInfo.remainingDays === 1 ? '' : 's'} left)`}
                                 </div>
                             ` : ''}
@@ -1475,6 +1478,7 @@
                     markManualEnrollment(courseId);
                     StorageManager.set('course_' + courseId, true);
                     StorageManager.set('progress_' + courseId, rowProgress);
+                    StorageManager.set('courseAdminUnlocked_' + courseId, Boolean(row.adminUnlockedAt));
                     if (row.enrolledAt) saveCourseSchedule(courseId, row.enrolledAt);
 
                     if (isCompleted) {

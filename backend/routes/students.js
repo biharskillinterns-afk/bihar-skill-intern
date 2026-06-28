@@ -8,6 +8,20 @@ const MIN_ACTIVITY_SCREENSHOTS = 5;
 const MIN_ACTIVITY_IMAGE_BYTES = 20 * 1024;
 const MAX_ACTIVITY_IMAGE_BYTES = 30 * 1024;
 
+async function ensureStudentCourseUnlockColumns(connection) {
+    try {
+        await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedAt TIMESTAMP NULL');
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+    }
+
+    try {
+        await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedBy INT NULL');
+    } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+    }
+}
+
 function normalizeDateInput(value) {
     if (!value) return null;
     const date = new Date(value);
@@ -198,6 +212,7 @@ router.get('/courses', verifyToken, isStudent, async (req, res) => {
 router.get('/progress', verifyToken, isStudent, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
+        await ensureStudentCourseUnlockColumns(connection);
         const [progress] = await connection.query(
             `SELECT sc.*, c.courseName, c.duration FROM student_courses sc 
              JOIN courses c ON c.id = sc.courseId 

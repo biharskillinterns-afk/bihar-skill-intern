@@ -660,6 +660,13 @@ class APIService {
         });
     }
 
+    static async updateStudentCourseUnlock(studentId, courseId, unlock = true) {
+        return this.request(`/admin/students/${encodeURIComponent(studentId)}/courses/${encodeURIComponent(courseId)}/unlock`, {
+            method: 'PUT',
+            body: JSON.stringify({ unlock })
+        });
+    }
+
     static async getAdminPaymentAmount() {
         return this.request('/admin/settings/payment-amount');
     }
