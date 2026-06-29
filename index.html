@@ -4,8 +4,527 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bihar Skill Intern - Internship Certification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="premium-ui.css">
+    <style>
+        :root {
+            --lp-primary: #2563eb;
+            --lp-primary-light: #60a5fa;
+            --lp-primary-dark: #1e40af;
+            --lp-secondary: #0f766e;
+            --lp-accent: #f59e0b;
+            --lp-ink: #172033;
+            --lp-muted: #64748b;
+            --lp-border: #e2e8f0;
+            --lp-surface: #ffffff;
+            --lp-bg: #f6f8fc;
+            --lp-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+            --lp-shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.07);
+        }
+
+        body {
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(37, 99, 235, 0.12), transparent 28%),
+                radial-gradient(circle at 90% 6%, rgba(15, 118, 110, 0.12), transparent 26%),
+                linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: "Poppins", "Inter", sans-serif;
+            letter-spacing: 0;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e40af 58%, #0f766e 100%);
+            padding: 30px 20px 28px;
+        }
+
+        header::before {
+            background-size: 72px 72px;
+            opacity: 0.55;
+        }
+
+        .header-container {
+            gap: 10px;
+        }
+
+        .site-logo {
+            width: min(106px, 36vw);
+            border-radius: 20px;
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.24);
+        }
+
+        .header-container h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 0;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.82);
+            border-bottom: 1px solid var(--lp-border);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        nav ul {
+            max-width: 1180px;
+        }
+
+        nav ul li a {
+            position: relative;
+            color: var(--lp-ink);
+            font-weight: 800;
+            outline: none;
+        }
+
+        nav ul li a::after {
+            content: "";
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 7px;
+            height: 3px;
+            border-radius: 999px;
+            background: var(--lp-primary);
+            opacity: 0;
+            transform: scaleX(0.4);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        nav ul li a[href="index.html"]::after,
+        nav ul li a:hover::after,
+        nav ul li a:focus-visible::after {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+
+        nav ul li a:hover {
+            background: #eff6ff;
+            color: var(--lp-primary);
+            transform: translateY(-1px);
+        }
+
+        nav ul li a.nav-login {
+            background: var(--lp-primary);
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
+        }
+
+        nav ul li a.nav-admin {
+            background: #ecfeff;
+            color: var(--lp-secondary);
+        }
+
+        main {
+            max-width: 1180px;
+            padding: 34px 20px 46px;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 28px;
+            background:
+                radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.35), transparent 22%),
+                radial-gradient(circle at 10% 86%, rgba(251, 191, 36, 0.20), transparent 24%),
+                linear-gradient(135deg, rgba(30, 64, 175, 0.95) 0%, rgba(37, 99, 235, 0.92) 48%, rgba(15, 118, 110, 0.94) 100%);
+            box-shadow: 0 28px 70px rgba(30, 64, 175, 0.22);
+            isolation: isolate;
+        }
+
+        .hero::before {
+            width: 290px;
+            height: 290px;
+            background: rgba(255, 255, 255, 0.13);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            top: -90px;
+            right: -70px;
+            z-index: -1;
+        }
+
+        .hero::after {
+            width: 220px;
+            height: 220px;
+            background: rgba(251, 191, 36, 0.18);
+            left: -86px;
+            bottom: -70px;
+            z-index: -1;
+        }
+
+        .hero-shape {
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .hero-shape-one {
+            width: 120px;
+            height: 120px;
+            left: 48%;
+            top: 13%;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .hero-shape-two {
+            width: 86px;
+            height: 86px;
+            right: 30%;
+            bottom: 14%;
+            background: rgba(15, 23, 42, 0.12);
+        }
+
+        .hero-content {
+            max-width: 720px;
+            padding: 10px 0;
+        }
+
+        .hero h2 {
+            font-size: clamp(2.6rem, 5vw, 4.7rem);
+            letter-spacing: 0;
+            line-height: 1.02;
+        }
+
+        .hero p {
+            color: rgba(255, 255, 255, 0.90);
+            font-size: 1.12rem;
+            line-height: 1.7;
+            max-width: 610px;
+        }
+
+        .hero-actions .cta-button {
+            min-height: 50px;
+            border-radius: 12px;
+            padding: 13px 24px;
+            font-weight: 800;
+        }
+
+        .hero-visual {
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+        }
+
+        .hero-stat {
+            display: grid;
+            grid-template-columns: 44px 1fr;
+            column-gap: 14px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.90);
+            border: 1px solid rgba(255, 255, 255, 0.42);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.11);
+        }
+
+        .lp-icon {
+            width: 44px;
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            color: var(--lp-primary-dark);
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.20), rgba(20, 184, 166, 0.16));
+        }
+
+        .lp-icon svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .hero-stat strong {
+            font-family: "Poppins", "Inter", sans-serif;
+            color: var(--lp-primary-dark);
+            display: block;
+            line-height: 1.15;
+        }
+
+        .hero-stat span:not(.lp-icon) {
+            color: var(--lp-muted);
+            line-height: 1.45;
+            font-weight: 700;
+        }
+
+        section:not(.hero) {
+            border-radius: 20px;
+            border: 1px solid var(--lp-border);
+            box-shadow: var(--lp-shadow-soft);
+        }
+
+        section h3 {
+            color: var(--lp-primary-dark);
+            font-size: clamp(1.7rem, 3vw, 2.35rem);
+        }
+
+        .about-content {
+            gap: 20px;
+        }
+
+        .card {
+            position: relative;
+            background: var(--lp-surface);
+            border: 1px solid var(--lp-border);
+            border-left: 5px solid var(--lp-primary);
+            border-radius: 18px;
+            box-shadow: var(--lp-shadow-soft);
+            padding: 28px;
+        }
+
+        .card .lp-icon {
+            margin-bottom: 18px;
+            color: var(--lp-secondary);
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(245, 158, 11, 0.13));
+        }
+
+        .card h4 {
+            color: var(--lp-primary-dark);
+            font-size: 1.2rem;
+            margin-bottom: 14px;
+        }
+
+        .card p {
+            color: var(--lp-muted);
+            line-height: 1.7;
+        }
+
+        .contact {
+            background:
+                radial-gradient(circle at top right, rgba(15, 118, 110, 0.11), transparent 30%),
+                #ffffff;
+            padding: 52px 40px;
+        }
+
+        .contact p {
+            max-width: 680px;
+            margin-left: auto;
+            margin-right: auto;
+            color: var(--lp-muted);
+            line-height: 1.65;
+        }
+
+        .helpline-card {
+            border-radius: 14px;
+            border-color: #a7f3d0;
+            box-shadow: 0 10px 24px rgba(16, 185, 129, 0.08);
+            gap: 12px;
+        }
+
+        footer {
+            background: #0f172a;
+            padding: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .footer-inner {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 36px 20px 22px;
+            display: grid;
+            grid-template-columns: 1.4fr 0.8fr 1fr;
+            gap: 28px;
+            color: rgba(255, 255, 255, 0.76);
+        }
+
+        .footer-brand {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .footer-logo {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            background: #ffffff;
+            object-fit: contain;
+        }
+
+        .footer-title {
+            display: block;
+            color: #ffffff;
+            font-family: "Poppins", "Inter", sans-serif;
+            font-weight: 800;
+            margin-bottom: 3px;
+        }
+
+        .footer-column h4 {
+            color: #ffffff;
+            font-size: 0.98rem;
+            margin-bottom: 12px;
+        }
+
+        .footer-column a {
+            color: rgba(255, 255, 255, 0.74);
+            display: block;
+            margin-bottom: 9px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-column a:hover,
+        .footer-column a:focus-visible {
+            color: #ffffff;
+        }
+
+        .footer-bottom {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 18px 20px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.68);
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-weight: 600;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .hero {
+                animation: landingFadeUp 0.55s ease both;
+            }
+
+            .hero-stat,
+            .lp-icon,
+            .card {
+                transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            }
+
+            .hero-stat:hover,
+            .card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--lp-shadow);
+            }
+
+            .card:hover {
+                border-left-color: var(--lp-accent);
+            }
+
+            .hero-stat:hover .lp-icon,
+            .card:hover .lp-icon {
+                transform: scale(1.05) rotate(-2deg);
+            }
+
+            .cta-button {
+                transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+            }
+
+            .cta-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 18px 34px rgba(245, 158, 11, 0.24);
+            }
+
+            .hero-shape-one {
+                animation: floatSoft 8s ease-in-out infinite;
+            }
+
+            .hero-shape-two {
+                animation: floatSoft 10s ease-in-out infinite reverse;
+            }
+        }
+
+        @keyframes landingFadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes floatSoft {
+            0%, 100% {
+                transform: translate3d(0, 0, 0);
+            }
+            50% {
+                transform: translate3d(0, -14px, 0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 22px 16px;
+            }
+
+            nav ul li[style] {
+                margin-left: 0 !important;
+            }
+
+            .hero {
+                min-height: auto;
+                border-radius: 20px;
+                padding: 28px 20px;
+            }
+
+            .hero h2 {
+                font-size: clamp(2.05rem, 12vw, 3rem);
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .hero-actions .cta-button {
+                width: 100%;
+            }
+
+            .hero-visual {
+                padding: 14px;
+            }
+
+            .hero-stat {
+                grid-template-columns: 40px 1fr;
+                padding: 16px;
+            }
+
+            .card {
+                padding: 22px;
+            }
+
+            .contact {
+                padding: 36px 20px;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+                padding-top: 30px;
+            }
+
+            .footer-bottom {
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
     <script>
         // Check if user is logged in, otherwise redirect to registration
         window.addEventListener('load', () => {
@@ -40,6 +559,8 @@
 
     <main>
         <section class="hero">
+            <span class="hero-shape hero-shape-one" aria-hidden="true"></span>
+            <span class="hero-shape hero-shape-two" aria-hidden="true"></span>
             <div class="hero-content">
                 <h2>Welcome to Bihar Skill Intern</h2>
                 <p>Your gateway to professional skill development, guided internship activity, and verified career recognition.</p>
@@ -50,16 +571,31 @@
             </div>
             <div class="hero-visual" aria-label="Program highlights">
                 <div class="hero-stat">
-                    <strong>15 Days</strong>
-                    <span>Structured internship activity</span>
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+                    </span>
+                    <span>
+                        <strong>15 Days</strong>
+                        <span>Structured internship activity</span>
+                    </span>
                 </div>
                 <div class="hero-stat">
-                    <strong>Course Based</strong>
-                    <span>Learning, quiz, report and certificate flow</span>
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M8 7h8"/><path d="M8 11h6"/></svg>
+                    </span>
+                    <span>
+                        <strong>Course Based</strong>
+                        <span>Learning, quiz, report and certificate flow</span>
+                    </span>
                 </div>
                 <div class="hero-stat">
-                    <strong>Verified</strong>
-                    <span>Admin monitored student progress</span>
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/><path d="M21 12a9 9 0 1 1-3-6.7"/></svg>
+                    </span>
+                    <span>
+                        <strong>Verified</strong>
+                        <span>Admin monitored student progress</span>
+                    </span>
                 </div>
             </div>
         </section>
@@ -68,14 +604,23 @@
             <h3>About The Program</h3>
             <div class="about-content">
                 <div class="card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 6v12"/><path d="M6 12h12"/><path d="M4 19.5V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-1.5z"/></svg>
+                    </span>
                     <h4>Industry-Focused Learning</h4>
                     <p>Students can enroll in skill-based internship tracks designed to build practical knowledge and career confidence.</p>
                 </div>
                 <div class="card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>
+                    </span>
                     <h4>Verified Student Journey</h4>
                     <p>The portal supports registration, course progress, attendance, marksheet access, and certificate generation in one place.</p>
                 </div>
                 <div class="card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/><path d="m15 5 3 3"/></svg>
+                    </span>
                     <h4>Admin Management</h4>
                     <p>Administrators can review learners, manage courses, and monitor platform activity from the dashboard.</p>
                 </div>
@@ -94,7 +639,34 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 Bihar Skill Intern. All rights reserved.</p>
+        <div class="footer-inner">
+            <div class="footer-column">
+                <div class="footer-brand">
+                    <img src="logo.png" alt="Bihar Skill Intern Logo" class="footer-logo">
+                    <div>
+                        <span class="footer-title">Bihar Skill Intern</span>
+                        <span>Professional Internship Certification Program</span>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Quick Links</h4>
+                <a href="index.html">Home</a>
+                <a href="POSK.html">Certificate</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="footer-column">
+                <h4>Contact</h4>
+                <a href="https://wa.me/917079952655" target="_blank" rel="noopener">WhatsApp: +91 70799 52655</a>
+                <a href="login.html">Student Login</a>
+                <a href="admin-login.html">Admin Panel</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>&copy; 2026 Bihar Skill Intern. All rights reserved.</span>
+            <span>Version 1.0 Stable Baseline</span>
+        </div>
     </footer>
 </body>
 </html>
