@@ -233,6 +233,38 @@
             font-weight: 800;
         }
 
+        .hero-trust-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .hero-trust-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            color: #ffffff;
+            font-weight: 800;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .hero-trust-badge svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            stroke-width: 2.4;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
         .hero-visual {
             border-radius: 22px;
             background: rgba(255, 255, 255, 0.16);
@@ -328,6 +360,589 @@
             line-height: 1.7;
         }
 
+        .section-kicker {
+            color: var(--lp-secondary);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.78rem;
+            margin-bottom: 10px;
+        }
+
+        .section-subtitle {
+            color: var(--lp-muted);
+            max-width: 720px;
+            margin: 10px auto 0;
+            line-height: 1.7;
+            font-weight: 600;
+        }
+
+        .timeline-section,
+        .certificate-showcase,
+        .why-section,
+        .stats-section,
+        .success-section,
+        .partners-section,
+        .faq-section,
+        .final-cta {
+            background: rgba(255, 255, 255, 0.92);
+            padding: 56px 40px;
+            margin-top: 34px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 34px;
+        }
+
+        .platform-stat-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 185px;
+            padding: 24px;
+            border-radius: 20px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #1e40af, #2563eb 52%, #0f766e);
+            box-shadow: 0 22px 48px rgba(37, 99, 235, 0.22);
+            isolation: isolate;
+        }
+
+        .platform-stat-card:nth-child(2) {
+            background: linear-gradient(135deg, #0f766e, #14b8a6 54%, #2563eb);
+        }
+
+        .platform-stat-card:nth-child(3) {
+            background: linear-gradient(135deg, #1d4ed8, #0f766e 58%, #22c55e);
+        }
+
+        .platform-stat-card:nth-child(4) {
+            background: linear-gradient(135deg, #0f172a, #1e40af 56%, #14b8a6);
+        }
+
+        .platform-stat-card::before {
+            content: "";
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            right: -44px;
+            top: -42px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            z-index: -1;
+        }
+
+        .platform-stat-card .lp-icon {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            margin-bottom: 22px;
+        }
+
+        .stat-number-large {
+            display: block;
+            font-family: "Poppins", "Inter", sans-serif;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .platform-stat-card p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.86);
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .timeline-section {
+            overflow: hidden;
+        }
+
+        .timeline {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 38px;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 8%;
+            right: 8%;
+            top: 33px;
+            height: 4px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--lp-primary), var(--lp-secondary));
+            transform-origin: left center;
+            opacity: 0.24;
+        }
+
+        .timeline-step {
+            position: relative;
+            z-index: 1;
+            padding: 22px 18px;
+            min-height: 190px;
+            border-radius: 18px;
+            border: 1px solid rgba(226, 232, 240, 0.86);
+            background: rgba(255, 255, 255, 0.78);
+            box-shadow: var(--lp-shadow-soft);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .timeline-number {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            color: #cbd5e1;
+            font-family: "Poppins", "Inter", sans-serif;
+            font-weight: 900;
+            font-size: 1.45rem;
+        }
+
+        .timeline-step .lp-icon {
+            margin-bottom: 18px;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--lp-primary), var(--lp-secondary));
+            box-shadow: 0 14px 28px rgba(37, 99, 235, 0.22);
+        }
+
+        .timeline-step h4,
+        .choose-card h4 {
+            color: var(--lp-primary-dark);
+            font-size: 1.04rem;
+            margin-bottom: 10px;
+        }
+
+        .timeline-step p,
+        .choose-card p,
+        .certificate-copy p {
+            color: var(--lp-muted);
+            line-height: 1.65;
+            font-weight: 600;
+        }
+
+        .certificate-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+            gap: 34px;
+            align-items: center;
+            margin-top: 34px;
+        }
+
+        .certificate-mockup {
+            position: relative;
+            min-height: 390px;
+            padding: 34px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at 15% 12%, rgba(255, 255, 255, 0.85), transparent 20%) padding-box,
+                linear-gradient(#ffffff, #ffffff) padding-box,
+                linear-gradient(135deg, rgba(37, 99, 235, 0.55), rgba(20, 184, 166, 0.55)) border-box;
+            border: 1px solid transparent;
+            box-shadow: 0 28px 70px rgba(15, 23, 42, 0.14);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .certificate-paper {
+            min-height: 320px;
+            border: 2px solid #dbeafe;
+            border-radius: 18px;
+            padding: 34px;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.08), transparent 24%),
+                radial-gradient(circle at 88% 82%, rgba(20, 184, 166, 0.10), transparent 28%),
+                #ffffff;
+            text-align: center;
+        }
+
+        .certificate-seal {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 18px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--lp-primary), var(--lp-secondary));
+            box-shadow: 0 14px 32px rgba(37, 99, 235, 0.24);
+        }
+
+        .certificate-seal svg {
+            width: 34px;
+            height: 34px;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .certificate-paper h4 {
+            color: var(--lp-primary-dark);
+            font-size: clamp(1.55rem, 3vw, 2.25rem);
+            margin-bottom: 10px;
+        }
+
+        .certificate-line {
+            width: min(360px, 80%);
+            height: 1px;
+            background: #cbd5e1;
+            margin: 26px auto 16px;
+        }
+
+        .qr-badge {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 16px;
+            padding: 12px 14px;
+            color: var(--lp-primary-dark);
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid #dbeafe;
+            box-shadow: var(--lp-shadow-soft);
+            font-weight: 800;
+        }
+
+        .certificate-meta-badges {
+            position: absolute;
+            left: 24px;
+            bottom: 24px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .certificate-meta-badges span,
+        .verified-stamp {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: max-content;
+            max-width: 220px;
+            padding: 9px 12px;
+            border-radius: 999px;
+            color: var(--lp-primary-dark);
+            background: rgba(239, 246, 255, 0.92);
+            border: 1px solid #bfdbfe;
+            font-weight: 900;
+            font-size: 0.84rem;
+        }
+
+        .verified-stamp {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: #047857;
+            background: rgba(209, 250, 229, 0.90);
+            border-color: #a7f3d0;
+            transform: rotate(4deg);
+        }
+
+        .qr-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background:
+                linear-gradient(90deg, #0f172a 8px, transparent 8px) 0 0 / 14px 14px,
+                linear-gradient(#0f172a 8px, transparent 8px) 0 0 / 14px 14px,
+                #ffffff;
+            border: 1px solid #cbd5e1;
+        }
+
+        .feature-list {
+            display: grid;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .feature-list span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--lp-ink);
+            font-weight: 800;
+        }
+
+        .feature-list span::before {
+            content: "\2713";
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            color: #ffffff;
+            background: var(--lp-secondary);
+            font-size: 0.85rem;
+        }
+
+        .section-link-btn,
+        .section-link-btn.secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 22px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 900;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--lp-primary), var(--lp-secondary));
+            box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
+        }
+
+        .section-link-btn.secondary {
+            color: var(--lp-primary-dark);
+            background: #ffffff;
+            border: 1px solid #bfdbfe;
+        }
+
+        .choose-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            margin-top: 34px;
+        }
+
+        .choose-card {
+            position: relative;
+            padding: 26px;
+            border-radius: 18px;
+            border: 1px solid var(--lp-border);
+            background: #ffffff;
+            box-shadow: var(--lp-shadow-soft);
+        }
+
+        .choose-card .lp-icon {
+            margin-bottom: 18px;
+            color: var(--lp-primary);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            margin-top: 34px;
+        }
+
+        .testimonial-card {
+            position: relative;
+            padding: 24px;
+            border-radius: 18px;
+            background: #ffffff;
+            border: 1px solid var(--lp-border);
+            box-shadow: var(--lp-shadow-soft);
+        }
+
+        .testimonial-top {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .avatar-circle {
+            width: 52px;
+            height: 52px;
+            flex: 0 0 52px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--lp-primary), var(--lp-secondary));
+            font-family: "Poppins", "Inter", sans-serif;
+            font-weight: 900;
+            box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18);
+        }
+
+        .testimonial-card h4 {
+            color: var(--lp-primary-dark);
+            margin: 0 0 3px;
+            font-size: 1.02rem;
+        }
+
+        .testimonial-city {
+            color: var(--lp-muted);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .stars {
+            color: #f59e0b;
+            letter-spacing: 0.04em;
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .testimonial-card p {
+            color: var(--lp-muted);
+            line-height: 1.7;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .partners-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 34px;
+        }
+
+        .partner-card {
+            min-height: 132px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            gap: 10px;
+            padding: 20px 16px;
+            border-radius: 18px;
+            background: #ffffff;
+            border: 1px solid var(--lp-border);
+            box-shadow: var(--lp-shadow-soft);
+            color: var(--lp-primary-dark);
+            font-family: "Poppins", "Inter", sans-serif;
+            font-weight: 800;
+        }
+
+        .partner-card .lp-icon {
+            color: var(--lp-secondary);
+        }
+
+        .faq-list {
+            display: grid;
+            gap: 14px;
+            margin-top: 32px;
+        }
+
+        .faq-item {
+            border: 1px solid var(--lp-border);
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .faq-item summary {
+            cursor: pointer;
+            list-style: none;
+            padding: 20px 24px;
+            color: var(--lp-primary-dark);
+            font-family: "Poppins", "Inter", sans-serif;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .faq-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .faq-item summary::after {
+            content: "+";
+            color: var(--lp-secondary);
+            font-size: 1.35rem;
+            line-height: 1;
+        }
+
+        .faq-item[open] summary::after {
+            content: "-";
+        }
+
+        .faq-item p {
+            margin: 0;
+            padding: 0 24px 22px;
+            color: var(--lp-muted);
+            line-height: 1.7;
+            font-weight: 600;
+        }
+
+        .final-cta {
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            color: #ffffff;
+            background:
+                radial-gradient(circle at 14% 22%, rgba(255, 255, 255, 0.18), transparent 24%),
+                linear-gradient(135deg, #1e40af 0%, #2563eb 48%, #0f766e 100%);
+            border-color: rgba(255, 255, 255, 0.22);
+            box-shadow: 0 28px 70px rgba(30, 64, 175, 0.24);
+        }
+
+        .final-cta h3 {
+            color: #ffffff;
+            font-size: clamp(2rem, 4vw, 3.4rem);
+        }
+
+        .final-cta p {
+            max-width: 680px;
+            margin: 12px auto 26px;
+            color: rgba(255, 255, 255, 0.84);
+            line-height: 1.7;
+            font-weight: 600;
+        }
+
+        .final-cta-actions {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 80;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .whatsapp-bubble {
+            display: grid;
+            gap: 2px;
+            padding: 10px 13px;
+            border-radius: 14px;
+            color: var(--lp-ink);
+            background: #ffffff;
+            border: 1px solid #bbf7d0;
+            box-shadow: var(--lp-shadow-soft);
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .whatsapp-bubble small {
+            color: var(--lp-secondary);
+            font-weight: 900;
+        }
+
+        .whatsapp-circle {
+            width: 58px;
+            height: 58px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            color: #ffffff;
+            background: #16a34a;
+            box-shadow: 0 16px 34px rgba(22, 163, 74, 0.32);
+        }
+
+        .whatsapp-circle svg {
+            width: 29px;
+            height: 29px;
+            fill: currentColor;
+        }
+
         .contact {
             background:
                 radial-gradient(circle at top right, rgba(15, 118, 110, 0.11), transparent 30%),
@@ -361,7 +976,7 @@
             margin: 0 auto;
             padding: 36px 20px 22px;
             display: grid;
-            grid-template-columns: 1.4fr 0.8fr 1fr;
+            grid-template-columns: 1.4fr repeat(4, minmax(0, 0.75fr));
             gap: 28px;
             color: rgba(255, 255, 255, 0.76);
         }
@@ -427,12 +1042,28 @@
 
             .hero-stat,
             .lp-icon,
-            .card {
+            .card,
+            .timeline-step,
+            .choose-card,
+            .platform-stat-card,
+            .testimonial-card,
+            .partner-card,
+            .certificate-mockup,
+            .faq-item,
+            .section-link-btn,
+            .whatsapp-float {
                 transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
             }
 
             .hero-stat:hover,
-            .card:hover {
+            .card:hover,
+            .timeline-step:hover,
+            .choose-card:hover,
+            .platform-stat-card:hover,
+            .testimonial-card:hover,
+            .partner-card:hover,
+            .certificate-mockup:hover,
+            .faq-item:hover {
                 transform: translateY(-4px);
                 box-shadow: var(--lp-shadow);
             }
@@ -453,6 +1084,56 @@
             .cta-button:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 18px 34px rgba(245, 158, 11, 0.24);
+            }
+
+            .section-link-btn:hover,
+            .section-link-btn:focus-visible {
+                transform: translateY(-2px);
+                box-shadow: 0 20px 38px rgba(37, 99, 235, 0.25);
+            }
+
+            .timeline::before {
+                animation: timelineLine 1.6s ease both;
+            }
+
+            .timeline-step,
+            .certificate-grid,
+            .choose-card,
+            .platform-stat-card,
+            .testimonial-card,
+            .partner-card,
+            .faq-item,
+            .final-cta {
+                animation: landingFadeUp 0.55s ease both;
+            }
+
+            .choose-card:nth-child(2),
+            .timeline-step:nth-child(2) {
+                animation-delay: 0.04s;
+            }
+
+            .choose-card:nth-child(3),
+            .timeline-step:nth-child(3) {
+                animation-delay: 0.08s;
+            }
+
+            .choose-card:nth-child(4),
+            .timeline-step:nth-child(4) {
+                animation-delay: 0.12s;
+            }
+
+            .choose-card:nth-child(5),
+            .timeline-step:nth-child(5) {
+                animation-delay: 0.16s;
+            }
+
+            .choose-card:nth-child(6) {
+                animation-delay: 0.20s;
+            }
+
+            .whatsapp-float:hover,
+            .whatsapp-float:focus-visible {
+                transform: translateY(-3px);
             }
 
             .hero-shape-one {
@@ -484,19 +1165,94 @@
             }
         }
 
+        @keyframes timelineLine {
+            from {
+                transform: scaleX(0);
+            }
+            to {
+                transform: scaleX(1);
+            }
+        }
+
         @media (max-width: 768px) {
             header {
-                padding: 22px 16px;
+                padding: 12px 14px 10px;
+            }
+
+            .site-logo {
+                width: min(62px, 20vw);
+                border-radius: 14px;
+            }
+
+            .header-container {
+                gap: 4px;
+            }
+
+            .header-container h1 {
+                font-size: clamp(1.2rem, 6vw, 1.65rem);
+                line-height: 1.1;
+            }
+
+            .tagline {
+                font-size: 0.68rem;
+            }
+
+            nav {
+                padding: 4px 6px;
+            }
+
+            nav ul {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                max-width: 100%;
+                overflow-x: hidden;
             }
 
             nav ul li[style] {
                 margin-left: 0 !important;
             }
 
+            nav ul li {
+                flex: 0 1 auto;
+            }
+
+            nav ul li a,
+            nav ul li a.nav-admin {
+                min-height: 28px;
+                padding: 6px 7px;
+                font-size: 0.68rem;
+                line-height: 1;
+                white-space: nowrap;
+                border-radius: 8px;
+            }
+
+            nav ul li a.nav-admin {
+                font-size: 0;
+            }
+
+            nav ul li a.nav-admin::before {
+                font-size: 0.68rem;
+            }
+
+            nav ul li a::after {
+                left: 8px;
+                right: 8px;
+                bottom: 2px;
+                height: 2px;
+            }
+
+            main {
+                padding-top: 8px;
+            }
+
             .hero {
                 min-height: auto;
                 border-radius: 20px;
-                padding: 28px 20px;
+                margin-top: 0;
+                padding: 18px 20px 24px;
             }
 
             .hero h2 {
@@ -524,6 +1280,128 @@
                 padding: 22px;
             }
 
+            .timeline-section,
+            .certificate-showcase,
+            .why-section,
+            .stats-section,
+            .success-section,
+            .partners-section,
+            .faq-section,
+            .final-cta {
+                padding: 36px 20px;
+                margin-top: 24px;
+            }
+
+            .hero-trust-badges {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .hero-trust-badge {
+                justify-content: center;
+            }
+
+            .stats-grid,
+            .testimonials-grid,
+            .partners-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .timeline::before {
+                left: 40px;
+                right: auto;
+                top: 22px;
+                bottom: 22px;
+                width: 4px;
+                height: auto;
+                transform-origin: top center;
+            }
+
+            .timeline-step {
+                min-height: auto;
+                padding: 20px 20px 20px 78px;
+            }
+
+            .timeline-step .lp-icon {
+                position: absolute;
+                left: 18px;
+                top: 20px;
+            }
+
+            .certificate-grid,
+            .choose-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .certificate-mockup,
+            .certificate-paper {
+                min-height: auto;
+            }
+
+            .certificate-mockup {
+                padding: 18px;
+            }
+
+            .certificate-paper {
+                padding: 26px 18px 156px;
+            }
+
+            .qr-badge {
+                left: 28px;
+                right: 28px;
+                justify-content: center;
+            }
+
+            .certificate-meta-badges {
+                left: 28px;
+                right: 28px;
+                bottom: 82px;
+            }
+
+            .certificate-meta-badges span,
+            .verified-stamp {
+                width: auto;
+                max-width: none;
+                justify-content: center;
+            }
+
+            .verified-stamp {
+                top: 18px;
+                right: 18px;
+                transform: none;
+            }
+
+            .faq-item summary {
+                padding: 18px;
+            }
+
+            .faq-item p {
+                padding: 0 18px 18px;
+            }
+
+            .final-cta-actions .section-link-btn {
+                width: 100%;
+            }
+
+            .whatsapp-float {
+                right: 14px;
+                bottom: 14px;
+            }
+
+            .whatsapp-bubble {
+                display: none;
+            }
+
+            .whatsapp-circle {
+                width: 54px;
+                height: 54px;
+            }
+
             .contact {
                 padding: 36px 20px;
             }
@@ -536,6 +1414,22 @@
             .footer-bottom {
                 display: block;
                 text-align: center;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .stats-grid,
+            .partners-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .testimonials-grid,
+            .choose-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .footer-inner {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
     </style>
@@ -582,6 +1476,12 @@
                     <button onclick="window.location.href='register.html'" class="cta-button">Register Now</button>
                     <button onclick="window.location.href='login.html'" class="cta-button" style="background:#ffffff;color:#1e3a8a;box-shadow:0 14px 26px rgba(15,23,42,0.18);">Student Login</button>
                 </div>
+                <div class="hero-trust-badges" aria-label="Platform trust highlights">
+                    <span class="hero-trust-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Verified Certificate</span>
+                    <span class="hero-trust-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>Industry Ready Skills</span>
+                    <span class="hero-trust-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-1.5z"/><path d="M8 7h8"/><path d="M8 11h6"/></svg>Internship Based Learning</span>
+                    <span class="hero-trust-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 8h8"/><path d="M8 12h5"/><path d="M8 16h8"/></svg>Student Dashboard Access</span>
+                </div>
             </div>
             <div class="hero-visual" aria-label="Program highlights">
                 <div class="hero-stat">
@@ -611,6 +1511,271 @@
                         <span>Admin monitored student progress</span>
                     </span>
                 </div>
+            </div>
+        </section>
+
+        <section class="stats-section" aria-labelledby="stats-title">
+            <div class="section-kicker">Platform impact</div>
+            <h3 id="stats-title">Platform Statistics</h3>
+            <p class="section-subtitle">Trusted by students and academic communities for structured internship learning.</p>
+            <div class="stats-grid">
+                <article class="platform-stat-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M2 21v-2a4 4 0 0 1 3-3.87"/></svg>
+                    </span>
+                    <span class="stat-number-large">12,500+</span>
+                    <p>Students Registered</p>
+                </article>
+                <article class="platform-stat-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M9 7h6"/><path d="M9 11h6"/></svg>
+                    </span>
+                    <span class="stat-number-large">50+</span>
+                    <p>Industry Ready Courses</p>
+                </article>
+                <article class="platform-stat-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/><path d="M21 12a9 9 0 1 1-3-6.7"/></svg>
+                    </span>
+                    <span class="stat-number-large">98%</span>
+                    <p>Completion Rate</p>
+                </article>
+                <article class="platform-stat-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-8h6v8"/></svg>
+                    </span>
+                    <span class="stat-number-large">120+</span>
+                    <p>College Participants</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="timeline-section" aria-labelledby="how-it-works-title">
+            <div class="section-kicker">Simple process</div>
+            <h3 id="how-it-works-title">How Bihar Skill Intern Works</h3>
+            <p class="section-subtitle">Complete your internship in 5 simple steps</p>
+            <div class="timeline">
+                <article class="timeline-step">
+                    <span class="timeline-number">01</span>
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+                    </span>
+                    <h4>Register Your Account</h4>
+                    <p>Create your student profile and complete the required registration details.</p>
+                </article>
+                <article class="timeline-step">
+                    <span class="timeline-number">02</span>
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M9 7h6"/><path d="M9 11h6"/></svg>
+                    </span>
+                    <h4>Choose Your Internship Program</h4>
+                    <p>Select a skill-based internship track that matches your career goals.</p>
+                </article>
+                <article class="timeline-step">
+                    <span class="timeline-number">03</span>
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/><path d="m15 5 3 3"/></svg>
+                    </span>
+                    <h4>Complete Training &amp; Assignments</h4>
+                    <p>Study the course material, complete activities, and build practical confidence.</p>
+                </article>
+                <article class="timeline-step">
+                    <span class="timeline-number">04</span>
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 15h6"/><path d="M9 18h4"/></svg>
+                    </span>
+                    <h4>Submit Internship Report</h4>
+                    <p>Generate and submit your internship report with the required activity proof.</p>
+                </article>
+                <article class="timeline-step">
+                    <span class="timeline-number">05</span>
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 15 8.5 11.5 10 10l2 2 4-4 1.5 1.5Z"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+                    </span>
+                    <h4>Download Verified Certificate</h4>
+                    <p>Access your digitally verifiable certificate after successful completion.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="certificate-showcase" aria-labelledby="certificate-showcase-title">
+            <div class="section-kicker">Certificate proof</div>
+            <h3 id="certificate-showcase-title">Verified Internship Certificate</h3>
+            <p class="section-subtitle">Every successfully completed internship includes a professionally verifiable certificate.</p>
+            <div class="certificate-grid">
+                <div class="certificate-mockup" aria-label="Certificate preview">
+                    <div class="certificate-paper">
+                        <span class="verified-stamp">Verified Stamp</span>
+                        <div class="certificate-seal" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/><path d="M21 12a9 9 0 1 1-3-6.7"/></svg>
+                        </div>
+                        <h4>Certificate of Internship</h4>
+                        <p>Presented to the student for successfully completing the selected professional internship program.</p>
+                        <div class="certificate-line"></div>
+                        <p><strong>Bihar Skill Intern</strong></p>
+                    </div>
+                    <div class="certificate-meta-badges">
+                        <span>Lifetime Verification</span>
+                        <span>Digital Certificate</span>
+                        <span>Unique Certificate ID</span>
+                    </div>
+                    <div class="qr-badge">
+                        <span class="qr-mark" aria-hidden="true"></span>
+                        <span>QR Verification</span>
+                    </div>
+                </div>
+                <div class="certificate-copy">
+                    <h4>Professional certificate, easy verification</h4>
+                    <p>Certificates are designed for clear digital verification, student records, and long-term access after completion.</p>
+                    <div class="feature-list">
+                        <span>QR Verified</span>
+                        <span>Digital Certificate</span>
+                        <span>Easy Verification</span>
+                        <span>Lifetime Access</span>
+                    </div>
+                    <a href="POSK.html" class="section-link-btn">Verify Certificate</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="success-section" aria-labelledby="success-title">
+            <div class="section-kicker">Student voices</div>
+            <h3 id="success-title">Student Success Stories</h3>
+            <p class="section-subtitle">Learners across Bihar use the platform to complete internships, organize reports, and access certificates.</p>
+            <div class="testimonials-grid">
+                <article class="testimonial-card">
+                    <div class="testimonial-top"><span class="avatar-circle">PD</span><div><h4>Prince Dalal</h4><span class="testimonial-city">Patna</span></div></div>
+                    <div class="stars" aria-label="5 stars">★★★★★</div>
+                    <p>"The internship process was smooth and I received my certificate quickly."</p>
+                </article>
+                <article class="testimonial-card">
+                    <div class="testimonial-top"><span class="avatar-circle">PK</span><div><h4>Priya Kumari</h4><span class="testimonial-city">Ara</span></div></div>
+                    <div class="stars" aria-label="5 stars">★★★★★</div>
+                    <p>"The dashboard made it easy to track learning, report work, and course progress."</p>
+                </article>
+                <article class="testimonial-card">
+                    <div class="testimonial-top"><span class="avatar-circle">AS</span><div><h4>Aman Singh</h4><span class="testimonial-city">Buxar</span></div></div>
+                    <div class="stars" aria-label="5 stars">★★★★★</div>
+                    <p>"I liked the simple course flow and the verified certificate option."</p>
+                </article>
+                <article class="testimonial-card">
+                    <div class="testimonial-top"><span class="avatar-circle">NK</span><div><h4>Neha Kumari</h4><span class="testimonial-city">Gaya</span></div></div>
+                    <div class="stars" aria-label="5 stars">★★★★★</div>
+                    <p>"The report and certificate pages helped me keep my internship records organized."</p>
+                </article>
+                <article class="testimonial-card">
+                    <div class="testimonial-top"><span class="avatar-circle">AR</span><div><h4>Aditya Raj</h4><span class="testimonial-city">Muzaffarpur</span></div></div>
+                    <div class="stars" aria-label="5 stars">★★★★★</div>
+                    <p>"The platform felt professional and useful for building career-ready skills."</p>
+                </article>
+                <article class="testimonial-card">
+                    <div class="testimonial-top"><span class="avatar-circle">SK</span><div><h4>Sneha Kumari</h4><span class="testimonial-city">Bhagalpur</span></div></div>
+                    <div class="stars" aria-label="5 stars">★★★★★</div>
+                    <p>"I completed the internship online and could access my certificate without confusion."</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="partners-section" aria-labelledby="partners-title">
+            <div class="section-kicker">Trusted ecosystem</div>
+            <h3 id="partners-title">Partner / Trusted By</h3>
+            <p class="section-subtitle">Placeholder cards for institutional, learning, and skill-development trust categories.</p>
+            <div class="partners-grid">
+                <div class="partner-card"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-8h6v8"/></svg></span>University</div>
+                <div class="partner-card"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M7 21V9h10v12"/><path d="M9 9V5h6v4"/></svg></span>Industry</div>
+                <div class="partner-card"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M4 12h16"/></svg></span>Skill Development</div>
+                <div class="partner-card"><span class="lp-icon" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 18v3"/></svg></span>Digital Learning</div>
+                <div class="partner-card"><span class="lp-icon" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="M5 10v6c2 2 12 2 14 0v-6"/></svg></span>Government Initiative</div>
+            </div>
+        </section>
+
+        <section class="why-section" aria-labelledby="why-title">
+            <div class="section-kicker">Student advantage</div>
+            <h3 id="why-title">Why Choose Bihar Skill Intern</h3>
+            <p class="section-subtitle">A focused platform for learning, activity tracking, reporting, and verified internship completion.</p>
+            <div class="choose-grid">
+                <article class="choose-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M3 7h18"/><path d="M5 7v12h14V7"/><path d="M9 11h6"/><path d="M9 15h4"/></svg>
+                    </span>
+                    <h4>Industry Based Learning</h4>
+                    <p>Programs are structured around practical skills students can use in career preparation.</p>
+                </article>
+                <article class="choose-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 2v6"/><path d="m16 6-4 4-4-4"/><path d="M4 14h16"/><path d="M6 18h12"/></svg>
+                    </span>
+                    <h4>Practical Projects</h4>
+                    <p>Learning flows include activity, report, quiz, and completion records for real progress.</p>
+                </article>
+                <article class="choose-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                    </span>
+                    <h4>Verified Certificate</h4>
+                    <p>Completed internships can generate a clean certificate with verification support.</p>
+                </article>
+                <article class="choose-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    </span>
+                    <h4>Flexible Learning</h4>
+                    <p>Students can complete their learning journey online with a clear dashboard flow.</p>
+                </article>
+                <article class="choose-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>
+                    </span>
+                    <h4>Career Skill Development</h4>
+                    <p>Each program is intended to improve confidence, employability, and professional readiness.</p>
+                </article>
+                <article class="choose-card">
+                    <span class="lp-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
+                    </span>
+                    <h4>Student Support</h4>
+                    <p>Students have a clear contact path and organized dashboard access throughout the program.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="faq-section" aria-labelledby="faq-title">
+            <div class="section-kicker">Common questions</div>
+            <h3 id="faq-title">Frequently Asked Questions</h3>
+            <div class="faq-list">
+                <details class="faq-item">
+                    <summary>Who can apply?</summary>
+                    <p>Students who want to complete a structured skill-based internship program can apply through the registration page.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is the internship duration?</summary>
+                    <p>The platform supports a structured internship activity flow with course learning, assignments, report generation, and certificate access.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>How do I receive my certificate?</summary>
+                    <p>After completing the required course activities and eligibility flow, students can download their certificate from the dashboard.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Is the certificate verified?</summary>
+                    <p>Yes. The certificate flow includes verification support so the certificate can be checked digitally.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Can I complete it online?</summary>
+                    <p>Yes. The learning, activity, report, and certificate journey is available through the online student dashboard.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>How do I verify my certificate?</summary>
+                    <p>Use the certificate verification option and follow the existing certificate page flow to confirm certificate details.</p>
+                </details>
+            </div>
+        </section>
+
+        <section class="final-cta" aria-labelledby="final-cta-title">
+            <h3 id="final-cta-title">Ready to Build Your Career?</h3>
+            <p>Join Bihar Skill Intern today and start your professional learning journey.</p>
+            <div class="final-cta-actions">
+                <a href="register.html" class="section-link-btn">Register Now</a>
+                <a href="login.html" class="section-link-btn secondary">Login</a>
             </div>
         </section>
 
@@ -652,6 +1817,13 @@
         </section>
     </main>
 
+    <a class="whatsapp-float" href="https://wa.me/917079952655" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
+        <span class="whatsapp-bubble"><span>Need Help?</span><small>Chat on WhatsApp</small></span>
+        <span class="whatsapp-circle" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><path d="M16.04 3.2A12.67 12.67 0 0 0 5.1 22.3L3.6 28.8l6.65-1.56A12.67 12.67 0 1 0 16.04 3.2Zm0 22.9a10.1 10.1 0 0 1-5.13-1.4l-.37-.22-3.94.92.9-3.85-.24-.4a10.08 10.08 0 1 1 8.78 4.95Zm5.75-7.56c-.31-.16-1.86-.92-2.15-1.02-.29-.11-.5-.16-.7.16-.2.31-.81 1.02-.99 1.23-.18.2-.36.23-.67.08-.31-.16-1.31-.48-2.5-1.54-.92-.82-1.55-1.84-1.73-2.15-.18-.31-.02-.48.14-.63.14-.14.31-.36.47-.54.16-.18.21-.31.31-.52.1-.2.05-.39-.03-.54-.08-.16-.7-1.69-.96-2.31-.25-.6-.51-.52-.7-.53h-.6c-.2 0-.54.08-.82.39-.29.31-1.08 1.06-1.08 2.58s1.11 2.99 1.26 3.2c.16.2 2.18 3.33 5.28 4.67.74.32 1.31.51 1.76.65.74.23 1.41.2 1.94.12.59-.09 1.86-.76 2.12-1.49.26-.73.26-1.36.18-1.49-.08-.13-.29-.21-.6-.36Z"/></svg>
+        </span>
+    </a>
+
     <footer>
         <div class="footer-inner">
             <div class="footer-column">
@@ -671,10 +1843,29 @@
                 <a href="#contact">Contact</a>
             </div>
             <div class="footer-column">
+                <h4>Courses</h4>
+                <a href="courses.html">Student Dashboard</a>
+                <a href="course-learning.html">Course Learning</a>
+                <a href="report.html">Internship Report</a>
+                <a href="marksheet.html">Marksheet</a>
+            </div>
+            <div class="footer-column">
+                <h4>Certificate Verification</h4>
+                <a href="POSK.html">Verify Certificate</a>
+                <a href="certificate.html">Certificate</a>
+                <a href="registration-documents.html">Registration Documents</a>
+                <a href="payment-receipt.html">Payment Receipt</a>
+            </div>
+            <div class="footer-column">
                 <h4>Contact</h4>
                 <a href="https://wa.me/917079952655" target="_blank" rel="noopener">WhatsApp: +91 70799 52655</a>
+                <a href="mailto:support@biharskillinterns.in">Email: support@biharskillinterns.in</a>
                 <a href="login.html">Student Login</a>
                 <a href="admin-login.html">Admin Panel</a>
+                <a href="forgot-password.html">Support</a>
+                <a href="index.html">Privacy Policy</a>
+                <a href="index.html">Terms &amp; Conditions</a>
+                <a href="index.html">Refund Policy</a>
             </div>
         </div>
         <div class="footer-bottom">
