@@ -613,7 +613,8 @@ router.post('/reset-password-by-details', async (req, res) => {
 // Admin Registration
 router.post('/admin/register', validateAdminRegistration, async (req, res) => {
     try {
-        const { email, password, fullName, setupKey } = req.body;
+        const { password, fullName, setupKey } = req.body;
+        const email = String(req.body.email || '').trim().toLowerCase();
         
         const connection = await req.db.getConnection();
 
@@ -675,7 +676,8 @@ router.post('/admin/register', validateAdminRegistration, async (req, res) => {
 // Admin Login
 router.post('/admin/login', validateLogin, async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { password } = req.body;
+        const email = String(req.body.email || '').trim().toLowerCase();
         
         const connection = await req.db.getConnection();
         const [admins] = await connection.query('SELECT * FROM admins WHERE email = ?', [email]);

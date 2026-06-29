@@ -518,6 +518,47 @@
             };
         }
 
+        function getApiBaseUrlForDisplay() {
+            try {
+                if (typeof API_BASE_URL !== 'undefined') return API_BASE_URL;
+            } catch (error) {
+                return 'API config unavailable';
+            }
+            return 'API config unavailable';
+        }
+
+        function getAdminLoginErrorMessage(error) {
+            const apiBase = getApiBaseUrlForDisplay();
+            const status = error && error.status;
+            const rawMessage = String((error && error.message) || '').trim();
+
+            if (status === 401) {
+                return 'Invalid admin email or password. Create this admin on the live server, or reset the live admin password.';
+            }
+
+            if (status === 403) {
+                return 'Admin access is blocked by server settings. Check ADMIN_REGISTRATION_KEY and admin role setup.';
+            }
+
+            if (status === 422 || status === 400) {
+                return rawMessage || 'Please enter a valid admin email and password.';
+            }
+
+            if (status === 503) {
+                return rawMessage || 'Backend database is starting. Wait a minute and try again.';
+            }
+
+            if (rawMessage === 'API request timed out') {
+                return `Backend took too long to respond. API: ${apiBase}`;
+            }
+
+            if (typeof APIService !== 'undefined' && APIService.isNetworkError && APIService.isNetworkError(error)) {
+                return `Cannot reach backend from this domain. Check deployed api-config.js and Render CORS FRONTEND_URLS. API: ${apiBase}`;
+            }
+
+            return `${rawMessage || 'Backend admin login failed.'} API: ${apiBase}`;
+        }
+
         window.addEventListener('load', () => {
             if (localStorage.getItem('adminRemember') === 'true') {
                 document.getElementById('adminId').value = localStorage.getItem('adminEmail') || '';
@@ -600,6 +641,13 @@
                 }
             } catch (apiError) {
                 console.warn('Backend admin login failed:', apiError.message);
+                if (!isLocalDemoMode()) {
+                    messageBox.textContent = getAdminLoginErrorMessage(apiError);
+                    messageBox.className = 'message error';
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Login as Admin';
+                    return;
+                }
             }
 
             if (!isLocalDemoMode()) {
