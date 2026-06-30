@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { addColumnIfMissing, addIndexIfMissing } = require('../utils/db');
 
 const ignoredSchemaErrors = new Set([
     'ER_TABLE_EXISTS_ERROR',
@@ -101,14 +102,16 @@ async function ensureRuntimeSchema(pool) {
             ['emergencyName', "VARCHAR(150)"],
             ['emergencyPhone', "VARCHAR(20)"],
             ['relationship', "VARCHAR(100)"],
-            ['signature', "LONGTEXT"]
+            ['signature', "LONGTEXT"],
+            ['studentCode', "VARCHAR(40) DEFAULT NULL"],
+            ['registrationId', "VARCHAR(40) DEFAULT NULL"],
+            ['profileImagePath', "VARCHAR(500) DEFAULT NULL"],
+            ['signaturePath', "VARCHAR(500) DEFAULT NULL"],
+            ['deletedAt', "TIMESTAMP NULL"]
         ];
 
         for (const [columnName, definition] of requiredStudentColumns) {
-            const [columns] = await connection.query('SHOW COLUMNS FROM students LIKE ?', [columnName]);
-            if (columns.length === 0) {
-                await connection.query(`ALTER TABLE students ADD COLUMN \`${columnName}\` ${definition}`);
-            }
+            await addColumnIfMissing(connection, 'students', columnName, definition);
         }
 
         const requiredStudentCourseColumns = [
@@ -118,10 +121,7 @@ async function ensureRuntimeSchema(pool) {
         ];
 
         for (const [columnName, definition] of requiredStudentCourseColumns) {
-            const [columns] = await connection.query('SHOW COLUMNS FROM student_courses LIKE ?', [columnName]);
-            if (columns.length === 0) {
-                await connection.query(`ALTER TABLE student_courses ADD COLUMN \`${columnName}\` ${definition}`);
-            }
+            await addColumnIfMissing(connection, 'student_courses', columnName, definition);
         }
 
         await connection.query(`
@@ -159,6 +159,15 @@ async function ensureRuntimeSchema(pool) {
             )
         `);
 
+        const pendingRegistrationColumns = [
+            ['registrationId', "VARCHAR(40) DEFAULT NULL"],
+            ['profileImagePath', "VARCHAR(500) DEFAULT NULL"],
+            ['signaturePath', "VARCHAR(500) DEFAULT NULL"]
+        ];
+        for (const [columnName, definition] of pendingRegistrationColumns) {
+            await addColumnIfMissing(connection, 'pending_registrations', columnName, definition);
+        }
+
         await connection.query(`
             CREATE TABLE IF NOT EXISTS internship_proofs (
                 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -182,6 +191,82 @@ async function ensureRuntimeSchema(pool) {
                 INDEX idx_proof_status (status)
             )
         `);
+
+        const proofColumns = [
+            ['screenshotPath', "VARCHAR(500) DEFAULT NULL"],
+            ['fileMimeType', "VARCHAR(120) DEFAULT NULL"],
+            ['fileSizeBytes', "INT DEFAULT NULL"]
+        ];
+        for (const [columnName, definition] of proofColumns) {
+            await addColumnIfMissing(connection, 'internship_proofs', columnName, definition);
+        }
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS uploaded_files (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                ownerType ENUM('student', 'admin', 'system') DEFAULT 'student',
+                ownerId INT NULL,
+                entityType VARCHAR(80) DEFAULT NULL,
+                entityId INT NULL,
+                fieldName VARCHAR(80) DEFAULT NULL,
+                originalName VARCHAR(255) DEFAULT NULL,
+                storedName VARCHAR(255) NOT NULL,
+                relativePath VARCHAR(500) NOT NULL,
+                mimeType VARCHAR(120) NOT NULL,
+                sizeBytes INT NOT NULL,
+                sha256 VARCHAR(64) NOT NULL,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_uploaded_owner (ownerType, ownerId),
+                INDEX idx_uploaded_entity (entityType, entityId),
+                INDEX idx_uploaded_sha (sha256)
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS admin_audit_logs (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                adminId INT NULL,
+                action VARCHAR(120) NOT NULL,
+                entityType VARCHAR(80) DEFAULT NULL,
+                entityId INT NULL,
+                beforeValue LONGTEXT,
+                afterValue LONGTEXT,
+                ipAddress VARCHAR(100),
+                userAgent TEXT,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_admin_audit_admin (adminId),
+                INDEX idx_admin_audit_action (action),
+                INDEX idx_admin_audit_entity (entityType, entityId),
+                INDEX idx_admin_audit_created (createdAt)
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS api_request_logs (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                method VARCHAR(10) NOT NULL,
+                path VARCHAR(500) NOT NULL,
+                statusCode INT NOT NULL,
+                durationMs DECIMAL(10, 2) NOT NULL,
+                userId INT NULL,
+                userRole VARCHAR(30) DEFAULT NULL,
+                ipAddress VARCHAR(100),
+                userAgent TEXT,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_api_logs_path (path(120)),
+                INDEX idx_api_logs_status (statusCode),
+                INDEX idx_api_logs_created (createdAt)
+            )
+        `);
+
+        await addIndexIfMissing(connection, 'students', 'idx_students_studentCode', 'CREATE INDEX idx_students_studentCode ON students (studentCode)');
+        await addIndexIfMissing(connection, 'students', 'idx_students_registrationId', 'CREATE INDEX idx_students_registrationId ON students (registrationId)');
+        await addIndexIfMissing(connection, 'students', 'idx_students_deletedAt', 'CREATE INDEX idx_students_deletedAt ON students (deletedAt)');
+        await addIndexIfMissing(connection, 'pending_registrations', 'idx_pending_registrationId', 'CREATE INDEX idx_pending_registrationId ON pending_registrations (registrationId)');
+        await addIndexIfMissing(connection, 'payments', 'idx_payments_order', 'CREATE INDEX idx_payments_order ON payments (gatewayOrderId)');
+        await addIndexIfMissing(connection, 'payments', 'idx_payments_gateway_payment', 'CREATE INDEX idx_payments_gateway_payment ON payments (gatewayPaymentId)');
+        await addIndexIfMissing(connection, 'student_courses', 'idx_student_courses_certificate', 'CREATE INDEX idx_student_courses_certificate ON student_courses (certificateNumber)');
+        await addIndexIfMissing(connection, 'internship_proofs', 'idx_proofs_student_course_date', 'CREATE INDEX idx_proofs_student_course_date ON internship_proofs (studentId, courseId, proofDate)');
 
         const defaultCourses = [
             [1, 'Skill Development', 'Comprehensive training to develop practical and technical skills for professional growth.', 50],

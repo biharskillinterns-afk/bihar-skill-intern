@@ -8,6 +8,11 @@ const pool = require('./config/database');
 const { ensureDatabaseExists, testDatabaseConnection, dbConnectionInfo } = require('./config/database');
 const { ensureSchema, ensureRuntimeSchema } = require('./config/schema');
 const paymentsRouter = require('./routes/payments');
+const requestLogger = require('./middleware/requestLogger');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { sanitizeRequestBody } = require('./utils/security');
+const { scheduleDailyBackup } = require('./utils/backup');
+const path = require('path');
 
 const app = express();
 const databaseState = {
@@ -16,9 +21,32 @@ const databaseState = {
     lastError: null,
     lastCheckedAt: null
 };
+const uploadsPath = path.join(__dirname, 'uploads');
 
 function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isEnabled(value) {
+    return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+}
+
+function shouldSkipSchemaSync() {
+    return isEnabled(process.env.SKIP_SCHEMA_SYNC);
+}
+
+function isRenderRuntime() {
+    return isEnabled(process.env.RENDER)
+        || Boolean(process.env.RENDER_EXTERNAL_URL)
+        || Boolean(process.env.RENDER_SERVICE_ID)
+        || Boolean(process.env.RENDER_INSTANCE_ID);
+}
+
+function logUploadStorageWarning() {
+    if (!isRenderRuntime()) return;
+
+    console.warn(`Uploads are currently stored on Render local filesystem: ${uploadsPath}`);
+    console.warn('Render local filesystem can be ephemeral. Use persistent disk or cloud storage for production uploads.');
 }
 
 function getPublicDatabaseError() {
@@ -77,6 +105,12 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+app.use(requestLogger);
+app.use(sanitizeRequestBody);
+app.use('/uploads', express.static(uploadsPath, {
+    maxAge: '7d',
+    immutable: true
+}));
 
 // Make pool accessible to routes
 app.use((req, res, next) => {
@@ -88,6 +122,8 @@ app.use((req, res, next) => {
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'Backend is running successfully!',
+        uptimeSeconds: Math.round(process.uptime()),
+        environment: process.env.NODE_ENV || 'development',
         database: {
             ready: databaseState.ready,
             initializing: databaseState.initializing,
@@ -120,24 +156,8 @@ app.use('/api/courses', require('./routes/courses'));
 app.use('/api/payments', paymentsRouter);
 app.use('/api/certificates', require('./routes/certificates'));
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    const statusCode = err.status || err.statusCode || 500;
-    res.status(statusCode).json({
-        success: false,
-        message: statusCode === 413 ? 'Uploaded form data is too large' : 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
-
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Route not found'
-    });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
@@ -155,25 +175,32 @@ async function initializeDatabaseWithRetry() {
             const attemptLabel = attempt <= maxAttempts ? `${attempt}/${maxAttempts}` : `${attempt} background`;
             console.log(`Checking database connection (${attemptLabel}) at ${dbConnectionInfo.host}:${dbConnectionInfo.port}`);
 
-            await ensureDatabaseExists();
-            await testDatabaseConnection();
-            try {
-                await ensureRuntimeSchema(pool);
-            } catch (error) {
-                const missingTable = error.code === 'ER_NO_SUCH_TABLE'
-                    || /table .* doesn't exist/i.test(error.message || '');
-                if (!missingTable) throw error;
+            if (shouldSkipSchemaSync()) {
+                console.log('Schema sync skipped because SKIP_SCHEMA_SYNC=true.');
+                await testDatabaseConnection();
+            } else {
+                console.log('Schema sync enabled. Running automatic schema checks.');
+                await ensureDatabaseExists();
+                await testDatabaseConnection();
+                try {
+                    await ensureRuntimeSchema(pool);
+                } catch (error) {
+                    const missingTable = error.code === 'ER_NO_SUCH_TABLE'
+                        || /table .* doesn't exist/i.test(error.message || '');
+                    if (!missingTable) throw error;
 
-                console.log('Database tables are missing. Creating full schema...');
-                await ensureSchema(pool);
-                await ensureRuntimeSchema(pool);
+                    console.log('Database tables are missing. Creating full schema...');
+                    await ensureSchema(pool);
+                    await ensureRuntimeSchema(pool);
+                }
             }
 
             databaseState.ready = true;
             databaseState.initializing = false;
             databaseState.lastError = null;
             databaseState.lastCheckedAt = new Date().toISOString();
-            console.log('Database schema is ready.');
+            console.log(shouldSkipSchemaSync() ? 'Database connection is ready.' : 'Database schema is ready.');
+            scheduleDailyBackup(pool);
             return;
         } catch (error) {
             databaseState.ready = false;
@@ -190,6 +217,8 @@ function startServer() {
     app.listen(PORT, () => {
         console.log(`Backend server running on port ${PORT}`);
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(shouldSkipSchemaSync() ? 'Schema sync skipped.' : 'Schema sync enabled.');
+        logUploadStorageWarning();
         initializeDatabaseWithRetry();
     });
 }

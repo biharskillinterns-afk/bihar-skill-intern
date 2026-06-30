@@ -7,6 +7,10 @@ const crypto = require('crypto');
 const { validateStudentRegistration, validateLogin, validateForgotPassword, validateResetPassword, validateAdminRegistration } = require('../middleware/validation');
 const { verifyToken } = require('../middleware/auth');
 const { syncCompletedPaymentsForStudent } = require('./payments');
+const { withTransaction } = require('../utils/db');
+const { buildRegistrationId, buildStudentCode } = require('../utils/ids');
+const { normalizeEmail, saveDataUrlFile, recordUploadedFile } = require('../utils/security');
+const { studentActiveClause, updateStudentGeneratedIds, updatePendingRegistrationId, safeRecordUploadedFile } = require('../utils/compat');
 
 const getJwtSecret = () => {
     if (process.env.JWT_SECRET) {
@@ -63,61 +67,75 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
             profileImage,
             signature
         } = req.body;
-        
-        const connection = await req.db.getConnection();
-        
-        // Check if user already exists
-        const [existingUser] = await connection.query('SELECT id FROM students WHERE email = ?', [email]);
-        if (existingUser.length > 0) {
-            connection.release();
-            return res.status(400).json({
-                success: false,
-                message: 'Email already registered'
+
+        const cleanEmail = normalizeEmail(email);
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const savedStudent = await withTransaction(req.db, async connection => {
+            const activeClause = await studentActiveClause(connection);
+            const [existingUser] = await connection.query(
+                `SELECT id FROM students WHERE LOWER(email) = ?${activeClause} LIMIT 1 FOR UPDATE`,
+                [cleanEmail]
+            );
+
+            if (existingUser.length > 0) {
+                const error = new Error('Email already registered');
+                error.statusCode = 400;
+                throw error;
+            }
+
+            const [result] = await connection.query(
+                `INSERT INTO students
+                    (firstName, lastName, email, phone, password, dob, gender, college, course, district,
+                     rollNo, guardian, address, pincode, university, degree, department, semester, session,
+                     emergencyName, emergencyPhone, relationship, profileImage, signature, createdAt)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+                [
+                    firstName,
+                    lastName,
+                    cleanEmail,
+                    phone,
+                    hashedPassword,
+                    dob,
+                    gender,
+                    college,
+                    course,
+                    district,
+                    rollNo || rollno || '',
+                    guardian || '',
+                    address || '',
+                    pincode || '',
+                    university || 'Veer Kunwar Singh University',
+                    degree || '',
+                    department || '',
+                    semester || '',
+                    session || '',
+                    emergencyName || '',
+                    emergencyPhone || '',
+                    relationship || '',
+                    profileImage || '',
+                    signature || ''
+                ]
+            );
+
+            const studentId = result.insertId;
+            const studentCode = buildStudentCode(studentId);
+            const registrationId = buildRegistrationId(studentId);
+            const profileFile = await saveDataUrlFile({ dataUrl: profileImage, category: 'profile-images', ownerId: studentId, originalName: 'profile-image' });
+            const signatureFile = await saveDataUrlFile({ dataUrl: signature, category: 'signatures', ownerId: studentId, originalName: 'signature' });
+            if (profileFile) await safeRecordUploadedFile(connection, recordUploadedFile, profileFile, { ownerType: 'student', ownerId: studentId, entityType: 'students', entityId: studentId, fieldName: 'profileImage' });
+            if (signatureFile) await safeRecordUploadedFile(connection, recordUploadedFile, signatureFile, { ownerType: 'student', ownerId: studentId, entityType: 'students', entityId: studentId, fieldName: 'signature' });
+            await updateStudentGeneratedIds(connection, studentId, {
+                studentCode,
+                registrationId,
+                profileImagePath: profileFile?.relativePath || null,
+                signaturePath: signatureFile?.relativePath || null
             });
-        }
-        
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // Insert student
-        const [result] = await connection.query(
-            `INSERT INTO students
-                (firstName, lastName, email, phone, password, dob, gender, college, course, district,
-                 rollNo, guardian, address, pincode, university, degree, department, semester, session,
-                 emergencyName, emergencyPhone, relationship, profileImage, signature, createdAt)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-            [
-                firstName,
-                lastName,
-                email,
-                phone,
-                hashedPassword,
-                dob,
-                gender,
-                college,
-                course,
-                district,
-                rollNo || rollno || '',
-                guardian || '',
-                address || '',
-                pincode || '',
-                university || 'Veer Kunwar Singh University',
-                degree || '',
-                department || '',
-                semester || '',
-                session || '',
-                emergencyName || '',
-                emergencyPhone || '',
-                relationship || '',
-                profileImage || '',
-                signature || ''
-            ]
-        );
-        
-        connection.release();
+
+            return { id: studentId, studentCode, registrationId };
+        });
 
         const token = jwt.sign(
-            { id: result.insertId, email, role: 'student' },
+            { id: savedStudent.id, email: cleanEmail, role: 'student' },
             getJwtSecret(),
             { expiresIn: process.env.JWT_EXPIRE || '7d' }
         );
@@ -127,10 +145,12 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
             message: 'Registration successful',
             token,
             student: {
-                id: result.insertId,
+                id: savedStudent.id,
+                studentCode: savedStudent.studentCode,
+                registrationId: savedStudent.registrationId,
                 firstName,
                 lastName,
-                email,
+                email: cleanEmail,
                 phone,
                 dob,
                 gender,
@@ -156,9 +176,9 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(error.statusCode || 500).json({
             success: false,
-            message: 'Registration failed',
+            message: error.statusCode ? error.message : 'Registration failed',
             error: error.message
         });
     }
@@ -166,7 +186,6 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
 
 // Save registration details temporarily. The real student login is created only after payment is completed.
 router.post('/pending-registration', validateStudentRegistration, async (req, res) => {
-    let connection;
     try {
         const {
             firstName,
@@ -196,72 +215,73 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
             signature
         } = req.body;
 
-        connection = await req.db.getConnection();
-
-        const [existingUser] = await connection.query('SELECT id FROM students WHERE email = ?', [email]);
-        if (existingUser.length > 0) {
-            const existingStudentId = existingUser[0].id;
-            const [completedPayments] = await connection.query(
-                "SELECT id FROM payments WHERE studentId = ? AND status = 'completed' LIMIT 1",
-                [existingStudentId]
+        const cleanEmail = normalizeEmail(email);
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const pending = await withTransaction(req.db, async connection => {
+            const activeClause = await studentActiveClause(connection);
+            const [existingUser] = await connection.query(
+                `SELECT id FROM students WHERE LOWER(email) = ?${activeClause} LIMIT 1 FOR UPDATE`,
+                [cleanEmail]
             );
 
-            if (completedPayments.length > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email already registered'
-                });
+            if (existingUser.length > 0) {
+                const error = new Error('Email already registered');
+                error.statusCode = 400;
+                throw error;
             }
 
-            await connection.query('DELETE FROM students WHERE id = ?', [existingStudentId]);
-        }
+            await connection.query('DELETE FROM pending_registrations WHERE LOWER(email) = ?', [cleanEmail]);
+            const [result] = await connection.query(
+                `INSERT INTO pending_registrations
+                    (firstName, lastName, email, phone, password, dob, gender, college, course, district,
+                     rollNo, guardian, address, pincode, university, degree, department, semester, session,
+                     emergencyName, emergencyPhone, relationship, profileImage, signature, expiresAt, createdAt)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW())`,
+                [
+                    firstName,
+                    lastName,
+                    cleanEmail,
+                    phone,
+                    hashedPassword,
+                    dob,
+                    gender,
+                    college,
+                    course,
+                    district,
+                    rollNo || rollno || '',
+                    guardian || '',
+                    address || '',
+                    pincode || '',
+                    university || 'Veer Kunwar Singh University',
+                    degree || '',
+                    department || '',
+                    semester || '',
+                    session || '',
+                    emergencyName || '',
+                    emergencyPhone || '',
+                    relationship || '',
+                    profileImage || '',
+                    signature || ''
+                ]
+            );
 
-        await connection.query('DELETE FROM pending_registrations WHERE email = ?', [email]);
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const [result] = await connection.query(
-            `INSERT INTO pending_registrations
-                (firstName, lastName, email, phone, password, dob, gender, college, course, district,
-                 rollNo, guardian, address, pincode, university, degree, department, semester, session,
-                 emergencyName, emergencyPhone, relationship, profileImage, signature, expiresAt, createdAt)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW())`,
-            [
-                firstName,
-                lastName,
-                email,
-                phone,
-                hashedPassword,
-                dob,
-                gender,
-                college,
-                course,
-                district,
-                rollNo || rollno || '',
-                guardian || '',
-                address || '',
-                pincode || '',
-                university || 'Veer Kunwar Singh University',
-                degree || '',
-                department || '',
-                semester || '',
-                session || '',
-                emergencyName || '',
-                emergencyPhone || '',
-                relationship || '',
-                profileImage || '',
-                signature || ''
-            ]
-        );
+            const registrationId = buildRegistrationId(result.insertId);
+            await updatePendingRegistrationId(connection, result.insertId, registrationId);
+            return { id: result.insertId, registrationId };
+        });
 
         res.status(201).json({
             success: true,
             message: 'Registration details saved. Complete payment to create your login.',
-            pendingRegistrationId: result.insertId,
+            pendingRegistrationId: pending.id,
+            registrationId: pending.registrationId,
             student: {
-                id: `pending_${result.insertId}`,
-                pendingRegistrationId: result.insertId,
+                id: `pending_${pending.id}`,
+                pendingRegistrationId: pending.id,
+                registrationId: pending.registrationId,
                 firstName,
                 lastName,
-                email,
+                email: cleanEmail,
                 phone,
                 dob,
                 gender,
@@ -288,13 +308,11 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(error.statusCode || 500).json({
             success: false,
-            message: 'Registration could not be saved',
+            message: error.statusCode ? error.message : 'Registration could not be saved',
             error: error.message
         });
-    } finally {
-        if (connection) connection.release();
     }
 });
 
@@ -304,7 +322,8 @@ router.post('/login', validateLogin, async (req, res) => {
         const { email, password } = req.body;
         
         const connection = await req.db.getConnection();
-        const [students] = await connection.query('SELECT * FROM students WHERE email = ?', [email]);
+        const activeClause = await studentActiveClause(connection);
+        const [students] = await connection.query(`SELECT * FROM students WHERE email = ?${activeClause}`, [email]);
         
         if (students.length === 0) {
             connection.release();
@@ -400,7 +419,8 @@ router.post('/forgot-password', validateForgotPassword, async (req, res) => {
         let user = null;
         let userType = '';
         
-        const [students] = await connection.query('SELECT id, firstName, email FROM students WHERE email = ?', [email]);
+        const activeClause = await studentActiveClause(connection);
+        const [students] = await connection.query(`SELECT id, firstName, email FROM students WHERE email = ?${activeClause}`, [email]);
         if (students.length > 0) {
             user = students[0];
             userType = 'student';
@@ -498,12 +518,12 @@ router.post('/reset-password', validateResetPassword, async (req, res) => {
         const reset = resets[0];
         
         // Hash new password
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
         
         // Update password (check both tables)
         let updateResult;
         const [studentUpdate] = await connection.query(
-            'UPDATE students SET password = ? WHERE email = ?',
+            `UPDATE students SET password = ? WHERE email = ?${await studentActiveClause(connection)}`,
             [hashedPassword, reset.email]
         );
         
@@ -569,7 +589,7 @@ router.post('/reset-password-by-details', async (req, res) => {
 
         connection = await req.db.getConnection();
         const [students] = await connection.query(
-            'SELECT id, email, phone, dob FROM students WHERE LOWER(email) = ? LIMIT 1',
+            `SELECT id, email, phone, dob FROM students WHERE LOWER(email) = ?${await studentActiveClause(connection)} LIMIT 1`,
             [cleanEmail]
         );
 
@@ -591,7 +611,7 @@ router.post('/reset-password-by-details', async (req, res) => {
             });
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
         await connection.query('UPDATE students SET password = ? WHERE id = ?', [hashedPassword, student.id]);
 
         res.json({
@@ -648,7 +668,7 @@ router.post('/admin/register', validateAdminRegistration, async (req, res) => {
         }
         
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 12);
         
         // Insert admin
         const [result] = await connection.query(

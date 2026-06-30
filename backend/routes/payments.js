@@ -5,6 +5,9 @@ const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const { verifyToken, isStudent } = require('../middleware/auth');
 const { getRegistrationAmount } = require('../config/settings');
+const { buildRegistrationId, buildStudentCode } = require('../utils/ids');
+const { saveDataUrlFile, recordUploadedFile } = require('../utils/security');
+const { studentActiveClause, updateStudentGeneratedIds, safeRecordUploadedFile } = require('../utils/compat');
 
 const getJwtSecret = () => {
     if (process.env.JWT_SECRET) {
@@ -281,14 +284,18 @@ async function createStudentFromPendingRegistration(connection, pendingRegistrat
     const [pendingRows] = await connection.query(
         `SELECT * FROM pending_registrations
          WHERE id = ? AND (expiresAt IS NULL OR expiresAt > NOW())
-         LIMIT 1`,
+         LIMIT 1 FOR UPDATE`,
         [pendingRegistrationId]
     );
 
     if (pendingRows.length === 0) return null;
     const pending = pendingRows[0];
 
-    const [existingStudents] = await connection.query('SELECT * FROM students WHERE email = ? LIMIT 1', [pending.email]);
+    const activeClause = await studentActiveClause(connection);
+    const [existingStudents] = await connection.query(
+        `SELECT * FROM students WHERE email = ?${activeClause} LIMIT 1 FOR UPDATE`,
+        [pending.email]
+    );
     if (existingStudents.length > 0) {
         await connection.query('DELETE FROM pending_registrations WHERE id = ?', [pending.id]);
         return existingStudents[0];
@@ -328,10 +335,25 @@ async function createStudentFromPendingRegistration(connection, pendingRegistrat
         ]
     );
 
+    const studentId = result.insertId;
+    const studentCode = buildStudentCode(studentId);
+    const registrationId = pending.registrationId || buildRegistrationId(studentId);
+    const profileFile = await saveDataUrlFile({ dataUrl: pending.profileImage, category: 'profile-images', ownerId: studentId, originalName: 'profile-image' });
+    const signatureFile = await saveDataUrlFile({ dataUrl: pending.signature, category: 'signatures', ownerId: studentId, originalName: 'signature' });
+    if (profileFile) await safeRecordUploadedFile(connection, recordUploadedFile, profileFile, { ownerType: 'student', ownerId: studentId, entityType: 'students', entityId: studentId, fieldName: 'profileImage' });
+    if (signatureFile) await safeRecordUploadedFile(connection, recordUploadedFile, signatureFile, { ownerType: 'student', ownerId: studentId, entityType: 'students', entityId: studentId, fieldName: 'signature' });
+    await updateStudentGeneratedIds(connection, studentId, {
+        studentCode,
+        registrationId,
+        profileImagePath: profileFile?.relativePath || pending.profileImagePath || null,
+        signaturePath: signatureFile?.relativePath || pending.signaturePath || null
+    });
     await connection.query('DELETE FROM pending_registrations WHERE id = ?', [pending.id]);
     return {
         ...pending,
-        id: result.insertId
+        id: studentId,
+        studentCode,
+        registrationId
     };
 }
 
@@ -339,6 +361,7 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
     let connection;
     try {
         connection = await req.db.getConnection();
+        await connection.beginTransaction();
         const existingPayment = await findPaymentByOrder(connection, paymentData.razorpayOrderId);
         let pendingRegistrationId = paymentData.pendingRegistrationId;
         if (!pendingRegistrationId && paymentData.razorpayOrderId) {
@@ -356,10 +379,10 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
         const courseId = existingPayment?.courseId || await getOrCreateDefaultCourseId(connection);
 
         if (!studentId || !courseId) {
+            await connection.rollback();
             return null;
         }
 
-        await connection.beginTransaction();
         try {
             if (existingPayment) {
                 await connection.query(
@@ -402,6 +425,13 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
             throw error;
         }
     } catch (error) {
+        if (connection) {
+            try {
+                await connection.rollback();
+            } catch (rollbackError) {
+                // The inner transaction handler may already have rolled back.
+            }
+        }
         console.warn('Unable to mark Razorpay payment completed:', error.message);
         req.paymentCompletionError = error.message;
         return null;

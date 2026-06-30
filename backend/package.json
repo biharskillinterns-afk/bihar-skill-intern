@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "db:import": "node scripts/import-schema.js"
+    "db:import": "node scripts/import-schema.js",
+    "db:backup": "node scripts/backup-database.js",
+    "db:restore": "node scripts/restore-database.js"
   },
   "engines": {
     "node": ">=22.2.0"

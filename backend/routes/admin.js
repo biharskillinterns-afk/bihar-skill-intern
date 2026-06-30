@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const { getRegistrationAmount, setRegistrationAmount, DEFAULT_REGISTRATION_AMOUNT } = require('../config/settings');
+const { addColumnIfMissing, withTransaction } = require('../utils/db');
+const { logAdminAction } = require('../utils/audit');
+const { compatColumnExists, studentActiveClause } = require('../utils/compat');
 
 function normalizeProofStatus(status) {
     return ['pending', 'approved', 'rejected'].includes(status) ? status : 'pending';
@@ -29,19 +32,30 @@ async function ensureInternshipProofsTable(connection) {
             INDEX idx_proof_status (status)
         )
     `);
+    try {
+        await addColumnIfMissing(connection, 'internship_proofs', 'screenshotPath', 'VARCHAR(500) DEFAULT NULL');
+        await addColumnIfMissing(connection, 'internship_proofs', 'fileMimeType', 'VARCHAR(120) DEFAULT NULL');
+        await addColumnIfMissing(connection, 'internship_proofs', 'fileSizeBytes', 'INT DEFAULT NULL');
+    } catch (error) {
+        console.warn('Internship proof optional columns unavailable; continuing with legacy proof schema:', error.message);
+    }
 }
 
 async function ensureStudentCourseUnlockColumns(connection) {
     try {
         await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedAt TIMESTAMP NULL');
     } catch (error) {
-        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+        if (error.code !== 'ER_DUP_FIELDNAME') {
+            console.warn('adminUnlockedAt column unavailable; early unlock feature may be disabled:', error.message);
+        }
     }
 
     try {
         await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedBy INT NULL');
     } catch (error) {
-        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+        if (error.code !== 'ER_DUP_FIELDNAME') {
+            console.warn('adminUnlockedBy column unavailable; early unlock feature may be disabled:', error.message);
+        }
     }
 }
 
@@ -141,6 +155,7 @@ router.post('/settings/payment-amount/reset', verifyToken, isAdmin, async (req, 
 router.get('/students', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
+        const activeClause = await studentActiveClause(connection, 's');
         const [students] = await connection.query(
             `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
                     s.course, s.district, s.state, s.rollNo, s.rollNo AS rollno, s.pincode,
@@ -157,6 +172,7 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
                     GROUP BY studentId
                 ) latest ON latest.latestPaymentId = p1.id
              ) p ON p.studentId = s.id
+             WHERE 1=1${activeClause}
              ORDER BY s.createdAt DESC`
         );
         connection.release();
@@ -179,6 +195,7 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
 router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
+        const activeClause = await studentActiveClause(connection, 's');
         const [students] = await connection.query(
             `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
                     s.course, s.district, s.state, s.rollNo, s.rollNo AS rollno, s.guardian, s.address,
@@ -198,7 +215,7 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
                     GROUP BY studentId
                 ) latest ON latest.latestPaymentId = p1.id
              ) p ON p.studentId = s.id
-             WHERE s.id = ?`,
+              WHERE s.id = ?${activeClause}`,
             [req.params.id]
         );
         connection.release();
@@ -223,13 +240,35 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
     }
 });
 
-// Delete student
+// Delete student (soft archive to prevent data loss)
 router.delete('/students/:id', verifyToken, isAdmin, async (req, res) => {
     try {
-        const connection = await req.db.getConnection();
-        const [result] = await connection.query('DELETE FROM students WHERE id = ?', [req.params.id]);
-        connection.release();
-        
+        const result = await withTransaction(req.db, async connection => {
+            const hasDeletedAt = await compatColumnExists(connection, 'students', 'deletedAt');
+            const [students] = await connection.query(
+                `SELECT id, email, status${hasDeletedAt ? ', deletedAt' : ''} FROM students WHERE id = ? LIMIT 1 FOR UPDATE`,
+                [req.params.id]
+            );
+            if (students.length === 0 || (hasDeletedAt && students[0].deletedAt)) return { affectedRows: 0 };
+
+            const [updateResult] = hasDeletedAt
+                ? await connection.query(
+                    "UPDATE students SET status = 'inactive', deletedAt = NOW() WHERE id = ? AND deletedAt IS NULL",
+                    [req.params.id]
+                )
+                : await connection.query(
+                    "UPDATE students SET status = 'inactive' WHERE id = ?",
+                    [req.params.id]
+                );
+            await logAdminAction(connection, req, 'student_soft_delete', {
+                entityType: 'students',
+                entityId: Number(req.params.id),
+                beforeValue: students[0],
+                afterValue: hasDeletedAt ? { deletedAt: 'NOW', status: 'inactive' } : { status: 'inactive' }
+            });
+            return updateResult;
+        });
+
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 success: false,
@@ -256,43 +295,59 @@ router.put('/students/:studentId/courses/:courseId/unlock', verifyToken, isAdmin
         const { studentId, courseId } = req.params;
         const unlock = req.body.unlock !== false;
 
-        connection = await req.db.getConnection();
-        await ensureStudentCourseUnlockColumns(connection);
+        const result = await withTransaction(req.db, async tx => {
+            connection = tx;
+            await ensureStudentCourseUnlockColumns(connection);
 
-        const [students] = await connection.query('SELECT id FROM students WHERE id = ? LIMIT 1', [studentId]);
-        if (students.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Student not found'
+            const activeClause = await studentActiveClause(connection);
+            const [students] = await connection.query(`SELECT id FROM students WHERE id = ?${activeClause} LIMIT 1`, [studentId]);
+            if (students.length === 0) {
+                const error = new Error('Student not found');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            const [courses] = await connection.query('SELECT id, courseName FROM courses WHERE id = ? LIMIT 1', [courseId]);
+            if (courses.length === 0) {
+                const error = new Error('Course not found');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            const hasAdminUnlockedAt = await compatColumnExists(connection, 'student_courses', 'adminUnlockedAt');
+            const hasAdminUnlockedBy = await compatColumnExists(connection, 'student_courses', 'adminUnlockedBy');
+            if (!hasAdminUnlockedAt || !hasAdminUnlockedBy) {
+                const error = new Error('Early unlock is unavailable until database migration is completed.');
+                error.statusCode = 503;
+                throw error;
+            }
+
+            if (unlock) {
+                await connection.query(
+                    `INSERT INTO student_courses
+                        (studentId, courseId, enrolledAt, progress, status, adminUnlockedAt, adminUnlockedBy)
+                     VALUES (?, ?, NOW(), 0, 'enrolled', NOW(), ?)
+                     ON DUPLICATE KEY UPDATE
+                        adminUnlockedAt = NOW(),
+                        adminUnlockedBy = VALUES(adminUnlockedBy)`,
+                    [studentId, courseId, req.user.id]
+                );
+            } else {
+                await connection.query(
+                    `UPDATE student_courses
+                     SET adminUnlockedAt = NULL, adminUnlockedBy = NULL
+                     WHERE studentId = ? AND courseId = ?`,
+                    [studentId, courseId]
+                );
+            }
+
+            await logAdminAction(connection, req, unlock ? 'student_course_unlock' : 'student_course_unlock_remove', {
+                entityType: 'student_courses',
+                entityId: Number(studentId),
+                afterValue: { studentId, courseId, unlock }
             });
-        }
-
-        const [courses] = await connection.query('SELECT id, courseName FROM courses WHERE id = ? LIMIT 1', [courseId]);
-        if (courses.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Course not found'
-            });
-        }
-
-        if (unlock) {
-            await connection.query(
-                `INSERT INTO student_courses
-                    (studentId, courseId, enrolledAt, progress, status, adminUnlockedAt, adminUnlockedBy)
-                 VALUES (?, ?, NOW(), 0, 'enrolled', NOW(), ?)
-                 ON DUPLICATE KEY UPDATE
-                    adminUnlockedAt = NOW(),
-                    adminUnlockedBy = VALUES(adminUnlockedBy)`,
-                [studentId, courseId, req.user.id]
-            );
-        } else {
-            await connection.query(
-                `UPDATE student_courses
-                 SET adminUnlockedAt = NULL, adminUnlockedBy = NULL
-                 WHERE studentId = ? AND courseId = ?`,
-                [studentId, courseId]
-            );
-        }
+            return { courseName: courses[0].courseName };
+        });
 
         res.json({
             success: true,
@@ -301,17 +356,17 @@ router.put('/students/:studentId/courses/:courseId/unlock', verifyToken, isAdmin
                 : 'Admin early unlock removed for this student.',
             studentId,
             courseId,
-            courseName: courses[0].courseName,
+            courseName: result.courseName,
             adminUnlocked: unlock
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(error.statusCode || 500).json({
             success: false,
-            message: 'Failed to update student course unlock',
+            message: error.statusCode ? error.message : 'Failed to update student course unlock',
             error: error.message
         });
     } finally {
-        if (connection) connection.release();
+        connection = null;
     }
 });
 
@@ -320,7 +375,8 @@ router.get('/stats', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
         
-        const [totalStudents] = await connection.query('SELECT COUNT(*) as count FROM students');
+        const activeClause = await studentActiveClause(connection);
+        const [totalStudents] = await connection.query(`SELECT COUNT(*) as count FROM students WHERE 1=1${activeClause}`);
         const [totalCourses] = await connection.query('SELECT COUNT(*) as count FROM courses');
         const [totalCertificates] = await connection.query("SELECT COUNT(*) as count FROM certificates WHERE status = 'issued'");
         const [totalPayments] = await connection.query("SELECT SUM(amount) as total FROM payments WHERE status = 'completed'");
@@ -398,57 +454,65 @@ router.put('/proofs/:id/review', verifyToken, isAdmin, async (req, res) => {
             });
         }
 
-        connection = await req.db.getConnection();
-        await ensureInternshipProofsTable(connection);
-        const [proofRows] = await connection.query(
-            'SELECT * FROM internship_proofs WHERE id = ? LIMIT 1',
-            [req.params.id]
-        );
-
-        if (proofRows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Proof not found'
-            });
-        }
-
-        const proof = proofRows[0];
-        await connection.query(
-            `UPDATE internship_proofs
-             SET status = ?, adminRemarks = ?, reviewedAt = NOW(), reviewedBy = ?
-             WHERE id = ?`,
-            [status, req.body.adminRemarks || '', req.user.id, req.params.id]
-        );
-
-        if (status === 'approved' && proof.courseId) {
-            await connection.query(
-                `INSERT INTO attendance (studentId, courseId, attendanceDate, status, remarks, markedAt)
-                 VALUES (?, ?, ?, 'present', ?, NOW())
-                 ON DUPLICATE KEY UPDATE
-                    status = 'present',
-                    remarks = VALUES(remarks),
-                    markedAt = NOW()`,
-                [
-                    proof.studentId,
-                    proof.courseId,
-                    proof.proofDate,
-                    `Approved work proof #${proof.id}`
-                ]
+        await withTransaction(req.db, async tx => {
+            connection = tx;
+            await ensureInternshipProofsTable(connection);
+            const [proofRows] = await connection.query(
+                'SELECT * FROM internship_proofs WHERE id = ? LIMIT 1 FOR UPDATE',
+                [req.params.id]
             );
-        }
+
+            if (proofRows.length === 0) {
+                const error = new Error('Proof not found');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            const proof = proofRows[0];
+            await connection.query(
+                `UPDATE internship_proofs
+                 SET status = ?, adminRemarks = ?, reviewedAt = NOW(), reviewedBy = ?
+                 WHERE id = ?`,
+                [status, req.body.adminRemarks || '', req.user.id, req.params.id]
+            );
+
+            if (status === 'approved' && proof.courseId) {
+                await connection.query(
+                    `INSERT INTO attendance (studentId, courseId, attendanceDate, status, remarks, markedAt)
+                     VALUES (?, ?, ?, 'present', ?, NOW())
+                     ON DUPLICATE KEY UPDATE
+                        status = 'present',
+                        remarks = VALUES(remarks),
+                        markedAt = NOW()`,
+                    [
+                        proof.studentId,
+                        proof.courseId,
+                        proof.proofDate,
+                        `Approved work proof #${proof.id}`
+                    ]
+                );
+            }
+
+            await logAdminAction(connection, req, 'proof_review', {
+                entityType: 'internship_proofs',
+                entityId: Number(req.params.id),
+                beforeValue: { status: proof.status, adminRemarks: proof.adminRemarks },
+                afterValue: { status, adminRemarks: req.body.adminRemarks || '' }
+            });
+        });
 
         res.json({
             success: true,
             message: `Proof ${status}.`
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(error.statusCode || 500).json({
             success: false,
-            message: 'Failed to review proof',
+            message: error.statusCode ? error.message : 'Failed to review proof',
             error: error.message
         });
     } finally {
-        if (connection) connection.release();
+        connection = null;
     }
 });
 
@@ -500,16 +564,20 @@ router.post('/courses', verifyToken, isAdmin, async (req, res) => {
             });
         }
         
-        const connection = await req.db.getConnection();
-        await ensureCourseQuestionsColumn(connection);
-        
-        const [result] = await connection.query(
-            `INSERT INTO courses (courseName, description, duration, syllabus, questions, prerequisites, status, createdAt)
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-            [finalCourseName, description, duration || 30, finalSyllabus, finalQuestions, prerequisites || '', status || 'active']
-        );
-        
-        connection.release();
+        const result = await withTransaction(req.db, async connection => {
+            await ensureCourseQuestionsColumn(connection);
+            const [insertResult] = await connection.query(
+                `INSERT INTO courses (courseName, description, duration, syllabus, questions, prerequisites, status, createdAt)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+                [finalCourseName, description, duration || 30, finalSyllabus, finalQuestions, prerequisites || '', status || 'active']
+            );
+            await logAdminAction(connection, req, 'course_create', {
+                entityType: 'courses',
+                entityId: insertResult.insertId,
+                afterValue: { courseName: finalCourseName, status: status || 'active' }
+            });
+            return insertResult;
+        });
         
         res.json({
             success: true,
@@ -541,47 +609,50 @@ router.put('/courses/:id', verifyToken, isAdmin, async (req, res) => {
         } = req.body;
         const finalQuestions = Array.isArray(questions) ? JSON.stringify(questions) : (questions || null);
         
-        const connection = await req.db.getConnection();
-        await ensureCourseQuestionsColumn(connection);
+        const result = await withTransaction(req.db, async connection => {
+            await ensureCourseQuestionsColumn(connection);
+            const [existingRows] = await connection.query(
+                'SELECT courseName, description, duration, syllabus, questions, prerequisites, status FROM courses WHERE id = ? LIMIT 1 FOR UPDATE',
+                [req.params.id]
+            );
 
-        const [existingRows] = await connection.query(
-            'SELECT courseName, description, duration, syllabus, questions, prerequisites, status FROM courses WHERE id = ? LIMIT 1',
-            [req.params.id]
-        );
+            if (existingRows.length === 0) {
+                const error = new Error('Course not found');
+                error.statusCode = 404;
+                throw error;
+            }
 
-        if (existingRows.length === 0) {
-            connection.release();
-            return res.status(404).json({
-                success: false,
-                message: 'Course not found'
+            const existing = existingRows[0];
+            const finalCourseName = courseName || name || existing.courseName;
+            const finalSyllabus = syllabus || material || '';
+            const mergedSyllabus = mergeCourseMaterial(existingRows[0].syllabus, finalSyllabus);
+            const mergedQuestions = finalQuestions
+                ? JSON.stringify(mergeQuestions(existingRows[0].questions, finalQuestions))
+                : existingRows[0].questions;
+
+            const [updateResult] = await connection.query(
+                `UPDATE courses
+                 SET courseName = ?, description = ?, duration = ?, syllabus = ?, questions = ?, prerequisites = ?, status = ?
+                 WHERE id = ?`,
+                [
+                    finalCourseName,
+                    description || existing.description,
+                    duration || existing.duration || 30,
+                    mergedSyllabus,
+                    mergedQuestions,
+                    prerequisites || existing.prerequisites || '',
+                    status || existing.status || 'active',
+                    req.params.id
+                ]
+            );
+            await logAdminAction(connection, req, 'course_update', {
+                entityType: 'courses',
+                entityId: Number(req.params.id),
+                beforeValue: existing,
+                afterValue: { courseName: finalCourseName, status: status || existing.status || 'active' }
             });
-        }
-
-        const existing = existingRows[0];
-        const finalCourseName = courseName || name || existing.courseName;
-        const finalSyllabus = syllabus || material || '';
-        const mergedSyllabus = mergeCourseMaterial(existingRows[0].syllabus, finalSyllabus);
-        const mergedQuestions = finalQuestions
-            ? JSON.stringify(mergeQuestions(existingRows[0].questions, finalQuestions))
-            : existingRows[0].questions;
-        
-        const [result] = await connection.query(
-            `UPDATE courses
-             SET courseName = ?, description = ?, duration = ?, syllabus = ?, questions = ?, prerequisites = ?, status = ?
-             WHERE id = ?`,
-            [
-                finalCourseName,
-                description || existing.description,
-                duration || existing.duration || 30,
-                mergedSyllabus,
-                mergedQuestions,
-                prerequisites || existing.prerequisites || '',
-                status || existing.status || 'active',
-                req.params.id
-            ]
-        );
-        
-        connection.release();
+            return updateResult;
+        });
         
         if (result.affectedRows === 0) {
             return res.status(404).json({
@@ -595,9 +666,9 @@ router.put('/courses/:id', verifyToken, isAdmin, async (req, res) => {
             message: 'Course updated successfully'
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(error.statusCode || 500).json({
             success: false,
-            message: 'Failed to update course',
+            message: error.statusCode ? error.message : 'Failed to update course',
             error: error.message
         });
     }
@@ -606,24 +677,29 @@ router.put('/courses/:id', verifyToken, isAdmin, async (req, res) => {
 // Delete course
 router.delete('/courses/:id', verifyToken, isAdmin, async (req, res) => {
     try {
-        const connection = await req.db.getConnection();
-        
-        // Check if students are enrolled
-        const [enrolled] = await connection.query(
-            'SELECT COUNT(*) as count FROM student_courses WHERE courseId = ?',
-            [req.params.id]
-        );
-        
-        if (enrolled[0].count > 0) {
-            connection.release();
-            return res.status(400).json({
-                success: false,
-                message: 'Cannot delete course with enrolled students'
-            });
-        }
-        
-        const [result] = await connection.query('DELETE FROM courses WHERE id = ?', [req.params.id]);
-        connection.release();
+        const result = await withTransaction(req.db, async connection => {
+            const [enrolled] = await connection.query(
+                'SELECT COUNT(*) as count FROM student_courses WHERE courseId = ?',
+                [req.params.id]
+            );
+
+            if (enrolled[0].count > 0) {
+                const error = new Error('Cannot delete course with enrolled students');
+                error.statusCode = 400;
+                throw error;
+            }
+
+            const [courseRows] = await connection.query('SELECT * FROM courses WHERE id = ? LIMIT 1 FOR UPDATE', [req.params.id]);
+            const [deleteResult] = await connection.query('DELETE FROM courses WHERE id = ?', [req.params.id]);
+            if (deleteResult.affectedRows > 0) {
+                await logAdminAction(connection, req, 'course_delete', {
+                    entityType: 'courses',
+                    entityId: Number(req.params.id),
+                    beforeValue: courseRows[0] || null
+                });
+            }
+            return deleteResult;
+        });
         
         if (result.affectedRows === 0) {
             return res.status(404).json({
@@ -637,9 +713,9 @@ router.delete('/courses/:id', verifyToken, isAdmin, async (req, res) => {
             message: 'Course deleted successfully'
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(error.statusCode || 500).json({
             success: false,
-            message: 'Failed to delete course',
+            message: error.statusCode ? error.message : 'Failed to delete course',
             error: error.message
         });
     }

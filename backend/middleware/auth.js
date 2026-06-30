@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { compatColumnExists } = require('../utils/compat');
 
 const getJwtSecret = () => {
     if (process.env.JWT_SECRET) {
@@ -36,25 +37,58 @@ const verifyToken = (req, res, next) => {
 };
 
 // Check if user is admin
-const isAdmin = (req, res, next) => {
+const isAdmin = async (req, res, next) => {
     if (!['admin', 'super_admin'].includes(req.user.role)) {
         return res.status(403).json({
             success: false,
             message: 'Access denied. Admin only.'
         });
     }
-    next();
+    try {
+        if (req.db) {
+            const [admins] = await req.db.query(
+                "SELECT id FROM admins WHERE id = ? AND status = 'active' LIMIT 1",
+                [req.user.id]
+            );
+            if (admins.length === 0) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Admin account is not active'
+                });
+            }
+        }
+        next();
+    } catch (error) {
+        next(error);
+    }
 };
 
 // Check if user is student
-const isStudent = (req, res, next) => {
+const isStudent = async (req, res, next) => {
     if (req.user.role !== 'student') {
         return res.status(403).json({
             success: false,
             message: 'Access denied. Student only.'
         });
     }
-    next();
+    try {
+        if (req.db) {
+            const hasDeletedAt = await compatColumnExists(req.db, 'students', 'deletedAt');
+            const query = hasDeletedAt
+                ? "SELECT id FROM students WHERE id = ? AND status = 'active' AND deletedAt IS NULL LIMIT 1"
+                : "SELECT id FROM students WHERE id = ? AND status = 'active' LIMIT 1";
+            const [students] = await req.db.query(query, [req.user.id]);
+            if (students.length === 0) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Student account is not active'
+                });
+            }
+        }
+        next();
+    } catch (error) {
+        next(error);
+    }
 };
 
 module.exports = {

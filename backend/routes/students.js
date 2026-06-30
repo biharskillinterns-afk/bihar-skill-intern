@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { verifyToken, isStudent } = require('../middleware/auth');
+const { addColumnIfMissing, withTransaction } = require('../utils/db');
+const { saveDataUrlFile, recordUploadedFile } = require('../utils/security');
+const { internshipProofInsertShape, safeRecordUploadedFile } = require('../utils/compat');
 
 const REQUIRED_APPROVED_PROOF_DAYS = 5;
 const ACTIVITY_PROOF_DAYS = 15;
@@ -12,13 +15,17 @@ async function ensureStudentCourseUnlockColumns(connection) {
     try {
         await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedAt TIMESTAMP NULL');
     } catch (error) {
-        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+        if (error.code !== 'ER_DUP_FIELDNAME') {
+            console.warn('adminUnlockedAt column unavailable; continuing with legacy unlock behavior:', error.message);
+        }
     }
 
     try {
         await connection.query('ALTER TABLE student_courses ADD COLUMN adminUnlockedBy INT NULL');
     } catch (error) {
-        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+        if (error.code !== 'ER_DUP_FIELDNAME') {
+            console.warn('adminUnlockedBy column unavailable; continuing with legacy unlock behavior:', error.message);
+        }
     }
 }
 
@@ -64,6 +71,13 @@ async function ensureInternshipProofsTable(connection) {
             INDEX idx_proof_status (status)
         )
     `);
+    try {
+        await addColumnIfMissing(connection, 'internship_proofs', 'screenshotPath', 'VARCHAR(500) DEFAULT NULL');
+        await addColumnIfMissing(connection, 'internship_proofs', 'fileMimeType', 'VARCHAR(120) DEFAULT NULL');
+        await addColumnIfMissing(connection, 'internship_proofs', 'fileSizeBytes', 'INT DEFAULT NULL');
+    } catch (error) {
+        console.warn('Internship proof optional columns unavailable; continuing with legacy proof schema:', error.message);
+    }
 }
 
 // Get student profile
@@ -305,23 +319,57 @@ router.post('/proofs', verifyToken, isStudent, async (req, res) => {
             });
         }
 
-        connection = await req.db.getConnection();
-        await ensureInternshipProofsTable(connection);
-        const [result] = await connection.query(
-            `INSERT INTO internship_proofs
-                (studentId, courseId, proofDate, internshipMode, topic, workDescription, screenshot, fileName, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
-            [
-                req.user.id,
-                courseId || null,
-                safeDate,
-                internshipMode === 'offline' ? 'offline' : 'online',
-                safeTopic,
-                workDescription || '',
-                safeScreenshot,
-                fileName || ''
-            ]
-        );
+        const result = await withTransaction(req.db, async tx => {
+            connection = tx;
+            await ensureInternshipProofsTable(connection);
+            const storedScreenshot = await saveDataUrlFile({
+                dataUrl: safeScreenshot,
+                category: 'internship-proofs',
+                ownerId: req.user.id,
+                originalName: fileName || 'internship-proof'
+            });
+            const insertShape = await internshipProofInsertShape(connection);
+            const optionalColumns = [];
+            const optionalValues = [];
+            if (insertShape.hasScreenshotPath) {
+                optionalColumns.push('screenshotPath');
+                optionalValues.push(storedScreenshot?.relativePath || null);
+            }
+            if (insertShape.hasFileMimeType) {
+                optionalColumns.push('fileMimeType');
+                optionalValues.push(storedScreenshot?.mimeType || null);
+            }
+            if (insertShape.hasFileSizeBytes) {
+                optionalColumns.push('fileSizeBytes');
+                optionalValues.push(storedScreenshot?.sizeBytes || null);
+            }
+            const [insertResult] = await connection.query(
+                `INSERT INTO internship_proofs
+                    (studentId, courseId, proofDate, internshipMode, topic, workDescription, screenshot, fileName${optionalColumns.length ? `, ${optionalColumns.join(', ')}` : ''}, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?${optionalValues.map(() => ', ?').join('')}, 'pending')`,
+                [
+                    req.user.id,
+                    courseId || null,
+                    safeDate,
+                    internshipMode === 'offline' ? 'offline' : 'online',
+                    safeTopic,
+                    workDescription || '',
+                    safeScreenshot,
+                    fileName || '',
+                    ...optionalValues
+                ]
+            );
+            if (storedScreenshot) {
+                await safeRecordUploadedFile(connection, recordUploadedFile, storedScreenshot, {
+                    ownerType: 'student',
+                    ownerId: req.user.id,
+                    entityType: 'internship_proofs',
+                    entityId: insertResult.insertId,
+                    fieldName: 'screenshot'
+                });
+            }
+            return insertResult;
+        });
 
         res.json({
             success: true,
@@ -397,6 +445,7 @@ router.post('/proofs/bulk', verifyToken, isStudent, async (req, res) => {
         }
 
         connection = await req.db.getConnection();
+        await connection.beginTransaction();
         await ensureInternshipProofsTable(connection);
         const [courses] = await connection.query(
             `SELECT sc.enrolledAt, c.courseName
@@ -408,6 +457,7 @@ router.post('/proofs/bulk', verifyToken, isStudent, async (req, res) => {
         );
 
         if (courses.length === 0) {
+            await connection.rollback();
             return res.status(403).json({
                 success: false,
                 message: 'Please enroll in this course before uploading activity proof.'
@@ -417,11 +467,32 @@ router.post('/proofs/bulk', verifyToken, isStudent, async (req, res) => {
         const enrollmentDate = normalizeDateInput(courses[0].enrolledAt);
         const baseDate = enrollmentDate || safeStartDate;
         const insertedIds = [];
+        const insertShape = await internshipProofInsertShape(connection);
         for (const [index, item] of screenshots.entries()) {
+            const storedScreenshot = await saveDataUrlFile({
+                dataUrl: item.screenshot,
+                category: 'internship-proofs',
+                ownerId: req.user.id,
+                originalName: item.fileName || `activity-proof-${index + 1}.jpg`
+            });
+            const optionalColumns = [];
+            const optionalValues = [];
+            if (insertShape.hasScreenshotPath) {
+                optionalColumns.push('screenshotPath');
+                optionalValues.push(storedScreenshot?.relativePath || null);
+            }
+            if (insertShape.hasFileMimeType) {
+                optionalColumns.push('fileMimeType');
+                optionalValues.push(storedScreenshot?.mimeType || null);
+            }
+            if (insertShape.hasFileSizeBytes) {
+                optionalColumns.push('fileSizeBytes');
+                optionalValues.push(storedScreenshot?.sizeBytes || null);
+            }
             const [result] = await connection.query(
                 `INSERT INTO internship_proofs
-                    (studentId, courseId, proofDate, internshipMode, topic, workDescription, screenshot, fileName, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+                    (studentId, courseId, proofDate, internshipMode, topic, workDescription, screenshot, fileName${optionalColumns.length ? `, ${optionalColumns.join(', ')}` : ''}, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?${optionalValues.map(() => ', ?').join('')}, 'pending')`,
                 [
                     req.user.id,
                     safeCourseId,
@@ -430,12 +501,23 @@ router.post('/proofs/bulk', verifyToken, isStudent, async (req, res) => {
                     `${safeTopic} - Day ${index + 1}`,
                     workDescription || `Activity proof for ${courses[0].courseName || 'selected course'} - Day ${index + 1}`,
                     item.screenshot,
-                    item.fileName || `activity-proof-${index + 1}.jpg`
+                    item.fileName || `activity-proof-${index + 1}.jpg`,
+                    ...optionalValues
                 ]
             );
+            if (storedScreenshot) {
+                await safeRecordUploadedFile(connection, recordUploadedFile, storedScreenshot, {
+                    ownerType: 'student',
+                    ownerId: req.user.id,
+                    entityType: 'internship_proofs',
+                    entityId: result.insertId,
+                    fieldName: 'screenshot'
+                });
+            }
             insertedIds.push(result.insertId);
         }
 
+        await connection.commit();
         res.json({
             success: true,
             message: `${screenshots.length} activity proof screenshots uploaded. Dates were set from ${baseDate}. Attendance will count after admin approval.`,
@@ -445,6 +527,13 @@ router.post('/proofs/bulk', verifyToken, isStudent, async (req, res) => {
             attendanceEndDate: addDays(baseDate, ACTIVITY_PROOF_DAYS - 1)
         });
     } catch (error) {
+        if (connection) {
+            try {
+                await connection.rollback();
+            } catch (rollbackError) {
+                // Transaction may already be closed.
+            }
+        }
         console.error('Activity proof bulk upload failed:', error);
         res.status(500).json({
             success: false,
