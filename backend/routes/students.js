@@ -3,7 +3,7 @@ const router = express.Router();
 const { verifyToken, isStudent } = require('../middleware/auth');
 const { addColumnIfMissing, withTransaction } = require('../utils/db');
 const { saveDataUrlFile, recordUploadedFile } = require('../utils/security');
-const { internshipProofInsertShape, safeRecordUploadedFile } = require('../utils/compat');
+const { compatColumnExists, internshipProofInsertShape, safeRecordUploadedFile } = require('../utils/compat');
 
 const REQUIRED_APPROVED_PROOF_DAYS = 5;
 const ACTIVITY_PROOF_DAYS = 15;
@@ -84,9 +84,12 @@ async function ensureInternshipProofsTable(connection) {
 router.get('/profile', verifyToken, isStudent, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
+        const majorSubjectSelect = await compatColumnExists(connection, 'students', 'majorSubject')
+            ? 'majorSubject,'
+            : "'' AS majorSubject,";
         const [students] = await connection.query(
             `SELECT id, firstName, lastName, email, phone, dob, gender, college, course, district, state,
-                    rollNo, rollNo AS rollno, guardian, address, pincode, university, degree, department, semester, session,
+                    rollNo, rollNo AS rollno, guardian, address, pincode, university, degree, department, ${majorSubjectSelect} semester, session,
                     emergencyName, emergencyPhone, relationship, profileImage, signature, bio, status, createdAt, updatedAt
              FROM students WHERE id = ?`,
             [req.user.id]
@@ -130,6 +133,7 @@ router.put('/profile', verifyToken, isStudent, async (req, res) => {
             university,
             degree,
             department,
+            majorSubject,
             semester,
             session,
             emergencyName,
@@ -140,46 +144,60 @@ router.put('/profile', verifyToken, isStudent, async (req, res) => {
         } = req.body;
         const connection = await req.db.getConnection();
         
+        const assignments = [
+            'firstName = ?',
+            'lastName = ?',
+            'phone = ?',
+            'college = ?',
+            'course = ?',
+            'rollNo = COALESCE(?, rollNo)',
+            'guardian = COALESCE(?, guardian)',
+            'address = COALESCE(?, address)',
+            'pincode = COALESCE(?, pincode)',
+            'university = COALESCE(?, university)',
+            'degree = COALESCE(?, degree)',
+            'department = COALESCE(?, department)'
+        ];
+        const params = [
+            firstName,
+            lastName,
+            phone,
+            college,
+            course,
+            rollNo ?? rollno ?? null,
+            guardian ?? null,
+            address ?? null,
+            pincode ?? null,
+            university ?? null,
+            degree ?? null,
+            department ?? null
+        ];
+        if (await compatColumnExists(connection, 'students', 'majorSubject')) {
+            assignments.push('majorSubject = COALESCE(?, majorSubject)');
+            params.push(majorSubject ?? null);
+        }
+        assignments.push(
+            'semester = COALESCE(?, semester)',
+            'session = COALESCE(?, session)',
+            'emergencyName = COALESCE(?, emergencyName)',
+            'emergencyPhone = COALESCE(?, emergencyPhone)',
+            'relationship = COALESCE(?, relationship)',
+            'profileImage = COALESCE(?, profileImage)',
+            'signature = COALESCE(?, signature)'
+        );
+        params.push(
+            semester ?? null,
+            session ?? null,
+            emergencyName ?? null,
+            emergencyPhone ?? null,
+            relationship ?? null,
+            profileImage ?? null,
+            signature ?? null,
+            req.user.id
+        );
         await connection.query(
-            `UPDATE students
-             SET firstName = ?, lastName = ?, phone = ?, college = ?, course = ?,
-                 rollNo = COALESCE(?, rollNo),
-                 guardian = COALESCE(?, guardian),
-                 address = COALESCE(?, address),
-                 pincode = COALESCE(?, pincode),
-                 university = COALESCE(?, university),
-                 degree = COALESCE(?, degree),
-                 department = COALESCE(?, department),
-                 semester = COALESCE(?, semester),
-                 session = COALESCE(?, session),
-                 emergencyName = COALESCE(?, emergencyName),
-                 emergencyPhone = COALESCE(?, emergencyPhone),
-                 relationship = COALESCE(?, relationship),
-                 profileImage = COALESCE(?, profileImage),
-                 signature = COALESCE(?, signature)
-             WHERE id = ?`,
-            [
-                firstName,
-                lastName,
-                phone,
-                college,
-                course,
-                rollNo ?? rollno ?? null,
-                guardian ?? null,
-                address ?? null,
-                pincode ?? null,
-                university ?? null,
-                degree ?? null,
-                department ?? null,
-                semester ?? null,
-                session ?? null,
-                emergencyName ?? null,
-                emergencyPhone ?? null,
-                relationship ?? null,
-                profileImage ?? null,
-                signature ?? null,
-                req.user.id
-            ]
+            `UPDATE students SET ${assignments.join(', ')} WHERE id = ?`,
+            params
         );
         
         connection.release();
@@ -289,7 +307,6 @@ router.get('/proofs', verifyToken, isStudent, async (req, res) => {
 
 // Upload a daily internship work proof
 router.post('/proofs', verifyToken, isStudent, async (req, res) => {
-    let connection;
     try {
         const {
             courseId,
@@ -320,7 +337,7 @@ router.post('/proofs', verifyToken, isStudent, async (req, res) => {
         }
 
         const result = await withTransaction(req.db, async tx => {
-            connection = tx;
+            const connection = tx;
             await ensureInternshipProofsTable(connection);
             const storedScreenshot = await saveDataUrlFile({
                 dataUrl: safeScreenshot,
@@ -382,8 +399,6 @@ router.post('/proofs', verifyToken, isStudent, async (req, res) => {
             message: 'Failed to upload internship proof',
             error: error.message
         });
-    } finally {
-        if (connection) connection.release();
     }
 });
 

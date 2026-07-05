@@ -268,6 +268,7 @@ class BSIAuthStorage {
         this.setItem('userCollege', studentData.college || '');
         this.setItem('userDegree', studentData.degree || '');
         this.setItem('userDepartment', studentData.department || '');
+        this.setItem('userMajorSubject', studentData.majorSubject || studentData.userMajorSubject || '');
         this.setItem('userSemester', studentData.semester || '');
         this.setItem('userSession', studentData.session || '');
         this.setItem('userRollNo', studentData.rollno || studentData.rollNo || studentData.userRollNo || this.getItem('userRollNo') || '');
@@ -641,6 +642,13 @@ class APIService {
     static async deleteStudent(id) {
         return this.request(`/admin/students/${id}`, {
             method: 'DELETE'
+        });
+    }
+
+    static async updateAdminStudent(id, data) {
+        return this.request(`/admin/students/${encodeURIComponent(id)}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
         });
     }
 

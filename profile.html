@@ -871,6 +871,11 @@
                         <option value="mobile-dev">Mobile App Development</option>
                     </select>
                 </div>
+
+                <div class="info-item">
+                    <div class="info-label">Major Subject (MJC)</div>
+                    <div class="info-value" id="majorSubjectValue">-</div>
+                </div>
             </div>
 
             <div class="profile-box">
@@ -1038,6 +1043,7 @@
             const aliases = {
                 rollno: ['rollno', 'rollNo', 'userRollNo'],
                 guardian: ['guardian', 'fatherName', 'userGuardian'],
+                majorSubject: ['majorSubject', 'userMajorSubject'],
                 skill: ['skill', 'course', 'selectedSkill', 'userSkill']
             };
             const fields = aliases[field] || [field];
@@ -1196,7 +1202,10 @@
 
             if (!token) {
                 console.log('Loading profile data from localStorage');
-                document.getElementById('certificatesList').innerHTML = '<div class="no-certificates"><p>No certificates earned yet. Complete a course to earn your certificate!</p></div>';
+                const certificatesList = document.getElementById('certificatesList');
+                if (certificatesList) {
+                    certificatesList.innerHTML = '<div class="no-certificates"><p>No certificates earned yet. Complete a course to earn your certificate!</p></div>';
+                }
                 return;
             }
 
@@ -1217,6 +1226,7 @@
             const phone = getRegistrationValue(studentData, 'phone', 'userPhone', '-');
             const dob = formatProfileDate(getRegistrationValue(studentData, 'dob', 'userDOB', '-'));
             const skill = getRegistrationValue(studentData, 'skill', 'userSkill', 'Skill Development');
+            const majorSubject = getRegistrationValue(studentData, 'majorSubject', 'userMajorSubject', '-');
             const initials = `${firstName[0] || 'S'}${lastName[0] || ''}`.toUpperCase();
             const profilePhoto = (studentData && studentData.profilePhoto) || localStorage.getItem('userProfileImage');
 
@@ -1235,6 +1245,7 @@
             document.getElementById('usernameValue').textContent = email.includes('@') ? email.split('@')[0] : '-';
             document.getElementById('dobValue').textContent = dob;
             document.getElementById('skillValue').textContent = skill;
+            document.getElementById('majorSubjectValue').textContent = majorSubject;
 
             document.getElementById('firstNameEdit').value = firstName;
             document.getElementById('lastNameEdit').value = lastName;
@@ -1269,6 +1280,10 @@
                 if (rollNo) {
                     localStorage.setItem('userRollNo', rollNo);
                 }
+                const majorSubject = student.majorSubject || (registeredStudent && registeredStudent.majorSubject) || localStorage.getItem('userMajorSubject') || '';
+                if (majorSubject) {
+                    localStorage.setItem('userMajorSubject', majorSubject);
+                }
 
                 document.getElementById('profileName').textContent = student.firstName + ' ' + student.lastName;
                 document.getElementById('profileEmail').textContent = student.email;
@@ -1290,6 +1305,7 @@
                 const formattedDob = formatProfileDate(student.dob);
                 document.getElementById('dobValue').textContent = formattedDob;
                 document.getElementById('skillValue').textContent = student.course || '-';
+                document.getElementById('majorSubjectValue').textContent = majorSubject || '-';
 
                 // Edit fields
                 document.getElementById('firstNameEdit').value = student.firstName;
@@ -1352,13 +1368,17 @@
                 
                 renderCertificates(certificates);
             } catch (err) {
-                document.getElementById('certificatesList').innerHTML = '<div class="no-certificates"><p>Failed to load certificates</p></div>';
+                const certificatesList = document.getElementById('certificatesList');
+                if (certificatesList) {
+                    certificatesList.innerHTML = '<div class="no-certificates"><p>Failed to load certificates</p></div>';
+                }
                 console.error('Certificate load failed:', err.message);
             }
         }
 
         function renderCertificates(certificates) {
             const certificatesList = document.getElementById('certificatesList');
+            if (!certificatesList) return;
             
             if (certificates.length === 0) {
                 certificatesList.innerHTML = '<div class="no-certificates"><div class="no-certificates-icon">📜</div><p>No certificates earned yet.<br>Complete a course to earn your certificate!</p></div>';
@@ -1615,6 +1635,7 @@
                             university: localStorage.getItem('userUniversity') || 'Veer Kunwar Singh University',
                             degree: localStorage.getItem('userDegree') || '',
                             department: localStorage.getItem('userDepartment') || '',
+                            majorSubject: localStorage.getItem('userMajorSubject') || '',
                             semester: localStorage.getItem('userSemester') || '',
                             session: localStorage.getItem('userSession') || '',
                             emergencyName: localStorage.getItem('userEmergencyName') || '',

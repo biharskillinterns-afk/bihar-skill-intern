@@ -10,7 +10,7 @@ const { syncCompletedPaymentsForStudent } = require('./payments');
 const { withTransaction } = require('../utils/db');
 const { buildRegistrationId, buildStudentCode } = require('../utils/ids');
 const { normalizeEmail, saveDataUrlFile, recordUploadedFile } = require('../utils/security');
-const { studentActiveClause, updateStudentGeneratedIds, updatePendingRegistrationId, safeRecordUploadedFile } = require('../utils/compat');
+const { compatColumnExists, studentActiveClause, updateStudentGeneratedIds, updatePendingRegistrationId, safeRecordUploadedFile } = require('../utils/compat');
 
 const getJwtSecret = () => {
     if (process.env.JWT_SECRET) {
@@ -59,6 +59,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
             university,
             degree,
             department,
+            majorSubject,
             semester,
             session,
             emergencyName,
@@ -83,38 +84,46 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 throw error;
             }
 
+            const studentColumns = [
+                'firstName', 'lastName', 'email', 'phone', 'password', 'dob', 'gender', 'college', 'course', 'district',
+                'rollNo', 'guardian', 'address', 'pincode', 'university', 'degree', 'department', 'semester', 'session',
+                'emergencyName', 'emergencyPhone', 'relationship', 'profileImage', 'signature'
+            ];
+            const studentValues = [
+                firstName,
+                lastName,
+                cleanEmail,
+                phone,
+                hashedPassword,
+                dob,
+                gender,
+                college,
+                course,
+                district,
+                rollNo || rollno || '',
+                guardian || '',
+                address || '',
+                pincode || '',
+                university || 'Veer Kunwar Singh University',
+                degree || '',
+                department || '',
+                semester || '',
+                session || '',
+                emergencyName || '',
+                emergencyPhone || '',
+                relationship || '',
+                profileImage || '',
+                signature || ''
+            ];
+            if (await compatColumnExists(connection, 'students', 'majorSubject')) {
+                const departmentIndex = studentColumns.indexOf('department');
+                studentColumns.splice(departmentIndex + 1, 0, 'majorSubject');
+                studentValues.splice(departmentIndex + 1, 0, majorSubject || '');
+            }
             const [result] = await connection.query(
-                `INSERT INTO students
-                    (firstName, lastName, email, phone, password, dob, gender, college, course, district,
-                     rollNo, guardian, address, pincode, university, degree, department, semester, session,
-                     emergencyName, emergencyPhone, relationship, profileImage, signature, createdAt)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-                [
-                    firstName,
-                    lastName,
-                    cleanEmail,
-                    phone,
-                    hashedPassword,
-                    dob,
-                    gender,
-                    college,
-                    course,
-                    district,
-                    rollNo || rollno || '',
-                    guardian || '',
-                    address || '',
-                    pincode || '',
-                    university || 'Veer Kunwar Singh University',
-                    degree || '',
-                    department || '',
-                    semester || '',
-                    session || '',
-                    emergencyName || '',
-                    emergencyPhone || '',
-                    relationship || '',
-                    profileImage || '',
-                    signature || ''
-                ]
+                `INSERT INTO students (${studentColumns.join(', ')}, createdAt)
+                 VALUES (${studentColumns.map(() => '?').join(', ')}, NOW())`,
+                studentValues
             );
 
             const studentId = result.insertId;
@@ -165,6 +174,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 university: university || 'Veer Kunwar Singh University',
                 degree: degree || '',
                 department: department || '',
+                majorSubject: majorSubject || '',
                 semester: semester || '',
                 session: session || '',
                 emergencyName: emergencyName || '',
@@ -206,6 +216,7 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
             university,
             degree,
             department,
+            majorSubject,
             semester,
             session,
             emergencyName,
@@ -231,38 +242,46 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
             }
 
             await connection.query('DELETE FROM pending_registrations WHERE LOWER(email) = ?', [cleanEmail]);
+            const pendingColumns = [
+                'firstName', 'lastName', 'email', 'phone', 'password', 'dob', 'gender', 'college', 'course', 'district',
+                'rollNo', 'guardian', 'address', 'pincode', 'university', 'degree', 'department', 'semester', 'session',
+                'emergencyName', 'emergencyPhone', 'relationship', 'profileImage', 'signature'
+            ];
+            const pendingValues = [
+                firstName,
+                lastName,
+                cleanEmail,
+                phone,
+                hashedPassword,
+                dob,
+                gender,
+                college,
+                course,
+                district,
+                rollNo || rollno || '',
+                guardian || '',
+                address || '',
+                pincode || '',
+                university || 'Veer Kunwar Singh University',
+                degree || '',
+                department || '',
+                semester || '',
+                session || '',
+                emergencyName || '',
+                emergencyPhone || '',
+                relationship || '',
+                profileImage || '',
+                signature || ''
+            ];
+            if (await compatColumnExists(connection, 'pending_registrations', 'majorSubject')) {
+                const departmentIndex = pendingColumns.indexOf('department');
+                pendingColumns.splice(departmentIndex + 1, 0, 'majorSubject');
+                pendingValues.splice(departmentIndex + 1, 0, majorSubject || '');
+            }
             const [result] = await connection.query(
-                `INSERT INTO pending_registrations
-                    (firstName, lastName, email, phone, password, dob, gender, college, course, district,
-                     rollNo, guardian, address, pincode, university, degree, department, semester, session,
-                     emergencyName, emergencyPhone, relationship, profileImage, signature, expiresAt, createdAt)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW())`,
-                [
-                    firstName,
-                    lastName,
-                    cleanEmail,
-                    phone,
-                    hashedPassword,
-                    dob,
-                    gender,
-                    college,
-                    course,
-                    district,
-                    rollNo || rollno || '',
-                    guardian || '',
-                    address || '',
-                    pincode || '',
-                    university || 'Veer Kunwar Singh University',
-                    degree || '',
-                    department || '',
-                    semester || '',
-                    session || '',
-                    emergencyName || '',
-                    emergencyPhone || '',
-                    relationship || '',
-                    profileImage || '',
-                    signature || ''
-                ]
+                `INSERT INTO pending_registrations (${pendingColumns.join(', ')}, expiresAt, createdAt)
+                 VALUES (${pendingColumns.map(() => '?').join(', ')}, DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW())`,
+                pendingValues
             );
 
             const registrationId = buildRegistrationId(result.insertId);
@@ -296,6 +315,7 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
                 university: university || 'Veer Kunwar Singh University',
                 degree: degree || '',
                 department: department || '',
+                majorSubject: majorSubject || '',
                 semester: semester || '',
                 session: session || '',
                 emergencyName: emergencyName || '',
@@ -387,6 +407,7 @@ router.post('/login', validateLogin, async (req, res) => {
                 university: student.university,
                 degree: student.degree,
                 department: student.department,
+                majorSubject: student.majorSubject || '',
                 semester: student.semester,
                 session: student.session,
                 emergencyName: student.emergencyName,

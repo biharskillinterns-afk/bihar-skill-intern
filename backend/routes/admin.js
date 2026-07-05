@@ -156,9 +156,13 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
         const activeClause = await studentActiveClause(connection, 's');
+        const majorSubjectSelect = await compatColumnExists(connection, 'students', 'majorSubject')
+            ? 's.majorSubject,'
+            : "'' AS majorSubject,";
         const [students] = await connection.query(
             `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
                     s.course, s.district, s.state, s.rollNo, s.rollNo AS rollno, s.pincode,
+                    ${majorSubjectSelect}
                     s.status, s.createdAt, p.status AS paymentStatus, p.amount AS paymentAmount,
                     p.gatewayPaymentId AS razorpayPaymentId, p.gatewayOrderId AS razorpayOrderId,
                     p.completedAt AS paymentCompletedAt, p.createdAt AS paymentCreatedAt
@@ -196,10 +200,13 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const connection = await req.db.getConnection();
         const activeClause = await studentActiveClause(connection, 's');
+        const majorSubjectSelect = await compatColumnExists(connection, 'students', 'majorSubject')
+            ? 's.majorSubject,'
+            : "'' AS majorSubject,";
         const [students] = await connection.query(
             `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
                     s.course, s.district, s.state, s.rollNo, s.rollNo AS rollno, s.guardian, s.address,
-                    s.pincode, s.university, s.degree, s.department, s.semester, s.session,
+                    s.pincode, s.university, s.degree, s.department, ${majorSubjectSelect} s.semester, s.session,
                     s.emergencyName, s.emergencyPhone, s.relationship, s.profileImage, s.signature,
                     s.bio, s.status, s.createdAt, s.updatedAt, p.status AS paymentStatus,
                     p.amount AS paymentAmount, p.gatewayPaymentId AS razorpayPaymentId,
@@ -235,6 +242,63 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch student',
+            error: error.message
+        });
+    }
+});
+
+// Update student academic fields used by admin edit controls
+router.put('/students/:id', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const { course, majorSubject } = req.body;
+
+        const result = await withTransaction(req.db, async connection => {
+            const activeClause = await studentActiveClause(connection);
+            const [students] = await connection.query(
+                `SELECT id, course${await compatColumnExists(connection, 'students', 'majorSubject') ? ', majorSubject' : ''} FROM students WHERE id = ?${activeClause} LIMIT 1 FOR UPDATE`,
+                [req.params.id]
+            );
+
+            if (students.length === 0) {
+                const error = new Error('Student not found');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            const assignments = [];
+            const params = [];
+            if (course !== undefined) {
+                assignments.push('course = ?');
+                params.push(course || '');
+            }
+            if (majorSubject !== undefined && await compatColumnExists(connection, 'students', 'majorSubject')) {
+                assignments.push('majorSubject = ?');
+                params.push(majorSubject || '');
+            }
+
+            if (assignments.length > 0) {
+                params.push(req.params.id);
+                await connection.query(`UPDATE students SET ${assignments.join(', ')} WHERE id = ?`, params);
+                await logAdminAction(connection, req, 'student_update', {
+                    entityType: 'students',
+                    entityId: req.params.id,
+                    beforeValue: students[0],
+                    afterValue: { course, majorSubject }
+                });
+            }
+
+            return { before: students[0] };
+        });
+
+        res.json({
+            success: true,
+            message: 'Student updated successfully',
+            previous: result.before
+        });
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode ? error.message : 'Failed to update student',
             error: error.message
         });
     }
@@ -290,13 +354,12 @@ router.delete('/students/:id', verifyToken, isAdmin, async (req, res) => {
 });
 
 router.put('/students/:studentId/courses/:courseId/unlock', verifyToken, isAdmin, async (req, res) => {
-    let connection;
     try {
         const { studentId, courseId } = req.params;
         const unlock = req.body.unlock !== false;
 
         const result = await withTransaction(req.db, async tx => {
-            connection = tx;
+            const connection = tx;
             await ensureStudentCourseUnlockColumns(connection);
 
             const activeClause = await studentActiveClause(connection);
@@ -365,8 +428,6 @@ router.put('/students/:studentId/courses/:courseId/unlock', verifyToken, isAdmin
             message: error.statusCode ? error.message : 'Failed to update student course unlock',
             error: error.message
         });
-    } finally {
-        connection = null;
     }
 });
 
@@ -444,7 +505,6 @@ router.get('/proofs', verifyToken, isAdmin, async (req, res) => {
 
 // Approve or reject an internship work proof
 router.put('/proofs/:id/review', verifyToken, isAdmin, async (req, res) => {
-    let connection;
     try {
         const status = normalizeProofStatus(req.body.status);
         if (status === 'pending') {
@@ -455,7 +515,7 @@ router.put('/proofs/:id/review', verifyToken, isAdmin, async (req, res) => {
         }
 
         await withTransaction(req.db, async tx => {
-            connection = tx;
+            const connection = tx;
             await ensureInternshipProofsTable(connection);
             const [proofRows] = await connection.query(
                 'SELECT * FROM internship_proofs WHERE id = ? LIMIT 1 FOR UPDATE',
@@ -511,8 +571,6 @@ router.put('/proofs/:id/review', verifyToken, isAdmin, async (req, res) => {
             message: error.statusCode ? error.message : 'Failed to review proof',
             error: error.message
         });
-    } finally {
-        connection = null;
     }
 });
 

@@ -23,6 +23,7 @@ const validateStudentRegistration = [
     body('dob').isISO8601().withMessage('Invalid date format'),
     body('gender').isIn(['male', 'female', 'other']).withMessage('Invalid gender'),
     body('college').notEmpty().withMessage('College is required'),
+    body('majorSubject').notEmpty().withMessage('Major Subject (MJC) is required'),
     body('pincode').optional({ checkFalsy: true }).matches(/^\d{6}$/).withMessage('Pincode must be 6 digits'),
     handleValidationErrors
 ];

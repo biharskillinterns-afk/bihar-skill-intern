@@ -673,6 +673,38 @@
 
                     <div class="form-row">
                         <div class="form-group">
+                            <label>Major Subject (MJC) <span class="required">*</span></label>
+                            <select id="majorSubject" name="majorSubject" required>
+                                <option value="">Select Major Subject</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Botany">Botany</option>
+                                <option value="Zoology">Zoology</option>
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="Urdu / Persian">Urdu / Persian</option>
+                                <option value="Political Science">Political Science</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="Economics">Economics</option>
+                                <option value="Psychology">Psychology</option>
+                                <option value="Sociology">Sociology</option>
+                                <option value="Philosophy">Philosophy</option>
+                                <option value="Home Science">Home Science</option>
+                                <option value="Commerce">Commerce</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="BCA">BCA</option>
+                                <option value="BBA">BBA</option>
+                                <option value="MBA">MBA</option>
+                                <option value="MCA">MCA</option>
+                                <option value="Law">Law</option>
+                                <option value="Agriculture">Agriculture</option>
+                                <option value="Education">Education</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Class/Semester <span class="required">*</span></label>
                             <select id="semester" name="semester" required>
                                 <option value="">Select Semester</option>
@@ -894,6 +926,7 @@
             localStorage.setItem('userCollege', studentData.college || '');
             localStorage.setItem('userDegree', studentData.degree || '');
             localStorage.setItem('userDepartment', studentData.department || '');
+            localStorage.setItem('userMajorSubject', studentData.majorSubject || '');
             localStorage.setItem('userSemester', studentData.semester || '');
             localStorage.setItem('userSession', studentData.session || '');
             localStorage.setItem('userRollNo', studentData.rollno || '');
@@ -1135,6 +1168,7 @@
                         document.getElementById('college').value = studentData.college || '';
                         document.getElementById('degree').value = studentData.degree || '';
                         document.getElementById('department').value = studentData.department || '';
+                        document.getElementById('majorSubject').value = studentData.majorSubject || '';
                         document.getElementById('semester').value = studentData.semester || '';
                         document.getElementById('session').value = studentData.session || '';
                         document.getElementById('emergencyName').value = studentData.emergencyName || '';
@@ -1281,6 +1315,7 @@
                 college: document.getElementById('college').value,
                 degree: document.getElementById('degree').value,
                 department: document.getElementById('department').value,
+                majorSubject: document.getElementById('majorSubject').value,
                 semester: document.getElementById('semester').value,
                 session: document.getElementById('session').value,
                 rollno: rollno,
@@ -1315,6 +1350,7 @@
                         university: 'Veer Kunwar Singh University',
                         degree: document.getElementById('degree').value,
                         department: document.getElementById('department').value,
+                        majorSubject: document.getElementById('majorSubject').value,
                         semester: document.getElementById('semester').value,
                         session: document.getElementById('session').value,
                         emergencyName: document.getElementById('emergencyName').value,

@@ -1993,6 +1993,38 @@
                     <span id="modalCurrentCourse"></span>
                 </div>
                 <div class="info-row">
+                    <label>Major Subject (MJC):</label>
+                    <select id="newMajorSubject">
+                        <option value="">Select Major Subject</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Botany">Botany</option>
+                        <option value="Zoology">Zoology</option>
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi</option>
+                        <option value="Urdu / Persian">Urdu / Persian</option>
+                        <option value="Political Science">Political Science</option>
+                        <option value="History">History</option>
+                        <option value="Geography">Geography</option>
+                        <option value="Economics">Economics</option>
+                        <option value="Psychology">Psychology</option>
+                        <option value="Sociology">Sociology</option>
+                        <option value="Philosophy">Philosophy</option>
+                        <option value="Home Science">Home Science</option>
+                        <option value="Commerce">Commerce</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="BCA">BCA</option>
+                        <option value="BBA">BBA</option>
+                        <option value="MBA">MBA</option>
+                        <option value="MCA">MCA</option>
+                        <option value="Law">Law</option>
+                        <option value="Agriculture">Agriculture</option>
+                        <option value="Education">Education</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="info-row">
                     <label>Change Course To: <span style="color: #ef4444;">*</span></label>
                     <select id="newCourse">
                         <option value="">Select New Course</option>
@@ -2542,6 +2574,9 @@
                 student.course,
                 student.rollno,
                 student.department,
+                student.majorSubject,
+                raw.majorSubject,
+                raw.userMajorSubject,
                 raw.gender,
                 raw.guardian,
                 raw.pincode,
@@ -2611,7 +2646,8 @@
                 college: student.college || sourceStudent.college || sourceStudent.userCollege || '',
                 course: student.course || sourceStudent.course || sourceStudent.skill || sourceStudent.selectedSkill || sourceStudent.userSkill || '',
                 rollno: student.rollno || sourceStudent.rollno || sourceStudent.rollNo || sourceStudent.userRollNo || rollNumber,
-                department: student.department || sourceStudent.department || sourceStudent.userDepartment || ''
+                department: student.department || sourceStudent.department || sourceStudent.userDepartment || '',
+                majorSubject: student.majorSubject || sourceStudent.majorSubject || sourceStudent.userMajorSubject || ''
             };
 
             let studentIds = StorageManager.get('allStudentIds', []);
@@ -2657,6 +2693,7 @@
                 dob: student.dob || student.userDOB || 'N/A',
                 rollno: student.rollno || student.rollNo || student.userRollNo || 'N/A',
                 department: student.department || student.userDepartment || 'N/A',
+                majorSubject: student.majorSubject || student.userMajorSubject || 'N/A',
                 fullData: student
             };
         }
@@ -3235,11 +3272,13 @@
                 rows.map(row => columns.map(column => csvEscape(row[column])).join(',')).join('\n');
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
+            const url = URL.createObjectURL(blob);
+            link.href = url;
             link.download = `${type}_report_${new Date().toISOString().slice(0, 10)}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
             addActivityLog(`${type} report exported`);
         }
 
@@ -3265,6 +3304,8 @@
                     <div class="detail-box"><strong>Date of Birth</strong>${escapeHTML(student.dob || raw.dob || raw.dateOfBirth || 'N/A')}</div>
                     <div class="detail-box"><strong>District</strong>${escapeHTML(student.district)}</div>
                     <div class="detail-box"><strong>College</strong>${escapeHTML(student.college)}</div>
+                    <div class="detail-box"><strong>Department</strong>${escapeHTML(student.department || raw.department || 'N/A')}</div>
+                    <div class="detail-box"><strong>Major Subject (MJC)</strong>${escapeHTML(student.majorSubject || raw.majorSubject || raw.userMajorSubject || 'N/A')}</div>
                     <div class="detail-box"><strong>Pincode</strong>${escapeHTML(student.pincode || raw.pincode || raw.pinCode || 'N/A')}</div>
                     <div class="detail-box"><strong>Roll No.</strong>${escapeHTML(student.rollno)}</div>
                 </div>
@@ -3347,6 +3388,7 @@
                     college: StorageManager.get('userCollege'),
                     degree: StorageManager.get('userDegree'),
                     department: StorageManager.get('userDepartment'),
+                    majorSubject: StorageManager.get('userMajorSubject'),
                     semester: StorageManager.get('userSemester'),
                     session: StorageManager.get('userSession'),
                     rollno: StorageManager.get('userRollNo'),
@@ -3412,6 +3454,7 @@
                             dob: student.dob || 'N/A',
                             rollno: student.rollno || student.id || 'N/A',
                             department: student.department || 'N/A',
+                            majorSubject: student.majorSubject || 'N/A',
                             pincode: student.pincode || 'N/A',
                             paymentStatus: student.paymentStatus || student.status || 'unknown',
                             fullData: student
@@ -3481,6 +3524,7 @@
             document.getElementById('modalCollege').textContent = student.college;
             document.getElementById('modalCurrentCourse').textContent = student.course;
             document.getElementById('newCourse').value = student.course;
+            document.getElementById('newMajorSubject').value = student.majorSubject || student.fullData?.majorSubject || student.fullData?.userMajorSubject || '';
 
             document.getElementById('editModal').classList.add('show');
         }
@@ -3490,25 +3534,46 @@
             currentEditingStudent = null;
         }
 
-        function saveChanges() {
+        async function saveChanges() {
             const newCourse = document.getElementById('newCourse').value;
+            const newMajorSubject = document.getElementById('newMajorSubject').value;
 
             if (!newCourse) {
                 alert('Please select a course!');
                 return;
             }
+            if (!newMajorSubject) {
+                alert('Please select Major Subject (MJC)!');
+                return;
+            }
 
             const student = allStudents[currentEditingStudent];
+            const hasBackendAdminSession = Boolean(StorageManager.get('authToken') || StorageManager.get('token'));
+            if (student.id && hasBackendAdminSession && typeof APIService !== 'undefined') {
+                try {
+                    await APIService.updateAdminStudent(student.id, {
+                        course: newCourse,
+                        majorSubject: newMajorSubject
+                    });
+                } catch (error) {
+                    alert(error.message || 'Unable to update student on server.');
+                    return;
+                }
+            }
             
             // Update the full student data object
             student.fullData.skill = newCourse;
+            student.fullData.course = newCourse;
+            student.fullData.majorSubject = newMajorSubject;
+            student.fullData.userMajorSubject = newMajorSubject;
             student.course = newCourse;
+            student.majorSubject = newMajorSubject;
 
             // Update localStorage with the updated student data
             StorageManager.set(student.id, student.fullData);
 
-            alert('✓ Course updated successfully!');
-            addActivityLog(`Course changed for ${student.name} to ${newCourse}`);
+            alert('✓ Student academic details updated successfully!');
+            addActivityLog(`Academic details updated for ${student.name}`);
             closeModal();
             loadAllStudents();
             updateStats();
@@ -3614,6 +3679,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
             
             alert('✓ Data downloaded successfully as CSV file!');
         }
@@ -3627,7 +3693,7 @@
             const priorityColumns = [
                 'id', 'name', 'firstName', 'lastName', 'email', 'phone', 'gender', 'guardian',
                 'dob', 'address', 'pincode', 'state', 'university', 'district', 'college', 'degree',
-                'department', 'semester', 'session', 'rollno', 'skill', 'course',
+                'department', 'majorSubject', 'semester', 'session', 'rollno', 'skill', 'course',
                 'emergencyName', 'emergencyPhone', 'relationship', 'registered',
                 'paymentStatus', 'paymentStatusLabel', 'paymentAmount', 'razorpayPaymentId', 'razorpayOrderId',
                 'progress', 'certificateStatus', 'certificateNumber', 'registrationDate'
@@ -3662,6 +3728,7 @@
                     district: student.district,
                     college: student.college,
                     department: student.department,
+                    majorSubject: student.majorSubject || student.fullData?.majorSubject || student.fullData?.userMajorSubject || '',
                     rollno: student.rollno,
                     pincode: student.pincode || student.fullData?.pincode || student.fullData?.pinCode || '',
                     course: student.course,
@@ -3687,6 +3754,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
             alert('Student A to Z data downloaded successfully. Open the CSV file in Excel.');
         }

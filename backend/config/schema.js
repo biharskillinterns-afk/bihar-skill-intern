@@ -97,6 +97,7 @@ async function ensureRuntimeSchema(pool) {
             ['university', "VARCHAR(150) DEFAULT 'Veer Kunwar Singh University'"],
             ['degree', "VARCHAR(100)"],
             ['department', "VARCHAR(100)"],
+            ['majorSubject', "VARCHAR(100)"],
             ['semester', "VARCHAR(50)"],
             ['session', "VARCHAR(50)"],
             ['emergencyName', "VARCHAR(150)"],
@@ -145,6 +146,7 @@ async function ensureRuntimeSchema(pool) {
                 university VARCHAR(150) DEFAULT 'Veer Kunwar Singh University',
                 degree VARCHAR(100),
                 department VARCHAR(100),
+                majorSubject VARCHAR(100),
                 semester VARCHAR(50),
                 session VARCHAR(50),
                 emergencyName VARCHAR(150),
@@ -161,6 +163,7 @@ async function ensureRuntimeSchema(pool) {
 
         const pendingRegistrationColumns = [
             ['registrationId', "VARCHAR(40) DEFAULT NULL"],
+            ['majorSubject', "VARCHAR(100)"],
             ['profileImagePath', "VARCHAR(500) DEFAULT NULL"],
             ['signaturePath', "VARCHAR(500) DEFAULT NULL"]
         ];

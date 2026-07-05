@@ -7,7 +7,7 @@ const { verifyToken, isStudent } = require('../middleware/auth');
 const { getRegistrationAmount } = require('../config/settings');
 const { buildRegistrationId, buildStudentCode } = require('../utils/ids');
 const { saveDataUrlFile, recordUploadedFile } = require('../utils/security');
-const { studentActiveClause, updateStudentGeneratedIds, safeRecordUploadedFile } = require('../utils/compat');
+const { compatColumnExists, studentActiveClause, updateStudentGeneratedIds, safeRecordUploadedFile } = require('../utils/compat');
 
 const getJwtSecret = () => {
     if (process.env.JWT_SECRET) {
@@ -267,6 +267,7 @@ function formatStudentResponse(student, paymentStatus = 'completed') {
         university: student.university,
         degree: student.degree,
         department: student.department,
+        majorSubject: student.majorSubject || '',
         semester: student.semester,
         session: student.session,
         emergencyName: student.emergencyName,
@@ -301,38 +302,46 @@ async function createStudentFromPendingRegistration(connection, pendingRegistrat
         return existingStudents[0];
     }
 
+    const studentColumns = [
+        'firstName', 'lastName', 'email', 'phone', 'password', 'dob', 'gender', 'college', 'course', 'district',
+        'rollNo', 'guardian', 'address', 'pincode', 'university', 'degree', 'department', 'semester', 'session',
+        'emergencyName', 'emergencyPhone', 'relationship', 'profileImage', 'signature'
+    ];
+    const studentValues = [
+        pending.firstName,
+        pending.lastName,
+        pending.email,
+        pending.phone,
+        pending.password,
+        pending.dob,
+        pending.gender,
+        pending.college,
+        pending.course || '',
+        pending.district || '',
+        pending.rollNo || '',
+        pending.guardian || '',
+        pending.address || '',
+        pending.pincode || '',
+        pending.university || 'Veer Kunwar Singh University',
+        pending.degree || '',
+        pending.department || '',
+        pending.semester || '',
+        pending.session || '',
+        pending.emergencyName || '',
+        pending.emergencyPhone || '',
+        pending.relationship || '',
+        pending.profileImage || '',
+        pending.signature || ''
+    ];
+    if (await compatColumnExists(connection, 'students', 'majorSubject')) {
+        const departmentIndex = studentColumns.indexOf('department');
+        studentColumns.splice(departmentIndex + 1, 0, 'majorSubject');
+        studentValues.splice(departmentIndex + 1, 0, pending.majorSubject || '');
+    }
     const [result] = await connection.query(
-        `INSERT INTO students
-            (firstName, lastName, email, phone, password, dob, gender, college, course, district,
-             rollNo, guardian, address, pincode, university, degree, department, semester, session,
-             emergencyName, emergencyPhone, relationship, profileImage, signature, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [
-            pending.firstName,
-            pending.lastName,
-            pending.email,
-            pending.phone,
-            pending.password,
-            pending.dob,
-            pending.gender,
-            pending.college,
-            pending.course || '',
-            pending.district || '',
-            pending.rollNo || '',
-            pending.guardian || '',
-            pending.address || '',
-            pending.pincode || '',
-            pending.university || 'Veer Kunwar Singh University',
-            pending.degree || '',
-            pending.department || '',
-            pending.semester || '',
-            pending.session || '',
-            pending.emergencyName || '',
-            pending.emergencyPhone || '',
-            pending.relationship || '',
-            pending.profileImage || '',
-            pending.signature || ''
-        ]
+        `INSERT INTO students (${studentColumns.join(', ')}, createdAt)
+         VALUES (${studentColumns.map(() => '?').join(', ')}, NOW())`,
+        studentValues
     );
 
     const studentId = result.insertId;
