@@ -318,7 +318,20 @@ async function ensureRuntimeSchema(pool) {
     }
 }
 
+async function ensureMajorSubjectMigration(pool) {
+    const connection = await pool.getConnection();
+
+    try {
+        await addColumnIfMissing(connection, 'students', 'majorSubject', 'VARCHAR(100)');
+        await addColumnIfMissing(connection, 'pending_registrations', 'majorSubject', 'VARCHAR(100)');
+        console.log('Major Subject (MJC) database columns are ready.');
+    } finally {
+        connection.release();
+    }
+}
+
 module.exports = {
     ensureSchema,
-    ensureRuntimeSchema
+    ensureRuntimeSchema,
+    ensureMajorSubjectMigration
 };

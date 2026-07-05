@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const pool = require('./config/database');
 const { ensureDatabaseExists, testDatabaseConnection, dbConnectionInfo } = require('./config/database');
-const { ensureSchema, ensureRuntimeSchema } = require('./config/schema');
+const { ensureSchema, ensureRuntimeSchema, ensureMajorSubjectMigration } = require('./config/schema');
 const paymentsRouter = require('./routes/payments');
 const requestLogger = require('./middleware/requestLogger');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
@@ -178,6 +178,8 @@ async function initializeDatabaseWithRetry() {
             if (shouldSkipSchemaSync()) {
                 console.log('Schema sync skipped because SKIP_SCHEMA_SYNC=true.');
                 await testDatabaseConnection();
+                console.log('Running approved Major Subject (MJC) migration while full schema sync remains skipped.');
+                await ensureMajorSubjectMigration(pool);
             } else {
                 console.log('Schema sync enabled. Running automatic schema checks.');
                 await ensureDatabaseExists();
