@@ -44,19 +44,50 @@
             max-width: 100%;
             margin: 0 auto;
             background: #ffffff;
-            padding: 22mm 20mm;
+            padding: 18mm 20mm;
             box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
             border: 1px solid #e5e7eb;
-            font-size: 15.5px;
+            font-size: 15px;
+        }
+
+        .document-heading {
+            text-align: center;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .document-heading h1 {
+            margin: 0;
+            font-size: 22px;
+            line-height: 1.35;
+            text-decoration: underline;
         }
 
         .date-line {
             text-align: right;
-            margin-bottom: 22px;
+            margin-bottom: 18px;
+            font-weight: 600;
+        }
+
+        .recipient-block {
+            margin: 0 0 16px;
+        }
+
+        .recipient-block p {
+            margin: 0 0 4px;
+        }
+
+        .recipient-address {
+            margin-left: 18px;
         }
 
         .subject {
-            margin: 22px 0;
+            margin: 18px 0;
+            padding: 10px 12px;
+            border-left: 4px solid #2563eb;
+            background: #f8fafc;
+            line-height: 1.6;
         }
 
         .subject strong,
@@ -65,12 +96,12 @@
         }
 
         .body-copy p {
-            margin: 0 0 16px;
+            margin: 0 0 13px;
             text-align: justify;
         }
 
         .assurance-list {
-            margin: 10px 0 20px 26px;
+            margin: 8px 0 16px 26px;
             padding: 0;
         }
 
@@ -80,8 +111,9 @@
         }
 
         .signature-block {
-            margin-top: 30px;
-            max-width: 360px;
+            margin-top: 24px;
+            margin-left: auto;
+            max-width: 320px;
         }
 
         .signature-block p {
@@ -130,6 +162,10 @@
             background: linear-gradient(135deg, #0f766e, #14b8a6);
         }
 
+        .btn-back {
+            background: linear-gradient(135deg, #475569, #334155);
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -145,6 +181,14 @@
 
             .date-line {
                 text-align: left;
+            }
+
+            .document-heading h1 {
+                font-size: 18px;
+            }
+
+            .signature-block {
+                margin-left: 0;
             }
 
             .actions {
@@ -195,18 +239,23 @@
 <body>
     <main class="page-shell">
         <section class="noc-document" id="nocDocument">
+            <div class="document-heading">
+                <h1>अनुमति एवं विरमण पत्र हेतु आवेदन-पत्र</h1>
+            </div>
+
             <div class="date-line">दिनांक : <span class="fill" data-field="currentDate"></span></div>
 
-            <p>सेवा में,</p>
-            <p>
-                विभागाध्यक्ष,<br>
-                <span class="fill" data-field="majorSubject"></span> ,<span class="fill" data-field="department"></span><br>
-                <span class="fill" data-field="collegeName"></span>
-            </p>
+            <div class="recipient-block">
+                <p>सेवा में,</p>
+                <div class="recipient-address">
+                    <p>विभागाध्यक्ष,</p>
+                    <p><span class="fill" data-field="majorSubject"></span>, <span class="fill" data-field="department"></span></p>
+                    <p><span class="fill" data-field="collegeName"></span></p>
+                </div>
+            </div>
 
             <div class="subject">
-                <strong>विषय:</strong><br>
-                Bihar Skill Interns के माध्यम से इंटर्नशिप करने हेतु अनुमति एवं विरमण पत्र प्रदान करने के संबंध में।
+                <strong>विषय:</strong> Bihar Skill Interns के माध्यम से इंटर्नशिप करने हेतु अनुमति एवं विरमण पत्र प्रदान करने के संबंध में।
             </div>
 
             <div class="body-copy">
@@ -255,6 +304,7 @@
         </section>
 
         <div class="actions">
+            <button type="button" class="action-btn btn-back" onclick="goBack()">← Back</button>
             <button type="button" class="action-btn btn-print" onclick="printNocForm()">🖨 Print</button>
             <button type="button" class="action-btn btn-pdf" onclick="downloadNocPdf()">📥 Download PDF</button>
         </div>
@@ -347,6 +397,14 @@
 
         function printNocForm() {
             window.print();
+        }
+
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+                return;
+            }
+            window.location.href = 'courses.html';
         }
 
         function downloadNocPdf() {
