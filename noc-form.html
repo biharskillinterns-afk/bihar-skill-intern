@@ -54,24 +54,9 @@
             letter-spacing: 0;
         }
 
-        .document-heading {
-            text-align: center;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #9ca3af;
-        }
-
-        .document-heading h1 {
-            margin: 0;
-            font-size: 15pt;
-            line-height: 1.25;
-            text-decoration: underline;
-            font-weight: 400;
-        }
-
         .date-line {
             text-align: right;
-            margin-bottom: 16px;
+            margin-bottom: 22px;
             font-weight: 400;
         }
 
@@ -188,10 +173,6 @@
                 text-align: left;
             }
 
-            .document-heading h1 {
-                font-size: 14pt;
-            }
-
             .signature-block {
                 margin-left: 0;
             }
@@ -245,11 +226,7 @@
 <body>
     <main class="page-shell">
         <section class="noc-document" id="nocDocument">
-            <div class="document-heading">
-                <h1>अनुमति एवं विरमण पत्र हेतु आवेदन-पत्र</h1>
-            </div>
-
-            <div class="date-line">दिनांक : <span class="fill" data-field="currentDate"></span></div>
+            <div class="date-line">दिनांक : ____/____/20____</div>
 
             <div class="recipient-block">
                 <p>सेवा में,</p>
@@ -371,8 +348,7 @@
                 classRoll: pick(student, 'classRoll', 'classRollNo', 'classRollNumber', 'userClassRoll') || getStorageValue('userClassRoll', 'classRollNo'),
                 collegeName: pick(student, 'college', 'userCollege') || getStorageValue('userCollege'),
                 department: pick(student, 'department', 'userDepartment') || getStorageValue('userDepartment'),
-                mobile: pick(student, 'phone', 'mobile', 'userPhone', 'userMobile') || getStorageValue('userPhone', 'userMobile'),
-                currentDate: new Date().toLocaleDateString('hi-IN')
+                mobile: pick(student, 'phone', 'mobile', 'userPhone', 'userMobile') || getStorageValue('userPhone', 'userMobile')
             };
         }
 
