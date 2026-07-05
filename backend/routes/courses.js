@@ -143,7 +143,6 @@ router.post('/:id/enroll', verifyToken, isStudent, async (req, res) => {
 
 // Save course progress and completion result
 router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
-    let connection;
     try {
         const courseId = req.params.id;
         const {
@@ -159,7 +158,7 @@ router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
         const finalStatus = status || (safeProgress >= 100 ? 'completed' : safeProgress > 0 ? 'in_progress' : 'enrolled');
 
         const result = await withTransaction(req.db, async tx => {
-            connection = tx;
+            const connection = tx;
             await ensureStudentCourseUnlockColumns(connection);
 
             const [courses] = await connection.query(
@@ -274,8 +273,6 @@ router.put('/:id/progress', verifyToken, isStudent, async (req, res) => {
             ...(error.details || {}),
             error: error.message
         });
-    } finally {
-        connection = null;
     }
 });
 

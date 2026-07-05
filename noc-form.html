@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOC Form - Bihar Skill Intern</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+    <meta name="description" content="Auto-filled NOC application form for Bihar Skill Intern students.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bihar Skill Intern">
+    <meta property="og:title" content="NOC Form - Bihar Skill Intern">
+    <meta property="og:description" content="Auto-filled NOC application form for Bihar Skill Intern students.">
+    <meta property="og:url" content="https://biharskillinterns.in/noc-form.html">
+    <meta property="og:image" content="https://biharskillinterns.in/logo.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="NOC Form - Bihar Skill Intern">
+    <meta name="twitter:description" content="Auto-filled NOC application form for Bihar Skill Intern students.">
+    <meta name="twitter:image" content="https://biharskillinterns.in/logo.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="api-config.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #eef3f8;
+            color: #111827;
+            font-family: "Noto Sans Devanagari", "Mangal", "Nirmala UI", Arial, sans-serif;
+            line-height: 1.75;
+            padding: 24px 12px;
+        }
+
+        .page-shell {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .noc-document {
+            width: 210mm;
+            min-height: 297mm;
+            max-width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 22mm 20mm;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+            border: 1px solid #e5e7eb;
+            font-size: 15.5px;
+        }
+
+        .date-line {
+            text-align: right;
+            margin-bottom: 22px;
+        }
+
+        .subject {
+            margin: 22px 0;
+        }
+
+        .subject strong,
+        .body-copy strong {
+            font-weight: 700;
+        }
+
+        .body-copy p {
+            margin: 0 0 16px;
+            text-align: justify;
+        }
+
+        .assurance-list {
+            margin: 10px 0 20px 26px;
+            padding: 0;
+        }
+
+        .assurance-list li {
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .signature-block {
+            margin-top: 30px;
+            max-width: 360px;
+        }
+
+        .signature-block p {
+            margin: 8px 0;
+        }
+
+        .fill {
+            display: inline;
+            min-width: 80px;
+            font-weight: 600;
+        }
+
+        .actions {
+            width: 210mm;
+            max-width: 100%;
+            margin: 18px auto 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            border: 0;
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 12px 20px;
+            min-width: 150px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.22);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #0f766e, #14b8a6);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .noc-document {
+                width: 100%;
+                min-height: auto;
+                padding: 18px;
+                font-size: 14px;
+                box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1);
+            }
+
+            .date-line {
+                text-align: left;
+            }
+
+            .actions {
+                width: 100%;
+                position: sticky;
+                bottom: 0;
+                padding: 10px 0;
+                background: rgba(238, 243, 248, 0.94);
+                backdrop-filter: blur(8px);
+            }
+
+            .action-btn {
+                flex: 1 1 145px;
+                min-width: 0;
+            }
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+
+            .page-shell {
+                max-width: none;
+            }
+
+            .noc-document {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                padding: 14mm 16mm;
+                box-shadow: none;
+                border: 0;
+            }
+
+            .actions {
+                display: none;
+            }
+
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page-shell">
+        <section class="noc-document" id="nocDocument">
+            <div class="date-line">दिनांक : <span class="fill" data-field="currentDate"></span></div>
+
+            <p>सेवा में,</p>
+            <p>
+                विभागाध्यक्ष,<br>
+                <span class="fill" data-field="majorSubject"></span> ,<span class="fill" data-field="department"></span><br>
+                <span class="fill" data-field="collegeName"></span>
+            </p>
+
+            <div class="subject">
+                <strong>विषय:</strong><br>
+                Bihar Skill Interns के माध्यम से इंटर्नशिप करने हेतु अनुमति एवं विरमण पत्र प्रदान करने के संबंध में।
+            </div>
+
+            <div class="body-copy">
+                <p>महोदय/महोदया,</p>
+
+                <p>
+                    सविनय निवेदन है कि मैं <strong><span data-field="studentName"></span></strong>,
+                    मुख्य विषय (MJC) <strong><span data-field="majorSubject"></span></strong>,
+                    सत्र <strong><span data-field="session"></span></strong>,
+                    सेमेस्टर <strong><span data-field="semester"></span></strong>,
+                    विश्वविद्यालय रोल संख्या <strong><span data-field="universityRoll"></span></strong>,
+                    पंजीयन संख्या <strong><span data-field="registrationNumber"></span></strong>,
+                    अनुक्रमांक <strong><span data-field="classRoll"></span></strong>,
+                    आपके महाविद्यालय का छात्र/छात्रा हूँ।
+                </p>
+
+                <p>
+                    मैंने Bihar Skill Interns के माध्यम से इंटर्नशिप हेतु ऑनलाइन पंजीकरण किया है तथा विश्वविद्यालय द्वारा निर्धारित इंटर्नशिप कार्यक्रम के अंतर्गत उक्त संस्थान से इंटर्नशिप करना चाहता/चाहती हूँ।
+                </p>
+
+                <p>
+                    अतः आपसे विनम्र अनुरोध है कि मुझे उक्त इंटर्नशिप करने की अनुमति प्रदान करने की कृपा करें तथा महाविद्यालय की ओर से विरमण पत्र उपलब्ध कराने का कष्ट करें ताकि मैं निर्धारित समयावधि में अपनी इंटर्नशिप सफलतापूर्वक पूर्ण कर सकूँ।
+                </p>
+
+                <p>मैं आपको आश्वस्त करता/करती हूँ कि—</p>
+
+                <ol class="assurance-list">
+                    <li>विश्वविद्यालय एवं महाविद्यालय द्वारा निर्धारित सभी नियमों का पालन करूँगा/करूँगी।</li>
+                    <li>विश्वविद्यालय द्वारा निर्धारित 120 घंटे की इंटर्नशिप पूर्ण करूँगा/करूँगी।</li>
+                    <li>आवश्यक रिपोर्ट एवं प्रमाण-पत्र महाविद्यालय में प्रस्तुत करूँगा/करूँगी।</li>
+                    <li>अनुशासन एवं आचार-संहिता का पालन करूँगा/करूँगी।</li>
+                </ol>
+
+                <p>अतः आपसे पुनः अनुरोध है कि आवश्यक विरमण पत्र जारी करने की कृपा करें।</p>
+
+                <p>धन्यवाद।</p>
+            </div>
+
+            <div class="signature-block">
+                <p>विश्वासभाजन,</p>
+                <p>हस्ताक्षर ______________________</p>
+                <p>नाम : <span class="fill" data-field="studentName"></span></p>
+                <p>सेमेस्टर : <span class="fill" data-field="semester"></span></p>
+                <p>मोबाइल नं. : <span class="fill" data-field="mobile"></span></p>
+            </div>
+        </section>
+
+        <div class="actions">
+            <button type="button" class="action-btn btn-print" onclick="printNocForm()">🖨 Print</button>
+            <button type="button" class="action-btn btn-pdf" onclick="downloadNocPdf()">📥 Download PDF</button>
+        </div>
+    </main>
+
+    <script>
+        const storage = typeof BSIAuthStorage !== 'undefined' ? BSIAuthStorage : localStorage;
+
+        function cleanValue(value) {
+            if (value === null || value === undefined) return '';
+            const text = String(value).trim();
+            return ['null', 'undefined', 'N/A', 'n/a', '-'].includes(text) ? '' : text;
+        }
+
+        function getStorageValue(...keys) {
+            for (const key of keys) {
+                const value = cleanValue(storage.getItem(key));
+                if (value) return value;
+            }
+            return '';
+        }
+
+        function readJsonStorage(key) {
+            try {
+                const value = storage.getItem(key) || localStorage.getItem(key);
+                return value ? JSON.parse(value) : null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function getCurrentStudentFromStorage() {
+            const currentStudentId = getStorageValue('currentStudentId');
+            const currentStudent = currentStudentId ? readJsonStorage(currentStudentId) : null;
+            return currentStudent || readJsonStorage('student') || {};
+        }
+
+        function pick(source, ...keys) {
+            for (const key of keys) {
+                const value = cleanValue(source && source[key]);
+                if (value) return value;
+            }
+            return '';
+        }
+
+        function buildNocData(student = {}) {
+            const firstName = pick(student, 'firstName');
+            const lastName = pick(student, 'lastName');
+            const fullName = pick(student, 'name', 'fullName') || [firstName, lastName].filter(Boolean).join(' ');
+            const rollNo = pick(student, 'rollNo', 'rollno', 'userRollNo') || getStorageValue('userRollNo');
+            return {
+                studentName: fullName || getStorageValue('userName') || [getStorageValue('userFirstName'), getStorageValue('userLastName')].filter(Boolean).join(' '),
+                majorSubject: pick(student, 'majorSubject', 'userMajorSubject') || getStorageValue('userMajorSubject'),
+                session: pick(student, 'session', 'userSession') || getStorageValue('userSession'),
+                semester: pick(student, 'semester', 'userSemester') || getStorageValue('userSemester'),
+                universityRoll: rollNo,
+                registrationNumber: pick(student, 'registrationId', 'registrationNumber', 'userRegistrationId') || getStorageValue('userRegistrationId', 'registrationId', 'pendingRegistrationId'),
+                classRoll: pick(student, 'classRoll', 'classRollNo', 'classRollNumber', 'userClassRoll') || getStorageValue('userClassRoll', 'classRollNo'),
+                collegeName: pick(student, 'college', 'userCollege') || getStorageValue('userCollege'),
+                department: pick(student, 'department', 'userDepartment') || getStorageValue('userDepartment'),
+                mobile: pick(student, 'phone', 'mobile', 'userPhone', 'userMobile') || getStorageValue('userPhone', 'userMobile'),
+                currentDate: new Date().toLocaleDateString('hi-IN')
+            };
+        }
+
+        function fillNocForm(data) {
+            document.querySelectorAll('[data-field]').forEach(element => {
+                element.textContent = cleanValue(data[element.dataset.field]);
+            });
+        }
+
+        async function loadNocFormData() {
+            let student = getCurrentStudentFromStorage();
+            const token = getStorageValue('authToken', 'token');
+            if (token && typeof APIService !== 'undefined') {
+                try {
+                    const response = await APIService.getProfile();
+                    if (response && response.success && response.student) {
+                        student = { ...student, ...response.student };
+                        if (typeof BSIAuthStorage !== 'undefined') {
+                            BSIAuthStorage.saveStudent(response.student, response.student.passwordHash);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Unable to refresh profile for NOC form:', error.message);
+                }
+            }
+            fillNocForm(buildNocData(student));
+        }
+
+        function printNocForm() {
+            window.print();
+        }
+
+        function downloadNocPdf() {
+            const studentName = cleanValue(document.querySelector('[data-field="studentName"]').textContent) || 'Student';
+            const fileName = `NOC_Form_${studentName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'Student'}.pdf`;
+            const options = {
+                margin: [10, 12, 10, 12],
+                filename: fileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(options).from(document.getElementById('nocDocument')).save();
+        }
+
+        window.addEventListener('load', loadNocFormData);
+    </script>
+</body>
+</html>

@@ -585,9 +585,13 @@
             return '';
         }
 
+        let previewObjectUrls = [];
+
         async function previewFiles() {
             const files = Array.from(document.getElementById('screenshots').files || []);
             const preview = document.getElementById('previewGrid');
+            previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
+            previewObjectUrls = [];
             preview.innerHTML = '';
 
             if (!files.length) return;
@@ -595,6 +599,7 @@
             const validationError = validateFiles(files);
             files.slice(0, MAX_SCREENSHOTS).forEach((file, index) => {
                 const url = URL.createObjectURL(file);
+                previewObjectUrls.push(url);
                 const start = getSelectedStartDate();
                 const proofDate = start ? addDays(start, index) : new Date();
                 const sizeKb = (file.size / 1024).toFixed(1);

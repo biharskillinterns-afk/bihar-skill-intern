@@ -67,6 +67,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px 20px;
+            width: 100%;
         }
 
         .course-header {
@@ -140,6 +141,7 @@
 
         .tab-content {
             display: none;
+            max-width: 100%;
         }
 
         .tab-content.active {
@@ -154,6 +156,9 @@
             border-radius: 14px;
             box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
             line-height: 1.8;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .notes-container h3 {
@@ -180,6 +185,7 @@
             text-align: justify;
             line-height: 1.85;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-wrap: anywhere;
         }
 
         .notes-container ul,
@@ -482,6 +488,16 @@
 
             .notes-container {
                 padding: 20px;
+            }
+
+            .course-container {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
+            .progress-bar {
+                width: 100%;
+                max-width: 300px;
             }
         }
     </style>

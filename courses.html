@@ -71,6 +71,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
             border-bottom: 1px solid rgba(219, 229, 240, 0.92);
             box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
             position: sticky;
@@ -89,6 +90,7 @@
             font-weight: 800;
             color: var(--dash-primary-dark);
             min-width: 240px;
+            flex: 0 1 auto;
         }
 
         .brand-logo-small {
@@ -115,6 +117,8 @@
             list-style: none;
             align-items: center;
             justify-content: center;
+            flex: 1 1 auto;
+            min-width: 0;
         }
 
         .nav-menu a {
@@ -161,6 +165,8 @@
             display: flex;
             align-items: center;
             gap: 14px;
+            flex: 0 1 auto;
+            min-width: 0;
         }
 
         .user-profile {
@@ -813,6 +819,19 @@
             }
         }
 
+        @media (max-width: 1400px) and (min-width: 769px) {
+            .top-nav {
+                flex-wrap: wrap;
+                padding-inline: 24px;
+            }
+
+            .nav-menu {
+                order: 3;
+                width: 100%;
+                flex-wrap: wrap;
+            }
+        }
+
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -877,6 +896,7 @@
                 <button class="action-btn btn-primary" onclick="window.location.href='registration-documents.html'">🪪 Enrollment Docs</button>
                 <button class="action-btn btn-info" onclick="viewProfile()">👤 View Profile</button>
                 <button class="action-btn btn-info" onclick="window.location.href='consent-form.html'" style="background: linear-gradient(135deg, #ec4899, #db2777);">📋 Consent Form</button>
+                <button class="action-btn btn-info" onclick="window.location.href='noc-form.html'">📄 NOC Form</button>
                 <button class="action-btn" onclick="window.location.href='internship-report.html'" style="background: linear-gradient(135deg, #f97316, #ea580c); color:white;">📄 Internship Report</button>
             </div>
         </div>
