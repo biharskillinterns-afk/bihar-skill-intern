@@ -41,8 +41,14 @@
             margin: 0 auto;
         }
 
+        @media screen {
+            .noc-document,
+            .actions {
+                width: min(210mm, calc(100vw - 24px));
+            }
+        }
+
         .noc-document {
-            width: 210mm;
             min-height: 297mm;
             max-width: 100%;
             margin: 0 auto;
@@ -116,8 +122,50 @@
             font-weight: 600;
         }
 
-        .actions {
+        .pdf-export-wrapper {
+            position: fixed;
+            left: -9999px;
+            top: 0;
             width: 210mm;
+            background: #ffffff;
+            z-index: -1;
+        }
+
+        .pdf-export-document {
+            width: 210mm !important;
+            min-height: auto !important;
+            max-width: none !important;
+            padding: 16mm 18mm !important;
+            box-shadow: none !important;
+            border: 0 !important;
+            font-size: 12pt !important;
+        }
+
+        .pdf-export-document .date-line {
+            margin-bottom: 16px;
+        }
+
+        .pdf-export-document .subject {
+            margin: 10px 0 12px;
+        }
+
+        .pdf-export-document .body-copy p {
+            margin-bottom: 8px;
+        }
+
+        .pdf-export-document .assurance-list {
+            margin-bottom: 10px;
+        }
+
+        .pdf-export-document .assurance-list li {
+            margin-bottom: 3px;
+        }
+
+        .pdf-export-document .signature-block {
+            margin-top: 16px;
+        }
+
+        .actions {
             max-width: 100%;
             margin: 18px auto 0;
             display: flex;
@@ -159,14 +207,33 @@
         @media (max-width: 768px) {
             body {
                 padding: 10px;
+                overflow-x: hidden;
+            }
+
+            .page-shell {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
             }
 
             .noc-document {
                 width: 100%;
+                max-width: calc(100vw - 20px);
                 min-height: auto;
                 padding: 18px;
                 font-size: 12pt;
                 box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1);
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            .noc-document p,
+            .subject,
+            .assurance-list,
+            .signature-block {
+                max-width: 100%;
+                overflow-wrap: anywhere;
+                word-break: break-word;
             }
 
             .date-line {
@@ -184,11 +251,16 @@
                 padding: 10px 0;
                 background: rgba(238, 243, 248, 0.94);
                 backdrop-filter: blur(8px);
+                display: grid;
+                grid-template-columns: 1fr 1fr;
             }
 
             .action-btn {
-                flex: 1 1 145px;
                 min-width: 0;
+            }
+
+            .btn-pdf {
+                grid-column: 1 / -1;
             }
         }
 
@@ -206,10 +278,34 @@
                 width: auto;
                 min-height: auto;
                 margin: 0;
-                padding: 20mm 22mm;
+                padding: 16mm 18mm;
                 box-shadow: none;
                 border: 0;
                 font-size: 12pt;
+            }
+
+            .date-line {
+                margin-bottom: 16px;
+            }
+
+            .subject {
+                margin: 10px 0 12px;
+            }
+
+            .body-copy p {
+                margin-bottom: 8px;
+            }
+
+            .assurance-list {
+                margin-bottom: 10px;
+            }
+
+            .assurance-list li {
+                margin-bottom: 3px;
+            }
+
+            .signature-block {
+                margin-top: 16px;
             }
 
             .actions {
@@ -270,6 +366,8 @@
                     <li>विश्वविद्यालय द्वारा निर्धारित 120 घंटे की इंटर्नशिप पूर्ण करूँगा/करूँगी।</li>
                     <li>आवश्यक रिपोर्ट एवं प्रमाण-पत्र महाविद्यालय में प्रस्तुत करूँगा/करूँगी।</li>
                     <li>अनुशासन एवं आचार-संहिता का पालन करूँगा/करूँगी।</li>
+                    <li>इंटर्नशिप उपस्थिति के अनुसार निर्धारित अवधि में नियमित रूप से कक्षा/प्रशिक्षण में उपस्थित रहूँगा/रहूँगी।</li>
+                    <li>इंटर्नशिप के दौरान किसी भी प्रकार की समस्या उत्पन्न होने पर उसकी पूर्ण जिम्मेदारी मेरी स्वयं की होगी।</li>
                 </ol>
 
                 <p>अतः आपसे पुनः अनुरोध है कि आवश्यक विरमण पत्र जारी करने की कृपा करें।</p>
@@ -392,15 +490,24 @@
         function downloadNocPdf() {
             const studentName = cleanValue(document.querySelector('[data-field="studentName"]').textContent) || 'Student';
             const fileName = `NOC_Form_${studentName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'Student'}.pdf`;
+            const wrapper = document.createElement('div');
+            const exportDocument = document.getElementById('nocDocument').cloneNode(true);
+            wrapper.className = 'pdf-export-wrapper';
+            exportDocument.classList.add('pdf-export-document');
+            wrapper.appendChild(exportDocument);
+            document.body.appendChild(wrapper);
+
             const options = {
-                margin: [10, 12, 10, 12],
+                margin: 0,
                 filename: fileName,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(options).from(document.getElementById('nocDocument')).save();
+            html2pdf().set(options).from(exportDocument).save().finally(() => {
+                wrapper.remove();
+            });
         }
 
         window.addEventListener('load', loadNocFormData);
