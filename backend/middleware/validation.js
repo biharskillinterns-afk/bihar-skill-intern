@@ -24,6 +24,7 @@ const validateStudentRegistration = [
     body('gender').isIn(['male', 'female', 'other']).withMessage('Invalid gender'),
     body('college').notEmpty().withMessage('College is required'),
     body('majorSubject').notEmpty().withMessage('Major Subject (MJC) is required'),
+    body('selectedCourseId').notEmpty().withMessage('Internship course is required').bail().isInt({ min: 1 }).withMessage('Invalid internship course'),
     body('pincode').optional({ checkFalsy: true }).matches(/^\d{6}$/).withMessage('Pincode must be 6 digits'),
     handleValidationErrors
 ];

@@ -267,6 +267,7 @@
             const status = await APIService.getRegistrationPaymentStatus(order.razorpayOrderId, {
                 studentEmail: getStoredValue('userEmail', ''),
                 pendingRegistrationId: getStoredValue('pendingRegistrationId', ''),
+                selectedCourseId: getStoredValue('selectedCourseId', ''),
                 amount: String(order.amount || amount || getPaymentAmount())
             });
 
@@ -318,6 +319,7 @@
             callbackUrl.searchParams.set('frontend', getFrontendBaseUrl());
             callbackUrl.searchParams.set('studentEmail', getStoredValue('userEmail', ''));
             callbackUrl.searchParams.set('pendingRegistrationId', getStoredValue('pendingRegistrationId', ''));
+            callbackUrl.searchParams.set('selectedCourseId', getStoredValue('selectedCourseId', ''));
             callbackUrl.searchParams.set('amount', String(order.amount || amount || getPaymentAmount()));
             return callbackUrl.toString();
         }
@@ -392,6 +394,7 @@
                     studentEmail: getStoredValue('userEmail', ''),
                     studentPhone: getStoredValue('userPhone', getStoredValue('userMobile', '')),
                     pendingRegistrationId: getStoredValue('pendingRegistrationId', ''),
+                    selectedCourseId: getStoredValue('selectedCourseId', ''),
                     localOrderId: generateOrderId()
                 });
 
@@ -423,7 +426,8 @@
                 },
                 notes: {
                     local_order_id: getStoredValue('orderId', ''),
-                    student_email: getStoredValue('userEmail', '')
+                    student_email: getStoredValue('userEmail', ''),
+                    selectedCourseId: getStoredValue('selectedCourseId', '')
                 },
                 theme: {
                     color: '#2563eb'
@@ -463,12 +467,13 @@
                     response.razorpay_order_id,
                     response.razorpay_signature,
                     {
-                        amount: order.amount || getPaymentAmount(),
-                        studentEmail: getStoredValue('userEmail', ''),
-                        pendingRegistrationId: getStoredValue('pendingRegistrationId', ''),
-                        localOrderId: getStoredValue('orderId', '')
-                    }
-                );
+                    amount: order.amount || getPaymentAmount(),
+                    studentEmail: getStoredValue('userEmail', ''),
+                    pendingRegistrationId: getStoredValue('pendingRegistrationId', ''),
+                    selectedCourseId: getStoredValue('selectedCourseId', ''),
+                    localOrderId: getStoredValue('orderId', '')
+                }
+            );
 
                 if (!verified || !verified.success) {
                     throw new Error(verified?.message || 'Payment verification failed.');
@@ -479,6 +484,8 @@
                         response.razorpay_order_id || order.razorpayOrderId,
                         {
                             studentEmail: getStoredValue('userEmail', ''),
+                            pendingRegistrationId: getStoredValue('pendingRegistrationId', ''),
+                            selectedCourseId: getStoredValue('selectedCourseId', ''),
                             amount: String(order.amount || getPaymentAmount())
                         }
                     );

@@ -156,6 +156,25 @@ function getRegistrationNoteValue(...sources) {
     return '';
 }
 
+function getRegistrationSelectedCourseIdFromNotes(...sources) {
+    for (const source of sources) {
+        const notes = source?.notes || {};
+        const value = source?.selectedCourseId ||
+            source?.courseId ||
+            notes.selectedCourseId ||
+            notes.selected_course_id ||
+            notes.courseId ||
+            notes.course_id;
+
+        const safeValue = Number(value);
+        if (Number.isInteger(safeValue) && safeValue > 0) {
+            return safeValue;
+        }
+    }
+
+    return null;
+}
+
 function getRegistrationEmailFromNotes(...sources) {
     for (const source of sources) {
         const notes = source?.notes || {};
@@ -211,12 +230,54 @@ async function findPaymentByOrder(connection, razorpayOrderId) {
     return payments[0] || null;
 }
 
+async function getActiveCourseById(connection, courseId) {
+    const safeCourseId = Number(courseId);
+    if (!Number.isInteger(safeCourseId) || safeCourseId <= 0) return null;
+
+    const [courses] = await connection.query(
+        "SELECT id, courseName FROM courses WHERE id = ? AND status = 'active' LIMIT 1",
+        [safeCourseId]
+    );
+
+    return courses[0] || null;
+}
+
+async function resolveRegistrationCourse(connection, paymentData = {}, createdStudent = null, existingPayment = null) {
+    const candidates = [
+        existingPayment?.courseId,
+        paymentData.selectedCourseId,
+        createdStudent?.selectedCourseId
+    ];
+
+    for (const candidate of candidates) {
+        const course = await getActiveCourseById(connection, candidate);
+        if (course) return course;
+    }
+
+    const defaultCourseId = await getOrCreateDefaultCourseId(connection);
+    return getActiveCourseById(connection, defaultCourseId);
+}
+
+async function ensureStudentEnrollment(connection, studentId, courseId) {
+    if (!studentId || !courseId) {
+        throw new Error('Student and course are required for enrollment');
+    }
+
+    await connection.query(
+        `INSERT INTO student_courses (studentId, courseId, enrolledAt, progress)
+         VALUES (?, ?, NOW(), 0)
+         ON DUPLICATE KEY UPDATE courseId = VALUES(courseId)`,
+        [studentId, courseId]
+    );
+}
+
 async function savePendingRegistrationPayment(req, paymentData) {
     let connection;
     try {
         connection = await req.db.getConnection();
         const studentId = await findStudentId(connection, req, paymentData.studentEmail);
-        const courseId = await getOrCreateDefaultCourseId(connection);
+        const selectedCourse = await getActiveCourseById(connection, paymentData.selectedCourseId);
+        const courseId = selectedCourse?.id || await getOrCreateDefaultCourseId(connection);
 
         if (!studentId || !courseId) {
             return;
@@ -268,6 +329,7 @@ function formatStudentResponse(student, paymentStatus = 'completed') {
         degree: student.degree,
         department: student.department,
         majorSubject: student.majorSubject || '',
+        selectedCourseId: student.selectedCourseId || student.courseId || '',
         semester: student.semester,
         session: student.session,
         emergencyName: student.emergencyName,
@@ -299,7 +361,11 @@ async function createStudentFromPendingRegistration(connection, pendingRegistrat
     );
     if (existingStudents.length > 0) {
         await connection.query('DELETE FROM pending_registrations WHERE id = ?', [pending.id]);
-        return existingStudents[0];
+        return {
+            ...existingStudents[0],
+            selectedCourseId: pending.selectedCourseId || null,
+            course: pending.course || existingStudents[0].course || ''
+        };
     }
 
     const studentColumns = [
@@ -385,7 +451,8 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
 
         const createdStudent = await createStudentFromPendingRegistration(connection, pendingRegistrationId);
         const studentId = existingPayment?.studentId || createdStudent?.id || await findStudentId(connection, req, paymentData.studentEmail);
-        const courseId = existingPayment?.courseId || await getOrCreateDefaultCourseId(connection);
+        const selectedCourse = await resolveRegistrationCourse(connection, paymentData, createdStudent, existingPayment);
+        const courseId = selectedCourse?.id;
 
         if (!studentId || !courseId) {
             await connection.rollback();
@@ -417,16 +484,30 @@ async function markRegistrationPaymentCompleted(req, paymentData) {
                         paymentData.razorpayOrderId,
                         JSON.stringify({
                             purpose: 'registration_fee',
-                            studentEmail: paymentData.studentEmail || ''
+                            studentEmail: paymentData.studentEmail || '',
+                            selectedCourseId: courseId
                         })
                     ]
                 );
+            }
+
+            await ensureStudentEnrollment(connection, studentId, courseId);
+            if (selectedCourse?.courseName) {
+                await connection.query(
+                    'UPDATE students SET course = ? WHERE id = ?',
+                    [selectedCourse.courseName, studentId]
+                );
+                if (createdStudent) {
+                    createdStudent.course = selectedCourse.courseName;
+                    createdStudent.selectedCourseId = courseId;
+                }
             }
 
             await connection.commit();
             return {
                 success: true,
                 studentId,
+                courseId,
                 student: createdStudent ? formatStudentResponse(createdStudent, 'completed') : null
             };
         } catch (error) {
@@ -528,7 +609,7 @@ async function syncCompletedPaymentsForStudent(db, studentId, studentEmail = '')
 
 router.post('/registration-order', async (req, res) => {
     try {
-        const { studentName, studentEmail, studentPhone, localOrderId, pendingRegistrationId } = req.body;
+        const { studentName, studentEmail, studentPhone, localOrderId, pendingRegistrationId, selectedCourseId } = req.body;
         const { keyId, keySecret } = getRazorpayConfig();
         const payableAmount = await getRegistrationAmount(req.db);
 
@@ -554,7 +635,8 @@ router.post('/registration-order', async (req, res) => {
                 studentName: String(studentName || ''),
                 studentEmail: String(studentEmail || ''),
                 studentPhone: String(studentPhone || ''),
-                pendingRegistrationId: String(pendingRegistrationId || '')
+                pendingRegistrationId: String(pendingRegistrationId || ''),
+                selectedCourseId: String(selectedCourseId || '')
             }
         });
 
@@ -563,7 +645,8 @@ router.post('/registration-order', async (req, res) => {
             razorpayOrderId: order.id,
             localOrderId,
             studentEmail,
-            pendingRegistrationId
+            pendingRegistrationId,
+            selectedCourseId
         });
 
         res.json({
@@ -602,7 +685,7 @@ router.get('/registration-amount', async (req, res) => {
 
 router.post('/registration-verify', async (req, res) => {
     try {
-        const { razorpayPaymentId, razorpayOrderId, razorpaySignature, studentEmail, amount, pendingRegistrationId } = req.body;
+        const { razorpayPaymentId, razorpayOrderId, razorpaySignature, studentEmail, amount, pendingRegistrationId, selectedCourseId } = req.body;
 
         if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
             return res.status(400).json({
@@ -623,6 +706,7 @@ router.post('/registration-verify', async (req, res) => {
             razorpayOrderId,
             studentEmail,
             pendingRegistrationId,
+            selectedCourseId,
             amount: getValidAmount(amount) || await getRegistrationAmount(req.db)
         });
         const token = completion?.student ? jwt.sign(
@@ -656,6 +740,7 @@ router.post('/registration-callback', async (req, res) => {
         const razorpaySignature = req.body.razorpay_signature;
         const studentEmail = req.query.studentEmail || req.body.studentEmail || '';
         const pendingRegistrationId = req.query.pendingRegistrationId || req.body.pendingRegistrationId || '';
+        const selectedCourseId = req.query.selectedCourseId || req.body.selectedCourseId || '';
         const amount = getValidAmount(req.query.amount || req.body.amount) || await getRegistrationAmount(req.db);
 
         if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
@@ -671,6 +756,7 @@ router.post('/registration-callback', async (req, res) => {
             razorpayOrderId,
             studentEmail,
             pendingRegistrationId,
+            selectedCourseId,
             amount
         });
 
@@ -692,6 +778,7 @@ router.get('/registration-status/:orderId', async (req, res) => {
         const { orderId } = req.params;
         const studentEmail = req.query.studentEmail || '';
         const pendingRegistrationId = req.query.pendingRegistrationId || '';
+        const selectedCourseId = req.query.selectedCourseId || '';
         const amount = getValidAmount(req.query.amount) || await getRegistrationAmount(req.db);
 
         if (!orderId) {
@@ -720,6 +807,7 @@ router.get('/registration-status/:orderId', async (req, res) => {
             razorpayOrderId: orderId,
             studentEmail: studentEmail || getPaymentEmail(successfulPayment),
             pendingRegistrationId,
+            selectedCourseId,
             amount,
             paymentMethod: mapPaymentMethod(successfulPayment.method)
         });
@@ -744,7 +832,7 @@ router.get('/registration-status/:orderId', async (req, res) => {
 
 router.post('/registration-reconcile', async (req, res) => {
     try {
-        const { studentEmail = '', razorpayPaymentId = '', razorpayOrderId = '', pendingRegistrationId = '' } = req.body;
+        const { studentEmail = '', razorpayPaymentId = '', razorpayOrderId = '', pendingRegistrationId = '', selectedCourseId = '' } = req.body;
 
         if (!studentEmail || (!razorpayPaymentId && !razorpayOrderId)) {
             return res.status(400).json({
@@ -788,6 +876,7 @@ router.post('/registration-reconcile', async (req, res) => {
             razorpayOrderId: successfulPayment.order_id || razorpayOrderId,
             studentEmail,
             pendingRegistrationId,
+            selectedCourseId: selectedCourseId || getRegistrationSelectedCourseIdFromNotes(successfulPayment),
             amount: getValidAmount(Number(successfulPayment.amount) / 100) || await getRegistrationAmount(req.db),
             paymentMethod: mapPaymentMethod(successfulPayment.method)
         });
@@ -1053,6 +1142,7 @@ async function handleRazorpayWebhook(req, res) {
                 studentEmail: getRegistrationEmailFromNotes(payment, paymentOrder) || getPaymentEmail(payment),
                 studentPhone: getRegistrationPhoneFromNotes(payment, paymentOrder) || getPaymentPhone(payment),
                 pendingRegistrationId: getRegistrationNoteValue(payment, paymentOrder),
+                selectedCourseId: getRegistrationSelectedCourseIdFromNotes(payment, paymentOrder),
                 amount: getValidAmount(Number(payment.amount) / 100) || 0,
                 paymentMethod: mapPaymentMethod(payment.method)
             });
@@ -1072,6 +1162,7 @@ async function handleRazorpayWebhook(req, res) {
                     studentEmail: getRegistrationEmailFromNotes(successfulPayment, order) || getPaymentEmail(successfulPayment),
                     studentPhone: getRegistrationPhoneFromNotes(successfulPayment, order) || getPaymentPhone(successfulPayment),
                     pendingRegistrationId: getRegistrationNoteValue(successfulPayment, order),
+                    selectedCourseId: getRegistrationSelectedCourseIdFromNotes(successfulPayment, order),
                     amount: getValidAmount(Number(successfulPayment.amount) / 100) || 0,
                     paymentMethod: mapPaymentMethod(successfulPayment.method)
                 });

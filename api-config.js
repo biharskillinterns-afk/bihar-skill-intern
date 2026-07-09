@@ -273,6 +273,8 @@ class BSIAuthStorage {
         this.setItem('userSession', studentData.session || '');
         this.setItem('userRollNo', studentData.rollno || studentData.rollNo || studentData.userRollNo || this.getItem('userRollNo') || '');
         this.setItem('userSkill', studentData.skill || studentData.course || studentData.selectedSkill || studentData.userSkill || '');
+        this.setItem('selectedCourseId', studentData.selectedCourseId || studentData.courseId || this.getItem('selectedCourseId') || '');
+        this.setItem('selectedCourseName', studentData.selectedCourseName || studentData.course || studentData.skill || this.getItem('selectedCourseName') || '');
         this.setItem('userEmergencyName', studentData.emergencyName || '');
         this.setItem('userEmergencyPhone', studentData.emergencyPhone || '');
         this.setItem('userRelationship', studentData.relationship || '');

@@ -37,6 +37,28 @@ const normalizeDateOnly = (value) => {
     return Number.isNaN(parsed.getTime()) ? text : parsed.toISOString().slice(0, 10);
 };
 
+async function getActiveCourseForRegistration(connection, selectedCourseId) {
+    const safeCourseId = Number(selectedCourseId);
+    if (!Number.isInteger(safeCourseId) || safeCourseId <= 0) {
+        const error = new Error('Please select a valid internship course');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const [courses] = await connection.query(
+        "SELECT id, courseName FROM courses WHERE id = ? AND status = 'active' LIMIT 1",
+        [safeCourseId]
+    );
+
+    if (courses.length === 0) {
+        const error = new Error('Selected internship course is not available');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return courses[0];
+}
+
 // Student Registration
 router.post('/register', validateStudentRegistration, async (req, res) => {
     try {
@@ -60,6 +82,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
             degree,
             department,
             majorSubject,
+            selectedCourseId,
             semester,
             session,
             emergencyName,
@@ -84,6 +107,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 throw error;
             }
 
+            const selectedCourse = await getActiveCourseForRegistration(connection, selectedCourseId);
             const studentColumns = [
                 'firstName', 'lastName', 'email', 'phone', 'password', 'dob', 'gender', 'college', 'course', 'district',
                 'rollNo', 'guardian', 'address', 'pincode', 'university', 'degree', 'department', 'semester', 'session',
@@ -98,7 +122,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 dob,
                 gender,
                 college,
-                course,
+                selectedCourse.courseName || course,
                 district,
                 rollNo || rollno || '',
                 guardian || '',
@@ -127,6 +151,12 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
             );
 
             const studentId = result.insertId;
+            await connection.query(
+                `INSERT INTO student_courses (studentId, courseId, enrolledAt, progress)
+                 VALUES (?, ?, NOW(), 0)
+                 ON DUPLICATE KEY UPDATE courseId = VALUES(courseId)`,
+                [studentId, selectedCourse.id]
+            );
             const studentCode = buildStudentCode(studentId);
             const registrationId = buildRegistrationId(studentId);
             const profileFile = await saveDataUrlFile({ dataUrl: profileImage, category: 'profile-images', ownerId: studentId, originalName: 'profile-image' });
@@ -140,7 +170,7 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 signaturePath: signatureFile?.relativePath || null
             });
 
-            return { id: studentId, studentCode, registrationId };
+            return { id: studentId, studentCode, registrationId, selectedCourse };
         });
 
         const token = jwt.sign(
@@ -164,7 +194,8 @@ router.post('/register', validateStudentRegistration, async (req, res) => {
                 dob,
                 gender,
                 college,
-                course,
+                course: savedStudent.selectedCourse.courseName || course,
+                selectedCourseId: savedStudent.selectedCourse.id,
                 district,
                 rollNo: rollNo || rollno || '',
                 rollno: rollNo || rollno || '',
@@ -217,6 +248,7 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
             degree,
             department,
             majorSubject,
+            selectedCourseId,
             semester,
             session,
             emergencyName,
@@ -241,6 +273,7 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
                 throw error;
             }
 
+            const selectedCourse = await getActiveCourseForRegistration(connection, selectedCourseId);
             await connection.query('DELETE FROM pending_registrations WHERE LOWER(email) = ?', [cleanEmail]);
             const pendingColumns = [
                 'firstName', 'lastName', 'email', 'phone', 'password', 'dob', 'gender', 'college', 'course', 'district',
@@ -256,7 +289,7 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
                 dob,
                 gender,
                 college,
-                course,
+                selectedCourse.courseName || course,
                 district,
                 rollNo || rollno || '',
                 guardian || '',
@@ -278,6 +311,11 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
                 pendingColumns.splice(departmentIndex + 1, 0, 'majorSubject');
                 pendingValues.splice(departmentIndex + 1, 0, majorSubject || '');
             }
+            if (await compatColumnExists(connection, 'pending_registrations', 'selectedCourseId')) {
+                const courseIndex = pendingColumns.indexOf('course');
+                pendingColumns.splice(courseIndex + 1, 0, 'selectedCourseId');
+                pendingValues.splice(courseIndex + 1, 0, selectedCourse.id);
+            }
             const [result] = await connection.query(
                 `INSERT INTO pending_registrations (${pendingColumns.join(', ')}, expiresAt, createdAt)
                  VALUES (${pendingColumns.map(() => '?').join(', ')}, DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW())`,
@@ -286,7 +324,7 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
 
             const registrationId = buildRegistrationId(result.insertId);
             await updatePendingRegistrationId(connection, result.insertId, registrationId);
-            return { id: result.insertId, registrationId };
+            return { id: result.insertId, registrationId, selectedCourse };
         });
 
         res.status(201).json({
@@ -305,7 +343,8 @@ router.post('/pending-registration', validateStudentRegistration, async (req, re
                 dob,
                 gender,
                 college,
-                course,
+                course: pending.selectedCourse.courseName || course,
+                selectedCourseId: pending.selectedCourse.id,
                 district,
                 rollNo: rollNo || rollno || '',
                 rollno: rollNo || rollno || '',

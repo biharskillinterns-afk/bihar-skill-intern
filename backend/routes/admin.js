@@ -267,9 +267,17 @@ router.put('/students/:id', verifyToken, isAdmin, async (req, res) => {
 
             const assignments = [];
             const params = [];
+            let selectedCourse = null;
             if (course !== undefined) {
                 assignments.push('course = ?');
                 params.push(course || '');
+                if (course) {
+                    const [courseRows] = await connection.query(
+                        "SELECT id, courseName FROM courses WHERE courseName = ? AND status = 'active' LIMIT 1",
+                        [course]
+                    );
+                    selectedCourse = courseRows[0] || null;
+                }
             }
             if (majorSubject !== undefined && await compatColumnExists(connection, 'students', 'majorSubject')) {
                 assignments.push('majorSubject = ?');
@@ -285,6 +293,19 @@ router.put('/students/:id', verifyToken, isAdmin, async (req, res) => {
                     beforeValue: students[0],
                     afterValue: { course, majorSubject }
                 });
+            }
+
+            if (selectedCourse) {
+                await connection.query(
+                    'DELETE FROM student_courses WHERE studentId = ? AND courseId <> ?',
+                    [req.params.id, selectedCourse.id]
+                );
+                await connection.query(
+                    `INSERT INTO student_courses (studentId, courseId, enrolledAt, progress)
+                     VALUES (?, ?, NOW(), 0)
+                     ON DUPLICATE KEY UPDATE courseId = VALUES(courseId)`,
+                    [req.params.id, selectedCourse.id]
+                );
             }
 
             return { before: students[0] };

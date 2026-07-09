@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS pending_registrations (
     degree VARCHAR(100),
     department VARCHAR(100),
     majorSubject VARCHAR(100),
+    selectedCourseId INT NULL,
     semester VARCHAR(50),
     session VARCHAR(50),
     emergencyName VARCHAR(150),

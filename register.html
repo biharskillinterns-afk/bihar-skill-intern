@@ -239,6 +239,60 @@
             font-weight: 600;
         }
 
+        .course-preview-card {
+            display: none;
+            margin-top: 16px;
+            padding: 18px;
+            border: 1px solid rgba(37, 99, 235, 0.16);
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f8fbff 0%, #ecfeff 100%);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+        }
+
+        .course-preview-card.show {
+            display: block;
+        }
+
+        .course-preview-card h3 {
+            margin: 0 0 10px;
+            color: var(--reg-primary-dark);
+            font-size: 1.08rem;
+        }
+
+        .course-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .course-preview-item {
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(219, 229, 240, 0.9);
+        }
+
+        .course-preview-item span {
+            display: block;
+            color: var(--reg-muted);
+            font-size: 0.78rem;
+            font-weight: 800;
+            margin-bottom: 3px;
+        }
+
+        .course-preview-item strong {
+            color: var(--reg-ink);
+            font-size: 0.92rem;
+        }
+
+        .course-preview-description {
+            color: #475569;
+            line-height: 1.55;
+            font-weight: 600;
+            margin: 0;
+        }
+
         .file-preview {
             margin-top: 10px;
             padding: 10px;
@@ -738,10 +792,51 @@
 
                 </div>
 
-                <!-- Emergency Contact -->
+                <!-- Internship Course Selection -->
                 <div class="form-section">
                     <div class="section-header">
                         <div class="section-number">3</div>
+                        <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3.5 2 8.5 2 12 0v-5"/><path d="M22 10v6"/></svg></span>
+                        <h2>Select Internship Course</h2>
+                    </div>
+
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>Internship Course <span class="required">*</span></label>
+                            <select id="selectedCourseId" name="selectedCourseId" required>
+                                <option value="">Loading available courses...</option>
+                            </select>
+                            <small id="courseLoadStatus">Please select one internship course for automatic enrollment after payment.</small>
+                            <div class="course-preview-card" id="coursePreviewCard" aria-live="polite">
+                                <h3 id="previewCourseName">Course Name</h3>
+                                <div class="course-preview-grid">
+                                    <div class="course-preview-item">
+                                        <span>Duration</span>
+                                        <strong id="previewCourseDuration">-</strong>
+                                    </div>
+                                    <div class="course-preview-item">
+                                        <span>Internship Hours</span>
+                                        <strong id="previewCourseHours">-</strong>
+                                    </div>
+                                    <div class="course-preview-item">
+                                        <span>Certificate</span>
+                                        <strong id="previewCourseCertificate">-</strong>
+                                    </div>
+                                    <div class="course-preview-item">
+                                        <span>Mode</span>
+                                        <strong id="previewCourseMode">-</strong>
+                                    </div>
+                                </div>
+                                <p class="course-preview-description" id="previewCourseDescription">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Contact -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-number">4</div>
                         <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.35 1.9.66 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.31 1.84.53 2.8.66A2 2 0 0 1 22 16.92z"/></svg></span>
                         <h2>Emergency Contact</h2>
                     </div>
@@ -776,7 +871,7 @@
                 <!-- Account Security -->
                 <div class="form-section">
                     <div class="section-header">
-                        <div class="section-number">4</div>
+                        <div class="section-number">5</div>
                         <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><path d="M12 16v2"/></svg></span>
                         <h2>Account Security</h2>
                     </div>
@@ -799,6 +894,13 @@
                     <div class="terms-checkbox">
                         <input type="checkbox" id="terms" name="terms" required>
                         <label for="terms">I agree to the <a href="#" onclick="return false;">Terms of Service</a> and <a href="#" onclick="return false;">Privacy Policy</a>. I understand that the internship organization details, roll number verification, and other administrative fields will be managed by the platform administrators. <span class="required">*</span></label>
+                    </div>
+                </div>
+
+                <div class="terms-section">
+                    <div class="terms-checkbox">
+                        <input type="checkbox" id="courseConfirmation" name="courseConfirmation" required>
+                        <label for="courseConfirmation">I confirm that I have selected the correct internship course and understand that it can be changed only by admin approval. <span class="required">*</span></label>
                     </div>
                 </div>
 
@@ -930,7 +1032,9 @@
             localStorage.setItem('userSemester', studentData.semester || '');
             localStorage.setItem('userSession', studentData.session || '');
             localStorage.setItem('userRollNo', studentData.rollno || '');
-            localStorage.setItem('userSkill', studentData.skill || '');
+            localStorage.setItem('userSkill', studentData.skill || studentData.course || '');
+            localStorage.setItem('selectedCourseId', studentData.selectedCourseId || '');
+            localStorage.setItem('selectedCourseName', studentData.selectedCourseName || studentData.course || studentData.skill || '');
             localStorage.setItem('userEmergencyName', studentData.emergencyName || '');
             localStorage.setItem('userEmergencyPhone', studentData.emergencyPhone || '');
             localStorage.setItem('userRelationship', studentData.relationship || '');
@@ -1071,6 +1175,118 @@
                 option.textContent = dept;
                 deptSelect.appendChild(option);
             });
+        }
+
+        let registrationCourseCache = [];
+
+        function formatCourseDuration(duration) {
+            if (duration === null || duration === undefined || duration === '') return '30 days';
+            return /^\d+$/.test(String(duration)) ? `${duration} days` : String(duration);
+        }
+
+        function formatCourseHours(course) {
+            const hours = course.internshipHours || course.hours || course.totalHours || course.durationHours;
+            if (hours) return /^\d+$/.test(String(hours)) ? `${hours} Hours` : String(hours);
+            return '120 Hours';
+        }
+
+        function formatCertificateAvailability(course) {
+            if (course.certificate === false || course.certificate === 0 || course.certificate === '0') return 'Not Included';
+            return course.certificateAvailability || course.certificateStatus || 'Available';
+        }
+
+        function formatCourseMode(course) {
+            return course.mode || course.internshipMode || course.deliveryMode || 'Online/Offline';
+        }
+
+        function normalizeRegistrationCourse(course, index) {
+            return {
+                id: course.id || course.courseId || '',
+                name: course.name || course.courseName || course.title || `Course ${index + 1}`,
+                duration: formatCourseDuration(course.duration),
+                hours: formatCourseHours(course),
+                certificate: formatCertificateAvailability(course),
+                mode: formatCourseMode(course),
+                description: course.description || course.syllabus || 'Professional internship course with structured learning, progress tracking, reports, and certificate support.'
+            };
+        }
+
+        function hideCoursePreview() {
+            const card = document.getElementById('coursePreviewCard');
+            if (card) card.classList.remove('show');
+        }
+
+        function updateCoursePreview() {
+            const selectedCourse = getSelectedRegistrationCourse();
+            const course = registrationCourseCache.find(item => String(item.id) === String(selectedCourse.id));
+            if (!course) {
+                hideCoursePreview();
+                return;
+            }
+
+            document.getElementById('previewCourseName').textContent = course.name;
+            document.getElementById('previewCourseDuration').textContent = course.duration;
+            document.getElementById('previewCourseHours').textContent = course.hours;
+            document.getElementById('previewCourseCertificate').textContent = course.certificate;
+            document.getElementById('previewCourseMode').textContent = course.mode;
+            document.getElementById('previewCourseDescription').textContent = course.description;
+            document.getElementById('coursePreviewCard').classList.add('show');
+        }
+
+        async function loadRegistrationCourses() {
+            const courseSelect = document.getElementById('selectedCourseId');
+            const status = document.getElementById('courseLoadStatus');
+            if (!courseSelect) return;
+
+            courseSelect.innerHTML = '<option value="">Loading available courses...</option>';
+            courseSelect.disabled = true;
+            if (status) status.textContent = 'Loading available internship courses...';
+
+            try {
+                if (typeof APIService === 'undefined') {
+                    throw new Error('Course API is not available.');
+                }
+
+                const response = await APIService.getAllCourses();
+                const courses = response && response.success && Array.isArray(response.courses)
+                    ? response.courses.map(normalizeRegistrationCourse).filter(course => course.id && course.name)
+                    : [];
+                registrationCourseCache = courses;
+
+                courseSelect.innerHTML = '<option value="">Select Internship Course</option>';
+                courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = String(course.id);
+                    option.textContent = course.duration ? `${course.name} (${course.duration})` : course.name;
+                    option.dataset.courseName = course.name;
+                    courseSelect.appendChild(option);
+                });
+
+                courseSelect.onchange = updateCoursePreview;
+                hideCoursePreview();
+                courseSelect.disabled = courses.length === 0;
+                if (status) {
+                    status.textContent = courses.length > 0
+                        ? 'Please select one internship course for automatic enrollment after payment.'
+                        : 'No active internship courses are available right now. Please contact support.';
+                }
+            } catch (error) {
+                console.warn('Unable to load registration courses:', error.message);
+                registrationCourseCache = [];
+                courseSelect.innerHTML = '<option value="">Unable to load courses</option>';
+                courseSelect.disabled = true;
+                hideCoursePreview();
+                if (status) status.textContent = 'Unable to load internship courses. Please refresh the page or contact support.';
+            }
+        }
+
+        function getSelectedRegistrationCourse() {
+            const courseSelect = document.getElementById('selectedCourseId');
+            const selectedOption = courseSelect ? courseSelect.options[courseSelect.selectedIndex] : null;
+            return {
+                id: courseSelect ? courseSelect.value : '',
+                name: selectedOption ? (selectedOption.dataset.courseName || selectedOption.textContent || '').trim() : ''
+            };
         }
 
         const uploadRules = {
@@ -1291,6 +1507,12 @@
                 return;
             }
 
+            const selectedCourse = getSelectedRegistrationCourse();
+            if (!selectedCourse.id) {
+                finishWithError('Please select an internship course before registration.');
+                return;
+            }
+
             const nameParts = fullname.split(/\s+/).filter(Boolean);
             const firstName = nameParts[0] || fullname;
             const lastName = nameParts.slice(1).join(' ') || '-';
@@ -1319,7 +1541,10 @@
                 semester: document.getElementById('semester').value,
                 session: document.getElementById('session').value,
                 rollno: rollno,
-                skill: '',
+                course: selectedCourse.name,
+                skill: selectedCourse.name,
+                selectedCourseId: selectedCourse.id,
+                selectedCourseName: selectedCourse.name,
                 emergencyName: document.getElementById('emergencyName').value,
                 emergencyPhone: document.getElementById('emergencyPhone').value,
                 relationship: document.getElementById('relationship').value,
@@ -1340,7 +1565,8 @@
                         dob: document.getElementById('dob').value,
                         gender: document.getElementById('gender').value,
                         college: document.getElementById('college').value,
-                        course: '',
+                        course: selectedCourse.name,
+                        selectedCourseId: selectedCourse.id,
                         district: document.getElementById('district').value,
                         rollNo: rollno,
                         rollno,
@@ -1382,6 +1608,8 @@
                             studentData.pendingRegistrationId = response.pendingRegistrationId;
                             storage.setItem('pendingRegistrationId', response.pendingRegistrationId);
                         }
+                        storage.setItem('selectedCourseId', selectedCourse.id);
+                        storage.setItem('selectedCourseName', selectedCourse.name);
                         saveRegisteredStudent(studentData, passwordHash);
 
                         storage.setItem('paymentStatus', 'pending');
@@ -1423,6 +1651,7 @@
         // Load user data on page load
         window.addEventListener('load', () => {
             updateDepartments();
+            loadRegistrationCourses();
             
             // Initialize file upload handlers
             handleFileUpload('profilePhoto', 'photoPreview', 'photoImg');
