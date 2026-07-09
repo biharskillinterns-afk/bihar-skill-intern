@@ -426,9 +426,18 @@ class APIService {
         }
 
         if (!response.ok) {
-            const detail = payload && payload.error && payload.error !== payload.message
-                ? `${payload.message || 'API request failed'} (${payload.error})`
-                : (payload && payload.message) || 'API request failed';
+            let detail = (payload && payload.message) || 'API request failed';
+            if (payload && Array.isArray(payload.errors) && payload.errors.length > 0 && !String(detail).includes('\n- ')) {
+                const errorLines = payload.errors
+                    .map(error => error && (error.message || error.msg))
+                    .filter(Boolean)
+                    .map(message => `- ${message}`);
+                if (errorLines.length > 0) {
+                    detail = `${detail}\n${errorLines.join('\n')}`;
+                }
+            } else if (payload && payload.error && payload.error !== payload.message) {
+                detail = `${detail} (${payload.error})`;
+            }
             const error = new Error(detail);
             error.status = response.status;
             error.payload = payload;

@@ -4,10 +4,19 @@ const { validationResult, body, param } = require('express-validator');
 const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        const validationErrors = errors.array().map(error => ({
+            field: error.path || error.param,
+            message: error.msg
+        }));
+        const message = [
+            'Validation failed:',
+            ...validationErrors.map(error => `- ${error.message}`)
+        ].join('\n');
+
         return res.status(400).json({
             success: false,
-            message: 'Validation failed',
-            errors: errors.array()
+            message,
+            errors: validationErrors
         });
     }
     next();
@@ -23,8 +32,21 @@ const validateStudentRegistration = [
     body('dob').isISO8601().withMessage('Invalid date format'),
     body('gender').isIn(['male', 'female', 'other']).withMessage('Invalid gender'),
     body('college').notEmpty().withMessage('College is required'),
-    body('majorSubject').notEmpty().withMessage('Major Subject (MJC) is required'),
-    body('selectedCourseId').notEmpty().withMessage('Internship course is required').bail().isInt({ min: 1 }).withMessage('Invalid internship course'),
+    body('majorSubject').notEmpty().withMessage('majorSubject is required'),
+    body('selectedCourse').custom((value, { req }) => {
+        const selectedCourseName = String(value || req.body.course || '').trim();
+        if (!selectedCourseName) {
+            throw new Error('selectedCourse is required');
+        }
+        return true;
+    }),
+    body('selectedCourseId').notEmpty().withMessage('selectedCourseId is required').bail().isInt({ min: 1 }).withMessage('selectedCourseId must be a valid course ID'),
+    body('courseConfirmation').custom(value => {
+        if (value !== true && value !== 'true' && value !== 'on' && value !== '1' && value !== 1) {
+            throw new Error('Registration confirmation is required.');
+        }
+        return true;
+    }),
     body('pincode').optional({ checkFalsy: true }).matches(/^\d{6}$/).withMessage('Pincode must be 6 digits'),
     handleValidationErrors
 ];

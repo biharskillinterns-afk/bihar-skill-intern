@@ -433,6 +433,7 @@
             display: none;
             border-left: 4px solid var(--reg-primary);
             font-weight: 700;
+            white-space: pre-line;
         }
 
         .message.success {
@@ -1211,6 +1212,42 @@
             };
         }
 
+        function extractRegistrationCourses(response) {
+            return response && response.success && Array.isArray(response.courses)
+                ? response.courses.map(normalizeRegistrationCourse).filter(course => course.id && course.name)
+                : [];
+        }
+
+        async function fetchRegistrationCourses() {
+            const response = await APIService.request('/courses');
+            const courses = extractRegistrationCourses(response);
+            if (courses.length > 0) return courses;
+
+            throw new Error(response?.message || 'No active courses returned by Courses API.');
+        }
+
+        async function fetchRegistrationCoursesFromLiveApi(originalError) {
+            if (typeof LIVE_API_BASE_URL === 'undefined' || API_BASE_URL === LIVE_API_BASE_URL) {
+                throw originalError;
+            }
+
+            console.warn('Local Courses API failed, retrying live Courses API:', originalError.message);
+            const response = await fetch(`${LIVE_API_BASE_URL}/courses`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                cache: 'no-store'
+            });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) {
+                const message = payload?.message || payload?.error || `Live Courses API failed with HTTP ${response.status}`;
+                throw new Error(message);
+            }
+
+            const courses = extractRegistrationCourses(payload);
+            if (courses.length > 0) return courses;
+            throw new Error(payload?.message || 'No active courses returned by live Courses API.');
+        }
+
         function hideCoursePreview() {
             const card = document.getElementById('coursePreviewCard');
             if (card) card.classList.remove('show');
@@ -1247,10 +1284,13 @@
                     throw new Error('Course API is not available.');
                 }
 
-                const response = await APIService.getAllCourses();
-                const courses = response && response.success && Array.isArray(response.courses)
-                    ? response.courses.map(normalizeRegistrationCourse).filter(course => course.id && course.name)
-                    : [];
+                let courses = [];
+                try {
+                    courses = await fetchRegistrationCourses();
+                } catch (apiError) {
+                    console.error(`Registration Courses API failed at ${API_BASE_URL}/courses: ${apiError.message}`, apiError);
+                    courses = await fetchRegistrationCoursesFromLiveApi(apiError);
+                }
                 registrationCourseCache = courses;
 
                 courseSelect.innerHTML = '<option value="">Select Internship Course</option>';
@@ -1271,7 +1311,7 @@
                         : 'No active internship courses are available right now. Please contact support.';
                 }
             } catch (error) {
-                console.warn('Unable to load registration courses:', error.message);
+                console.error('Unable to load registration courses:', error);
                 registrationCourseCache = [];
                 courseSelect.innerHTML = '<option value="">Unable to load courses</option>';
                 courseSelect.disabled = true;
@@ -1513,6 +1553,12 @@
                 return;
             }
 
+            const courseConfirmation = document.getElementById('courseConfirmation').checked;
+            if (!courseConfirmation) {
+                finishWithError('Registration confirmation is required.');
+                return;
+            }
+
             const nameParts = fullname.split(/\s+/).filter(Boolean);
             const firstName = nameParts[0] || fullname;
             const lastName = nameParts.slice(1).join(' ') || '-';
@@ -1542,9 +1588,11 @@
                 session: document.getElementById('session').value,
                 rollno: rollno,
                 course: selectedCourse.name,
+                selectedCourse: selectedCourse.name,
                 skill: selectedCourse.name,
                 selectedCourseId: selectedCourse.id,
                 selectedCourseName: selectedCourse.name,
+                courseConfirmation,
                 emergencyName: document.getElementById('emergencyName').value,
                 emergencyPhone: document.getElementById('emergencyPhone').value,
                 relationship: document.getElementById('relationship').value,
@@ -1566,7 +1614,9 @@
                         gender: document.getElementById('gender').value,
                         college: document.getElementById('college').value,
                         course: selectedCourse.name,
+                        selectedCourse: selectedCourse.name,
                         selectedCourseId: selectedCourse.id,
+                        courseConfirmation,
                         district: document.getElementById('district').value,
                         rollNo: rollno,
                         rollno,
