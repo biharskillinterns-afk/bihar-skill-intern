@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const { verifyToken, isStudent } = require('../middleware/auth');
 const { getRegistrationAmount } = require('../config/settings');
+const { getEffectiveCollegePaymentSettings } = require('../config/collegeSettings');
 const { buildRegistrationId, buildStudentCode } = require('../utils/ids');
 const { saveDataUrlFile, recordUploadedFile } = require('../utils/security');
 const { compatColumnExists, studentActiveClause, updateStudentGeneratedIds, safeRecordUploadedFile } = require('../utils/compat');
@@ -295,7 +296,10 @@ async function savePendingRegistrationPayment(req, paymentData) {
                 JSON.stringify({
                     purpose: 'registration_fee',
                     localOrderId: paymentData.localOrderId || '',
-                    studentEmail: paymentData.studentEmail || ''
+                    studentEmail: paymentData.studentEmail || '',
+                    studentCollege: paymentData.studentCollege || '',
+                    paymentMode: paymentData.paymentMode || '',
+                    classMode: paymentData.classMode || ''
                 })
             ]
         );
@@ -304,6 +308,28 @@ async function savePendingRegistrationPayment(req, paymentData) {
     } finally {
         if (connection) connection.release();
     }
+}
+
+async function getPendingRegistrationCollege(db, pendingRegistrationId) {
+    if (!pendingRegistrationId) return '';
+    const connection = await db.getConnection();
+    try {
+        const [rows] = await connection.query(
+            'SELECT college FROM pending_registrations WHERE id = ? LIMIT 1',
+            [pendingRegistrationId]
+        );
+        return rows[0]?.college || '';
+    } catch (error) {
+        console.warn('Unable to read pending registration college:', error.message);
+        return '';
+    } finally {
+        connection.release();
+    }
+}
+
+async function getRegistrationPaymentSettings(db, details = {}) {
+    const college = details.college || details.studentCollege || await getPendingRegistrationCollege(db, details.pendingRegistrationId);
+    return getEffectiveCollegePaymentSettings(db, college || '');
 }
 
 function formatStudentResponse(student, paymentStatus = 'completed') {
@@ -609,9 +635,10 @@ async function syncCompletedPaymentsForStudent(db, studentId, studentEmail = '')
 
 router.post('/registration-order', async (req, res) => {
     try {
-        const { studentName, studentEmail, studentPhone, localOrderId, pendingRegistrationId, selectedCourseId } = req.body;
+        const { studentName, studentEmail, studentPhone, studentCollege, localOrderId, pendingRegistrationId, selectedCourseId } = req.body;
         const { keyId, keySecret } = getRazorpayConfig();
-        const payableAmount = await getRegistrationAmount(req.db);
+        const paymentSettings = await getRegistrationPaymentSettings(req.db, { studentCollege, pendingRegistrationId });
+        const payableAmount = paymentSettings.amount;
 
         if (!keyId || !keySecret) {
             return res.status(500).json({
@@ -635,8 +662,11 @@ router.post('/registration-order', async (req, res) => {
                 studentName: String(studentName || ''),
                 studentEmail: String(studentEmail || ''),
                 studentPhone: String(studentPhone || ''),
+                studentCollege: String(studentCollege || ''),
                 pendingRegistrationId: String(pendingRegistrationId || ''),
-                selectedCourseId: String(selectedCourseId || '')
+                selectedCourseId: String(selectedCourseId || ''),
+                paymentMode: paymentSettings.paymentMode,
+                classMode: paymentSettings.classMode
             }
         });
 
@@ -645,6 +675,9 @@ router.post('/registration-order', async (req, res) => {
             razorpayOrderId: order.id,
             localOrderId,
             studentEmail,
+            studentCollege,
+            paymentMode: paymentSettings.paymentMode,
+            classMode: paymentSettings.classMode,
             pendingRegistrationId,
             selectedCourseId
         });
@@ -653,6 +686,10 @@ router.post('/registration-order', async (req, res) => {
             success: true,
             message: 'Razorpay registration order created',
             amount: payableAmount,
+            globalAmount: paymentSettings.globalAmount,
+            paymentMode: paymentSettings.paymentMode,
+            classMode: paymentSettings.classMode,
+            collegeSettings: paymentSettings.collegeSettings,
             currency: order.currency,
             razorpayKey: keyId,
             razorpayOrderId: order.id
@@ -668,10 +705,17 @@ router.post('/registration-order', async (req, res) => {
 
 router.get('/registration-amount', async (req, res) => {
     try {
-        const amount = await getRegistrationAmount(req.db);
+        const paymentSettings = await getRegistrationPaymentSettings(req.db, {
+            studentCollege: req.query.college || req.query.studentCollege || '',
+            pendingRegistrationId: req.query.pendingRegistrationId || ''
+        });
         res.json({
             success: true,
-            amount,
+            amount: paymentSettings.amount,
+            globalAmount: paymentSettings.globalAmount,
+            paymentMode: paymentSettings.paymentMode,
+            classMode: paymentSettings.classMode,
+            collegeSettings: paymentSettings.collegeSettings,
             currency: 'INR'
         });
     } catch (error) {
@@ -707,7 +751,7 @@ router.post('/registration-verify', async (req, res) => {
             studentEmail,
             pendingRegistrationId,
             selectedCourseId,
-            amount: getValidAmount(amount) || await getRegistrationAmount(req.db)
+            amount: getValidAmount(amount) || (await getRegistrationPaymentSettings(req.db, { pendingRegistrationId })).amount
         });
         const token = completion?.student ? jwt.sign(
             { id: completion.student.id, email: completion.student.email, role: 'student' },
@@ -741,7 +785,8 @@ router.post('/registration-callback', async (req, res) => {
         const studentEmail = req.query.studentEmail || req.body.studentEmail || '';
         const pendingRegistrationId = req.query.pendingRegistrationId || req.body.pendingRegistrationId || '';
         const selectedCourseId = req.query.selectedCourseId || req.body.selectedCourseId || '';
-        const amount = getValidAmount(req.query.amount || req.body.amount) || await getRegistrationAmount(req.db);
+        const amount = getValidAmount(req.query.amount || req.body.amount) ||
+            (await getRegistrationPaymentSettings(req.db, { pendingRegistrationId })).amount;
 
         if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
             return res.redirect(`${frontendUrl}payment.html?payment=failed&reason=missing_payment_details`);
@@ -779,7 +824,8 @@ router.get('/registration-status/:orderId', async (req, res) => {
         const studentEmail = req.query.studentEmail || '';
         const pendingRegistrationId = req.query.pendingRegistrationId || '';
         const selectedCourseId = req.query.selectedCourseId || '';
-        const amount = getValidAmount(req.query.amount) || await getRegistrationAmount(req.db);
+        const amount = getValidAmount(req.query.amount) ||
+            (await getRegistrationPaymentSettings(req.db, { pendingRegistrationId })).amount;
 
         if (!orderId) {
             return res.status(400).json({
@@ -877,7 +923,8 @@ router.post('/registration-reconcile', async (req, res) => {
             studentEmail,
             pendingRegistrationId,
             selectedCourseId: selectedCourseId || getRegistrationSelectedCourseIdFromNotes(successfulPayment),
-            amount: getValidAmount(Number(successfulPayment.amount) / 100) || await getRegistrationAmount(req.db),
+            amount: getValidAmount(Number(successfulPayment.amount) / 100) ||
+                (await getRegistrationPaymentSettings(req.db, { pendingRegistrationId })).amount,
             paymentMethod: mapPaymentMethod(successfulPayment.method)
         });
         const token = completion?.student ? jwt.sign(

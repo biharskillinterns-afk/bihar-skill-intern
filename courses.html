@@ -1171,6 +1171,10 @@
                     <span class="info-value" id="studentSkill">-</span>
                 </div>
                 <div class="student-info-item">
+                    <span class="info-label">Class Mode:</span>
+                    <span class="info-value" id="studentClassMode">Online Class</span>
+                </div>
+                <div class="student-info-item">
                     <span class="info-label">Status:</span>
                     <span class="info-value" id="studentStatus" style="color: #10b981;">Active</span>
                 </div>
@@ -1773,6 +1777,46 @@
             }
         }
 
+        function refreshClassModeDisplay(studentData = null) {
+            const modeElement = document.getElementById('studentClassMode');
+            if (!modeElement || typeof BSIClassMode === 'undefined') return;
+            modeElement.textContent = BSIClassMode.getClassMode(studentData);
+        }
+
+        async function refreshStudentProfileForClassMode() {
+            if (typeof APIService === 'undefined' || typeof BSIAuthStorage === 'undefined') return null;
+            try {
+                const response = await APIService.getStudentProfile();
+                if (response && response.success && response.student) {
+                    BSIAuthStorage.saveStudent(response.student, response.student.passwordHash);
+                    await refreshCollegeSettingsForClassMode(response.student);
+                    refreshClassModeDisplay(response.student);
+                    return response.student;
+                }
+            } catch (error) {
+                console.warn('Student profile refresh for class mode failed:', error.message);
+            }
+            return null;
+        }
+
+        async function refreshCollegeSettingsForClassMode(studentData = null) {
+            if (typeof APIService === 'undefined') return;
+            const college = studentData?.college || StorageManager.get('userCollege', '');
+            if (!college) return;
+            try {
+                const response = await APIService.getRegistrationPaymentAmount({ college });
+                if (!response?.success) return;
+                StorageManager.set('bsiCollegeClassMode', response.classMode === 'offline' ? 'offline' : 'online');
+                StorageManager.set('bsiCollegePaymentMode', response.paymentMode === 'custom' ? 'custom' : 'auto');
+                if (Number(response.amount) > 0) {
+                    StorageManager.set('bsiPaymentAmount', Math.round(Number(response.amount)));
+                }
+                refreshClassModeDisplay(studentData);
+            } catch (error) {
+                console.warn('College class mode settings refresh failed:', error.message);
+            }
+        }
+
         // Activity logging
         function logActivity(activity) {
             const activities = StorageManager.get('studentActivities', []);
@@ -1878,6 +1922,9 @@
             document.getElementById('studentEmail').textContent = userEmail;
             document.getElementById('studentPhone').textContent = userPhone || 'Not provided';
             document.getElementById('studentSkill').textContent = userSkill || 'Not selected';
+            refreshClassModeDisplay();
+            await refreshCollegeSettingsForClassMode();
+            await refreshStudentProfileForClassMode();
 
             const storedCourses = readStoredAdminCourses();
             courses = storedCourses.length > 0

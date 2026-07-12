@@ -703,6 +703,23 @@ class APIService {
         });
     }
 
+    static async getAdminCollegeSettings() {
+        return this.request('/admin/college-settings');
+    }
+
+    static async saveAdminCollegeSettings(data) {
+        return this.request('/admin/college-settings', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    static async deleteAdminCollegeSettings(id) {
+        return this.request(`/admin/college-settings/${encodeURIComponent(id)}`, {
+            method: 'DELETE'
+        });
+    }
+
     // =============================================
     // COURSES ENDPOINTS
     // =============================================
@@ -739,8 +756,12 @@ class APIService {
         });
     }
 
-    static async getRegistrationPaymentAmount() {
-        return this.request('/payments/registration-amount');
+    static async getRegistrationPaymentAmount(details = {}) {
+        const params = new URLSearchParams();
+        if (details.college) params.set('college', details.college);
+        if (details.pendingRegistrationId) params.set('pendingRegistrationId', details.pendingRegistrationId);
+        const query = params.toString() ? `?${params.toString()}` : '';
+        return this.request(`/payments/registration-amount${query}`);
     }
 
     static async getRegistrationPaymentStatus(razorpayOrderId, paymentDetails = {}) {
@@ -789,6 +810,81 @@ class APIService {
 // Export for use in HTML
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = APIService;
+}
+
+const BSIClassMode = {
+    getStoredSettings(studentData = null) {
+        const classMode = studentData?.classMode || studentData?.collegeClassMode || (() => {
+            try {
+                return BSIAuthStorage.getItem('bsiCollegeClassMode') || '';
+            } catch (error) {
+                return '';
+            }
+        })();
+
+        const paymentMode = studentData?.paymentMode || (() => {
+            try {
+                return BSIAuthStorage.getItem('bsiCollegePaymentMode') || '';
+            } catch (error) {
+                return '';
+            }
+        })();
+
+        return {
+            classMode: classMode === 'offline' ? 'offline' : 'online',
+            paymentMode: paymentMode === 'custom' ? 'custom' : 'auto'
+        };
+    },
+
+    getCollegeValue(studentData = null) {
+        const candidates = [
+            studentData?.college,
+            studentData?.userCollege,
+            (() => {
+                try {
+                    const currentStudentId = BSIAuthStorage.getItem('currentStudentId');
+                    const currentStudent = currentStudentId ? BSIAuthStorage.getItem(currentStudentId) : null;
+                    return currentStudent?.college || currentStudent?.userCollege || '';
+                } catch (error) {
+                    return '';
+                }
+            })(),
+            (() => {
+                try {
+                    const storedStudent = BSIAuthStorage.getItem('student');
+                    const parsedStudent = typeof storedStudent === 'string' ? JSON.parse(storedStudent) : storedStudent;
+                    return parsedStudent?.college || parsedStudent?.userCollege || '';
+                } catch (error) {
+                    return '';
+                }
+            })(),
+            (() => {
+                try {
+                    return BSIAuthStorage.getItem('userCollege') || '';
+                } catch (error) {
+                    return '';
+                }
+            })()
+        ];
+
+        return String(candidates.find(Boolean) || '').trim();
+    },
+
+    isOfflineCollege(studentData = null) {
+        return this.getStoredSettings(studentData).classMode === 'offline';
+    },
+
+    getClassMode(studentData = null) {
+        return this.isOfflineCollege(studentData) ? 'Offline Class' : 'Online Class';
+    },
+
+    getInternshipModeLabel(studentData = null) {
+        return this.isOfflineCollege(studentData) ? 'Offline Internship' : 'Online Internship';
+    }
+};
+
+if (typeof window !== 'undefined') {
+    window.BSIClassMode = BSIClassMode;
 }
 
 // Warm the Render backend in the background as soon as a public page opens.

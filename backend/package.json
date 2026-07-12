@@ -9,7 +9,8 @@
     "db:import": "node scripts/import-schema.js",
     "db:backup": "node scripts/backup-database.js",
     "db:restore": "node scripts/restore-database.js",
-    "db:migrate:major-subject": "node scripts/migrate-major-subject.js"
+    "db:migrate:major-subject": "node scripts/migrate-major-subject.js",
+    "db:migrate:college-settings": "node scripts/migrate-college-settings.js"
   },
   "engines": {
     "node": ">=22.2.0"

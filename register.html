@@ -1176,6 +1176,35 @@
                 option.textContent = dept;
                 deptSelect.appendChild(option);
             });
+            syncCollegePaymentSettings();
+        }
+
+        async function syncCollegePaymentSettings() {
+            const college = document.getElementById('college')?.value || '';
+            if (!college || typeof APIService === 'undefined') {
+                return;
+            }
+
+            try {
+                const response = await APIService.getRegistrationPaymentAmount({ college });
+                if (!response?.success) {
+                    throw new Error(response?.message || 'College payment settings unavailable');
+                }
+
+                if (Number(response.amount) > 0) {
+                    localStorage.setItem('bsiPaymentAmount', String(Math.round(Number(response.amount))));
+                    localStorage.setItem('paymentAmount', String(Math.round(Number(response.amount))));
+                }
+                localStorage.setItem('bsiCollegeClassMode', response.classMode === 'offline' ? 'offline' : 'online');
+                localStorage.setItem('bsiCollegePaymentMode', response.paymentMode === 'custom' ? 'custom' : 'auto');
+                if (response.customFee !== null && response.customFee !== undefined) {
+                    localStorage.setItem('bsiCollegeCustomFee', String(response.customFee));
+                } else {
+                    localStorage.removeItem('bsiCollegeCustomFee');
+                }
+            } catch (error) {
+                console.warn('Unable to load selected college payment settings:', error.message);
+            }
         }
 
         let registrationCourseCache = [];

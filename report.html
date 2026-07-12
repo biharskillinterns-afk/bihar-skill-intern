@@ -478,7 +478,7 @@
                 <table>
                     <tr><th>Organization Name</th><td>Bihar Skill Intern</td></tr>
                     <tr><th>Program Type</th><td>Student Internship and Skill Development</td></tr>
-                    <tr><th>Training Mode</th><td>Online / Digital Learning Supported</td></tr>
+                    <tr><th>Training Mode</th><td data-field="classMode">Online Class</td></tr>
                     <tr><th>Key Documents</th><td>Attendance Record, Marksheet, Certificate, Consent Form, Internship Report</td></tr>
                 </table>
                 <h3>Role of Organization</h3>
@@ -923,6 +923,20 @@
             }).join('');
         }
 
+        function getCollegeBasedClassMode(student = null) {
+            if (typeof BSIClassMode !== 'undefined') {
+                return BSIClassMode.getClassMode(student);
+            }
+
+            const classMode = String(
+                student?.classMode ||
+                student?.collegeClassMode ||
+                storageValue('bsiCollegeClassMode', '')
+            ).toLowerCase();
+
+            return classMode === 'offline' ? 'Offline Class' : 'Online Class';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const result = getLatestResult();
             if (!result) {
@@ -950,6 +964,7 @@
             setField('rollNo', (student && (student.rollno || student.rollNo || student.userRollNo)) || storageValue('userRollNo', 'N/A'));
             setField('department', studentValue(student, 'department', 'userDepartment', 'General'));
             setField('college', studentValue(student, 'college', 'userCollege', 'N/A'));
+            setField('classMode', getCollegeBasedClassMode(student));
             setField('session', studentValue(student, 'session', 'userSession', '2025-26'));
             setField('courseName', courseName);
             setField('score', score);

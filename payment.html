@@ -351,9 +351,20 @@
         async function loadRegistrationAmount() {
             try {
                 if (typeof APIService === 'undefined') return;
-                const response = await APIService.getRegistrationPaymentAmount();
+                const response = await APIService.getRegistrationPaymentAmount({
+                    college: getStoredValue('userCollege', ''),
+                    pendingRegistrationId: getStoredValue('pendingRegistrationId', '')
+                });
                 if (response?.success && Number(response.amount) > 0) {
                     setStoredValue('bsiPaymentAmount', String(Math.round(Number(response.amount))));
+                    setStoredValue('paymentAmount', String(Math.round(Number(response.amount))));
+                    setStoredValue('bsiCollegeClassMode', response.classMode === 'offline' ? 'offline' : 'online');
+                    setStoredValue('bsiCollegePaymentMode', response.paymentMode === 'custom' ? 'custom' : 'auto');
+                    if (response.customFee !== null && response.customFee !== undefined) {
+                        setStoredValue('bsiCollegeCustomFee', String(response.customFee));
+                    } else {
+                        setStoredValue('bsiCollegeCustomFee', '');
+                    }
                     document.getElementById('paymentAmount').textContent = `₹${getPaymentAmount()}`;
                 }
             } catch (error) {
@@ -393,6 +404,7 @@
                     studentName: getStoredValue('userName', ''),
                     studentEmail: getStoredValue('userEmail', ''),
                     studentPhone: getStoredValue('userPhone', getStoredValue('userMobile', '')),
+                    studentCollege: getStoredValue('userCollege', ''),
                     pendingRegistrationId: getStoredValue('pendingRegistrationId', ''),
                     selectedCourseId: getStoredValue('selectedCourseId', ''),
                     localOrderId: generateOrderId()
@@ -427,6 +439,7 @@
                 notes: {
                     local_order_id: getStoredValue('orderId', ''),
                     student_email: getStoredValue('userEmail', ''),
+                    student_college: getStoredValue('userCollege', ''),
                     selectedCourseId: getStoredValue('selectedCourseId', '')
                 },
                 theme: {

@@ -876,6 +876,11 @@
                     <div class="info-label">Major Subject (MJC)</div>
                     <div class="info-value" id="majorSubjectValue">-</div>
                 </div>
+
+                <div class="info-item">
+                    <div class="info-label">Class Mode</div>
+                    <div class="info-value" id="classModeValue">Online Class</div>
+                </div>
             </div>
 
             <div class="profile-box">
@@ -1170,6 +1175,30 @@
             return `${year}-${month}-${day}`;
         }
 
+        function updateClassModeDisplay(studentData = null) {
+            const modeElement = document.getElementById('classModeValue');
+            if (!modeElement || typeof BSIClassMode === 'undefined') return;
+            modeElement.textContent = BSIClassMode.getClassMode(studentData);
+        }
+
+        async function refreshCollegeSettingsForProfile(studentData = null) {
+            if (typeof APIService === 'undefined') return;
+            const college = studentData?.college || getStoredProfileValue('userCollege') || '';
+            if (!college) return;
+            try {
+                const response = await APIService.getRegistrationPaymentAmount({ college });
+                if (!response?.success) return;
+                localStorage.setItem('bsiCollegeClassMode', response.classMode === 'offline' ? 'offline' : 'online');
+                localStorage.setItem('bsiCollegePaymentMode', response.paymentMode === 'custom' ? 'custom' : 'auto');
+                if (Number(response.amount) > 0) {
+                    localStorage.setItem('bsiPaymentAmount', String(Math.round(Number(response.amount))));
+                }
+                updateClassModeDisplay(studentData);
+            } catch (error) {
+                console.warn('Profile college settings refresh failed:', error.message);
+            }
+        }
+
         window.addEventListener('load', () => {
             console.log('Profile page loaded');
             const token = getStoredProfileValue('authToken') || getStoredProfileValue('token');
@@ -1246,6 +1275,8 @@
             document.getElementById('dobValue').textContent = dob;
             document.getElementById('skillValue').textContent = skill;
             document.getElementById('majorSubjectValue').textContent = majorSubject;
+            updateClassModeDisplay(studentData);
+            refreshCollegeSettingsForProfile(studentData);
 
             document.getElementById('firstNameEdit').value = firstName;
             document.getElementById('lastNameEdit').value = lastName;
@@ -1306,6 +1337,8 @@
                 document.getElementById('dobValue').textContent = formattedDob;
                 document.getElementById('skillValue').textContent = student.course || '-';
                 document.getElementById('majorSubjectValue').textContent = majorSubject || '-';
+                updateClassModeDisplay(student);
+                refreshCollegeSettingsForProfile(student);
 
                 // Edit fields
                 document.getElementById('firstNameEdit').value = student.firstName;

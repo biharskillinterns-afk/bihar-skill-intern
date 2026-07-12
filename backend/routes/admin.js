@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const { getRegistrationAmount, setRegistrationAmount, DEFAULT_REGISTRATION_AMOUNT } = require('../config/settings');
+const { splitCollegeValue, normalizeCollegeSettingsRow } = require('../config/collegeSettings');
 const { addColumnIfMissing, withTransaction } = require('../utils/db');
 const { logAdminAction } = require('../utils/audit');
 const { compatColumnExists, studentActiveClause } = require('../utils/compat');
@@ -148,6 +149,139 @@ router.post('/settings/payment-amount/reset', verifyToken, isAdmin, async (req, 
             message: 'Failed to reset payment amount',
             error: error.message
         });
+    }
+});
+
+const MAX_COLLEGE_CUSTOM_FEE = 100000;
+
+function sanitizeCollegeSettingsInput(body = {}) {
+    const parsed = splitCollegeValue(body.collegeName || '');
+    const collegeId = String(body.collegeId || parsed.collegeId || '').trim();
+    const collegeName = String(parsed.collegeName || body.collegeName || '').trim();
+    const classMode = body.classMode === 'offline' ? 'offline' : 'online';
+    const paymentMode = body.paymentMode === 'custom' ? 'custom' : 'auto';
+    const customFee = paymentMode === 'custom' ? Number(body.customFee) : null;
+
+    if (!collegeName) {
+        const error = new Error('College name is required');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (paymentMode === 'custom' && (!Number.isFinite(customFee) || customFee < 1)) {
+        const error = new Error('Valid custom fee is required for custom payment mode');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (paymentMode === 'custom' && customFee > MAX_COLLEGE_CUSTOM_FEE) {
+        const error = new Error(`Custom fee cannot exceed ₹${MAX_COLLEGE_CUSTOM_FEE}`);
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return {
+        collegeId,
+        collegeName,
+        classMode,
+        paymentMode,
+        customFee: paymentMode === 'custom' ? Math.round(customFee) : null
+    };
+}
+
+router.get('/college-settings', verifyToken, isAdmin, async (req, res) => {
+    const connection = await req.db.getConnection();
+    try {
+        const [rows] = await connection.query('SELECT * FROM college_settings ORDER BY collegeName ASC');
+        res.json({
+            success: true,
+            colleges: rows.map(normalizeCollegeSettingsRow)
+        });
+    } catch (error) {
+        res.status(error.code === 'ER_NO_SUCH_TABLE' ? 503 : 500).json({
+            success: false,
+            message: error.code === 'ER_NO_SUCH_TABLE'
+                ? 'College settings migration has not been run yet'
+                : 'Failed to fetch college settings',
+            error: error.message
+        });
+    } finally {
+        connection.release();
+    }
+});
+
+router.post('/college-settings', verifyToken, isAdmin, async (req, res) => {
+    const settings = sanitizeCollegeSettingsInput(req.body);
+    const connection = await req.db.getConnection();
+    try {
+        await connection.query(
+            `INSERT INTO college_settings (collegeId, collegeName, classMode, paymentMode, customFee)
+             VALUES (?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                collegeId = VALUES(collegeId),
+                classMode = VALUES(classMode),
+                paymentMode = VALUES(paymentMode),
+                customFee = VALUES(customFee),
+                updatedAt = NOW()`,
+            [settings.collegeId, settings.collegeName, settings.classMode, settings.paymentMode, settings.customFee]
+        );
+
+        const [rows] = await connection.query('SELECT * FROM college_settings WHERE collegeName = ? LIMIT 1', [settings.collegeName]);
+        await logAdminAction(connection, req, 'college_settings_upsert', {
+            entityType: 'college_settings',
+            entityId: rows[0]?.id || null,
+            afterValue: settings
+        });
+
+        res.json({
+            success: true,
+            message: 'College settings saved',
+            college: normalizeCollegeSettingsRow(rows[0])
+        });
+    } catch (error) {
+        res.status(error.code === 'ER_NO_SUCH_TABLE' ? 503 : error.statusCode || 500).json({
+            success: false,
+            message: error.code === 'ER_NO_SUCH_TABLE'
+                ? 'College settings migration has not been run yet'
+                : error.message || 'Failed to save college settings'
+        });
+    } finally {
+        connection.release();
+    }
+});
+
+router.delete('/college-settings/:id', verifyToken, isAdmin, async (req, res) => {
+    const connection = await req.db.getConnection();
+    try {
+        const [rows] = await connection.query('SELECT * FROM college_settings WHERE id = ? LIMIT 1', [req.params.id]);
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'College settings not found'
+            });
+        }
+
+        await connection.query('DELETE FROM college_settings WHERE id = ?', [req.params.id]);
+        await logAdminAction(connection, req, 'college_settings_delete', {
+            entityType: 'college_settings',
+            entityId: req.params.id,
+            beforeValue: rows[0]
+        });
+
+        res.json({
+            success: true,
+            message: 'College settings deleted'
+        });
+    } catch (error) {
+        res.status(error.code === 'ER_NO_SUCH_TABLE' ? 503 : 500).json({
+            success: false,
+            message: error.code === 'ER_NO_SUCH_TABLE'
+                ? 'College settings migration has not been run yet'
+                : 'Failed to delete college settings',
+            error: error.message
+        });
+    } finally {
+        connection.release();
     }
 });
 

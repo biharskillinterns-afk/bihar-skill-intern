@@ -1799,6 +1799,11 @@
                     <div style="font-weight: 600; font-size: 1.1em;">Course Material</div>
                     <div style="font-size: 0.9em; opacity: 0.9;">Add notes and materials to courses</div>
                 </div>
+                <div style="background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%); color: white; padding: 20px; border-radius: 8px; cursor: pointer;" onclick="scrollToCollegeManagement()">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🏫</div>
+                    <div style="font-weight: 600; font-size: 1.1em;">College Management</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Set class mode and payment fee per college</div>
+                </div>
             </div>
 
             <div id="coursesListContainer" style="background: #f8f9fa; padding: 20px; border-radius: 8px; display: none;">
@@ -1806,6 +1811,48 @@
                 <div id="coursesList"></div>
             </div>
         </div>
+        <div class="students-section" id="collegeManagementSection" style="margin-bottom: 30px;">
+            <h2 class="section-title">🏫 College Management</h2>
+            <div class="admin-panel">
+                <p style="color:#4b5563; margin-bottom: 16px;">Global fee remains controlled by Payment Amount Manager. Add a college only when it needs offline class mode or a custom registration fee.</p>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; align-items:end;">
+                    <div>
+                        <label for="collegeSettingName" style="display:block; font-weight:700; color:#374151; margin-bottom:8px;">College</label>
+                        <input id="collegeSettingName" list="collegeSettingOptions" type="text" placeholder="Select or type college name" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px;">
+                        <datalist id="collegeSettingOptions"></datalist>
+                    </div>
+                    <div>
+                        <label for="collegeClassMode" style="display:block; font-weight:700; color:#374151; margin-bottom:8px;">Class Mode</label>
+                        <select id="collegeClassMode" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px;">
+                            <option value="online">Online Class</option>
+                            <option value="offline">Offline Class</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="collegePaymentMode" style="display:block; font-weight:700; color:#374151; margin-bottom:8px;">Payment Mode</label>
+                        <select id="collegePaymentMode" onchange="toggleCollegeCustomFee()" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px;">
+                            <option value="auto">Auto - Global Fee</option>
+                            <option value="custom">Custom Fee</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="collegeCustomFee" style="display:block; font-weight:700; color:#374151; margin-bottom:8px;">Custom Fee</label>
+                        <input id="collegeCustomFee" type="number" min="1" max="100000" step="1" placeholder="Optional" disabled style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px;">
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                    <button class="search-btn" style="background:#0f766e;" onclick="saveCollegeSettings()">Save College Settings</button>
+                    <button class="search-btn" style="background:#64748b;" onclick="resetCollegeSettingsForm()">Clear</button>
+                    <button class="search-btn" style="background:#2563eb;" onclick="exportCollegeSettingsCSV()">Export College Settings</button>
+                </div>
+                <p id="collegeSettingsStatus" style="margin-top:12px; color:#4b5563;">Loading college settings...</p>
+                <div style="margin-top:18px;">
+                    <input id="collegeSettingsSearch" type="search" placeholder="Search college settings..." oninput="renderCollegeSettings()" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px;">
+                </div>
+                <div id="collegeSettingsList" style="margin-top:16px;"></div>
+            </div>
+        </div>
+
         <div class="students-section" style="margin-bottom: 30px;">
             <h2 class="section-title">Internship Proof Verification</h2>
             <div class="admin-panel">
@@ -1987,6 +2034,7 @@
                 <div class="info-row">
                     <label>College:</label>
                     <span id="modalCollege"></span>
+                    <small style="display:block; color:#64748b; margin-top:4px;">College is locked after registration.</small>
                 </div>
                 <div class="info-row">
                     <label>Current Course:</label>
@@ -2904,6 +2952,7 @@
             renderPendingActions();
             renderNoticePanel();
             renderActivityLog();
+            loadCollegeSettings();
         }
 
         function switchAdminControlTab(tabName) {
@@ -2962,6 +3011,226 @@
             const amount = getConfiguredPaymentAmount();
             if (input) input.value = amount;
             if (status) status.textContent = `Current payment amount: ₹${amount}`;
+        }
+
+        let collegeSettingsCache = [];
+
+        function scrollToCollegeManagement() {
+            document.getElementById('collegeManagementSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function parseCollegeSettingValue(value = '') {
+            const text = String(value || '').trim();
+            const match = text.match(/^([^/]+?)\s*\/\s*(.+)$/);
+            return match
+                ? { collegeId: match[1].trim(), collegeName: match[2].trim(), displayName: text }
+                : { collegeId: '', collegeName: text, displayName: text };
+        }
+
+        function getAllAdminCollegeOptions() {
+            const options = new Set();
+            if (typeof collegeData === 'object' && collegeData) {
+                Object.values(collegeData).flat().forEach(college => options.add(college));
+            }
+            allStudents.forEach(student => {
+                if (student?.college) options.add(student.college);
+            });
+            collegeSettingsCache.forEach(setting => {
+                const display = setting.collegeId ? `${setting.collegeId} / ${setting.collegeName}` : setting.collegeName;
+                if (display.trim()) options.add(display.trim());
+            });
+            return [...options].sort((a, b) => a.localeCompare(b));
+        }
+
+        function populateCollegeSettingsOptions() {
+            const datalist = document.getElementById('collegeSettingOptions');
+            if (!datalist) return;
+            datalist.innerHTML = getAllAdminCollegeOptions()
+                .map(college => `<option value="${escapeHTML(college)}"></option>`)
+                .join('');
+        }
+
+        function toggleCollegeCustomFee() {
+            const paymentMode = document.getElementById('collegePaymentMode')?.value || 'auto';
+            const feeInput = document.getElementById('collegeCustomFee');
+            if (!feeInput) return;
+            feeInput.disabled = paymentMode !== 'custom';
+            if (paymentMode !== 'custom') feeInput.value = '';
+        }
+
+        function resetCollegeSettingsForm() {
+            const nameInput = document.getElementById('collegeSettingName');
+            const classMode = document.getElementById('collegeClassMode');
+            const paymentMode = document.getElementById('collegePaymentMode');
+            const customFee = document.getElementById('collegeCustomFee');
+            if (nameInput) nameInput.value = '';
+            if (classMode) classMode.value = 'online';
+            if (paymentMode) paymentMode.value = 'auto';
+            if (customFee) customFee.value = '';
+            toggleCollegeCustomFee();
+        }
+
+        async function loadCollegeSettings() {
+            const status = document.getElementById('collegeSettingsStatus');
+            try {
+                if (typeof APIService === 'undefined') return;
+                const response = await APIService.getAdminCollegeSettings();
+                if (!response?.success) throw new Error(response?.message || 'College settings load failed');
+                collegeSettingsCache = Array.isArray(response.colleges) ? response.colleges : [];
+                if (status) status.textContent = collegeSettingsCache.length
+                    ? `${collegeSettingsCache.length} college setting(s) configured.`
+                    : 'No college-specific settings yet. All colleges use global fee and Online Class.';
+            } catch (error) {
+                if (status) status.textContent = `Unable to load college settings: ${error.message}`;
+                console.warn('College settings load failed:', error.message);
+            }
+            populateCollegeSettingsOptions();
+            renderCollegeSettings();
+        }
+
+        function renderCollegeSettings() {
+            const panel = document.getElementById('collegeSettingsList');
+            if (!panel) return;
+            const query = String(document.getElementById('collegeSettingsSearch')?.value || '').trim().toLowerCase();
+            const filtered = collegeSettingsCache.filter(setting => {
+                const text = `${setting.collegeId || ''} ${setting.collegeName || ''} ${setting.classMode || ''} ${setting.paymentMode || ''}`.toLowerCase();
+                return !query || text.includes(query);
+            });
+
+            if (filtered.length === 0) {
+                panel.innerHTML = '<p style="color:#6b7280; padding:14px; background:#f8fafc; border-radius:8px;">No college settings found.</p>';
+                return;
+            }
+
+            panel.innerHTML = `
+                <div style="overflow-x:auto;">
+                    <table class="mini-table" style="width:100%; min-width:720px;">
+                        <thead>
+                            <tr>
+                                <th>College</th>
+                                <th>Class Mode</th>
+                                <th>Payment Mode</th>
+                                <th>Effective Fee</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map(setting => {
+                                const displayName = `${setting.collegeId ? `${escapeHTML(setting.collegeId)} / ` : ''}${escapeHTML(setting.collegeName || '-')}`;
+                                const fee = setting.paymentMode === 'custom' && Number(setting.customFee) > 0
+                                    ? `₹${Math.round(Number(setting.customFee))}`
+                                    : `Global ₹${getConfiguredPaymentAmount()}`;
+                                return `
+                                    <tr>
+                                        <td>${displayName}</td>
+                                        <td>${setting.classMode === 'offline' ? 'Offline Class' : 'Online Class'}</td>
+                                        <td>${setting.paymentMode === 'custom' ? 'Custom' : 'Auto'}</td>
+                                        <td>${fee}</td>
+                                        <td>
+                                            <button class="action-btn" onclick="editCollegeSettings(${setting.id})">Edit</button>
+                                            <button class="action-btn action-btn-danger" onclick="deleteCollegeSettings(${setting.id})">Delete</button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function saveCollegeSettings() {
+            const parsed = parseCollegeSettingValue(document.getElementById('collegeSettingName')?.value || '');
+            const classMode = document.getElementById('collegeClassMode')?.value || 'online';
+            const paymentMode = document.getElementById('collegePaymentMode')?.value || 'auto';
+            const customFee = document.getElementById('collegeCustomFee')?.value || '';
+
+            if (!parsed.collegeName) {
+                alert('Please select or enter a college.');
+                return;
+            }
+            if (paymentMode === 'custom' && (!Number(customFee) || Number(customFee) < 1 || Number(customFee) > 100000)) {
+                alert('Please enter a valid custom fee between ₹1 and ₹100000.');
+                return;
+            }
+
+            try {
+                const response = await APIService.saveAdminCollegeSettings({
+                    collegeId: parsed.collegeId,
+                    collegeName: parsed.collegeName,
+                    classMode,
+                    paymentMode,
+                    customFee: paymentMode === 'custom' ? Number(customFee) : null
+                });
+                if (!response?.success) throw new Error(response?.message || 'College settings save failed');
+                addActivityLog(`College settings updated for ${parsed.collegeName}`);
+                resetCollegeSettingsForm();
+                await loadCollegeSettings();
+                renderActivityLog();
+                alert('College settings saved successfully.');
+            } catch (error) {
+                alert(`Unable to save college settings: ${error.message}`);
+            }
+        }
+
+        function editCollegeSettings(id) {
+            const setting = collegeSettingsCache.find(item => String(item.id) === String(id));
+            if (!setting) return;
+            document.getElementById('collegeSettingName').value = setting.collegeId
+                ? `${setting.collegeId} / ${setting.collegeName}`
+                : setting.collegeName;
+            document.getElementById('collegeClassMode').value = setting.classMode === 'offline' ? 'offline' : 'online';
+            document.getElementById('collegePaymentMode').value = setting.paymentMode === 'custom' ? 'custom' : 'auto';
+            document.getElementById('collegeCustomFee').value = setting.customFee || '';
+            toggleCollegeCustomFee();
+            scrollToCollegeManagement();
+        }
+
+        async function deleteCollegeSettings(id) {
+            if (!confirm('Delete this college setting? Students will fall back to the global fee and Online Class.')) return;
+            try {
+                const response = await APIService.deleteAdminCollegeSettings(id);
+                if (!response?.success) throw new Error(response?.message || 'College settings delete failed');
+                addActivityLog('College settings deleted');
+                await loadCollegeSettings();
+                renderActivityLog();
+            } catch (error) {
+                alert(`Unable to delete college settings: ${error.message}`);
+            }
+        }
+
+        function exportCollegeSettingsCSV() {
+            if (!Array.isArray(collegeSettingsCache) || collegeSettingsCache.length === 0) {
+                alert('No college settings available to export.');
+                return;
+            }
+
+            const escapeCsv = value => {
+                const text = String(value ?? '');
+                return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+            };
+
+            const rows = [
+                ['College ID', 'College Name', 'Class Mode', 'Payment Mode', 'Custom Fee'],
+                ...collegeSettingsCache.map(setting => [
+                    setting.collegeId || '',
+                    setting.collegeName || '',
+                    setting.classMode === 'offline' ? 'offline' : 'online',
+                    setting.paymentMode === 'custom' ? 'custom' : 'auto',
+                    setting.customFee ?? ''
+                ])
+            ];
+
+            const csv = rows.map(row => row.map(escapeCsv).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `college-settings-${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
         }
 
         async function savePaymentAmount() {

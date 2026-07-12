@@ -562,6 +562,18 @@
             }
         }
 
+        function applyCollegeClassMode() {
+            if (typeof BSIClassMode === 'undefined') return;
+            const modeSelect = document.getElementById('internshipMode');
+            if (!modeSelect) return;
+
+            const isOffline = BSIClassMode.isOfflineCollege();
+            const onlineOption = modeSelect.querySelector('option[value="online"]');
+            const offlineOption = modeSelect.querySelector('option[value="offline"]');
+            if (onlineOption) onlineOption.textContent = isOffline ? 'Offline Class' : 'Online Class';
+            if (offlineOption) offlineOption.textContent = 'Offline Internship / GPS Photo';
+        }
+
         function readFileAsDataUrl(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -737,6 +749,7 @@
             const courseName = reportRows[0]?.courseName || getItem('selectedCourseName') || getItem('userSkill') || '-';
             const firstDate = reportRows[0]?.proofDate || getSelectedStartDate();
             const lastDate = firstDate ? addDays(firstDate, 14) : '';
+            const classMode = typeof BSIClassMode !== 'undefined' ? BSIClassMode.getClassMode() : 'Online Class';
 
             return `
                 <div class="report-header">
@@ -752,6 +765,7 @@
                     <tr><th>Student Name</th><td>${escapeHTML(studentName)}</td><th>Registration ID</th><td>${escapeHTML(registrationId)}</td></tr>
                     <tr><th>Roll No</th><td>${escapeHTML(rollNo)}</td><th>Course Name</th><td>${escapeHTML(courseName)}</td></tr>
                     <tr><th>Attendance Period</th><td>${formatDate(firstDate)} to ${formatDate(lastDate)}</td><th>Total Duration</th><td>15 Days / 120 Hours</td></tr>
+                    <tr><th>Class Mode</th><td>${escapeHTML(classMode)}</td><th>Internship Type</th><td>${escapeHTML(classMode)}</td></tr>
                     <tr><th>Approved Proof Days</th><td>${Number(proofSummary.approvedDays || 0)}/${Number(proofSummary.requiredApprovedDays || 5)}</td><th>Status</th><td>${Number(proofSummary.approvedDays || 0) >= Number(proofSummary.requiredApprovedDays || 5) ? 'Verified for certificate review' : 'Pending admin approval'}</td></tr>
                 </table>
                 <table class="report-table">
@@ -814,6 +828,7 @@
 
         window.addEventListener('load', async () => {
             if (typeof BSIAuthStorage !== 'undefined' && !BSIAuthStorage.requireCompletedStudent()) return;
+            applyCollegeClassMode();
             document.getElementById('proofForm').addEventListener('submit', uploadProof);
             document.getElementById('screenshots').addEventListener('change', previewFiles);
             document.getElementById('courseSelect').addEventListener('change', () => {
