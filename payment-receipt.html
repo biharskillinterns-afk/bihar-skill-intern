@@ -204,6 +204,42 @@
             margin-top: 18px;
         }
 
+        .receipt-authorization {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            gap: 14px;
+            margin-top: 28px;
+            page-break-inside: avoid;
+        }
+
+        .receipt-seal {
+            width: 182px;
+            height: 182px;
+            object-fit: contain;
+            margin-right: -28px;
+            margin-bottom: -4px;
+        }
+
+        .receipt-signature {
+            min-width: 230px;
+            text-align: center;
+            color: #0f172a;
+            font-weight: 800;
+        }
+
+        .receipt-signature-line {
+            border-top: 2px solid #173b78;
+            padding-top: 8px;
+        }
+
+        .receipt-signature small {
+            display: block;
+            color: #64748b;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
         @media (max-width: 720px) {
             .receipt-header,
             .topbar {
@@ -217,6 +253,10 @@
 
             .detail-row {
                 grid-template-columns: 1fr;
+            }
+
+            .receipt-authorization {
+                justify-content: center;
             }
         }
 
@@ -233,6 +273,11 @@
             .receipt-card {
                 box-shadow: none;
                 border: 0;
+            }
+
+            .receipt-seal {
+                width: 48mm;
+                height: 48mm;
             }
         }
     </style>
@@ -354,6 +399,13 @@
                 </div>
 
                 <p class="footer-note">This receipt is generated from the saved payment record on the Bihar Skill Interns portal.</p>
+                <div class="receipt-authorization">
+                    <img class="receipt-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                    <div class="receipt-signature">
+                        <div class="receipt-signature-line">Authorized Signatory</div>
+                        <small>Bihar Skill Interns</small>
+                    </div>
+                </div>
             `;
         }
 

@@ -224,6 +224,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 34px;
             margin-top: 52px;
+            align-items: end;
         }
 
         .signature-line {
@@ -240,6 +241,20 @@
             height: 86px;
             object-fit: contain;
             margin: 8px auto 4px;
+        }
+
+        .report-official-seal {
+            width: 112px;
+            height: 112px;
+            margin-bottom: -8px;
+        }
+
+        .signatory-organization {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: #475569;
+            font-weight: 700;
         }
 
         .center {
@@ -749,12 +764,11 @@
                 </table>
                 <div class="signature-row">
                     <div>
-                        <img class="stamp" src="assets/certificates/iso-9001-transparent-stamp.png" alt="ISO 9001 stamp">
                         <div class="signature-line">Quality Verification</div>
                     </div>
                     <div>
-                        <img class="stamp" src="assets/certificates/authorized-signature.png" alt="Authorized signature">
-                        <div class="signature-line">Authorized Signatory</div>
+                        <img class="stamp report-official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                        <div class="signature-line">Authorized Signatory<span class="signatory-organization">Bihar Skill Interns</span></div>
                     </div>
                 </div>
                 <p class="center small">Bihar Skill Intern - Internship Completion Report</p>

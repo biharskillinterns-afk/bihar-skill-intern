@@ -110,10 +110,25 @@
             margin-top: 22px;
             margin-left: auto;
             max-width: 320px;
+            position: relative;
+            min-height: 126px;
+            padding-right: 122px;
         }
 
         .signature-block p {
             margin: 6px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .official-seal {
+            width: 136px;
+            height: 136px;
+            object-fit: contain;
+            position: absolute;
+            right: -4px;
+            top: 4px;
+            z-index: 0;
         }
 
         .fill {
@@ -163,6 +178,15 @@
 
         .pdf-export-document .signature-block {
             margin-top: 16px;
+            min-height: 36mm;
+            padding-right: 33mm;
+        }
+
+        .pdf-export-document .official-seal {
+            width: 32mm;
+            height: 32mm;
+            right: -1mm;
+            top: 1mm;
         }
 
         .actions {
@@ -242,6 +266,14 @@
 
             .signature-block {
                 margin-left: 0;
+                padding-right: 122px;
+            }
+
+            .official-seal {
+                width: 110px;
+                height: 110px;
+                right: 0;
+                top: 8px;
             }
 
             .actions {
@@ -306,6 +338,15 @@
 
             .signature-block {
                 margin-top: 16px;
+                min-height: 36mm;
+                padding-right: 35mm;
+            }
+
+            .official-seal {
+                width: 34mm;
+                height: 34mm;
+                right: -1mm;
+                top: 1mm;
             }
 
             .actions {
@@ -376,6 +417,7 @@
             </div>
 
             <div class="signature-block">
+                <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
                 <p>विश्वासभाजन,</p>
                 <p>हस्ताक्षर ______________________</p>
                 <p>नाम : <span class="fill" data-field="studentName"></span></p>
