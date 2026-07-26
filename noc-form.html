@@ -215,47 +215,142 @@
         }
 
         .pdf-export-document .official-signature-area .official-seal {
-            width: 34mm;
-            height: 34mm;
-            right: -1mm;
-            top: -2mm;
+            width: 26mm;
+            height: 26mm;
+            right: 2mm;
+            top: 3mm;
+        }
+
+        .pdf-export-document .official-signature-img {
+            width: 31mm;
+            right: 7mm;
+            top: 6mm;
+        }
+
+        .pdf-export-document .official-letter-page {
+            min-height: 270mm !important;
+            padding-top: 12mm !important;
+            padding-bottom: 12mm !important;
+            position: relative;
+        }
+
+        .pdf-export-document .official-letter-page .letter-head {
+            padding-bottom: 9px;
+            margin-bottom: 12px;
+        }
+
+        .pdf-export-document .official-letter-page .letter-head img {
+            width: 26mm;
+            height: 26mm;
+            margin-bottom: 4px;
+        }
+
+        .pdf-export-document .official-letter-page .letter-head h1 {
+            font-size: 18px;
+        }
+
+        .pdf-export-document .official-letter-page .platform-tagline {
+            font-size: 11px;
+        }
+
+        .pdf-export-document .official-letter-page .letter-title {
+            margin-top: 7px;
+            font-size: 12px;
+        }
+
+        .pdf-export-document .official-letter-page .letter-info-box {
+            margin: 10px 0;
+            padding: 8px 11px;
+            font-size: 11pt;
+        }
+
+        .pdf-export-document .official-letter-page .letter-body p {
+            margin-bottom: 7px;
+            font-size: 11pt;
+        }
+
+        .pdf-export-document .official-letter-page .official-signature-area {
+            margin-top: 14px;
+            font-size: 11pt;
+        }
+
+        .pdf-export-document .official-letter-page .signature-visual {
+            height: 25mm;
+            margin-bottom: 2px;
+        }
+
+        .pdf-export-document .official-letter-page .official-letter-footer {
+            position: absolute;
+            left: 18mm;
+            right: 18mm;
+            bottom: 8mm;
+            margin-top: 0;
         }
 
         .letter-head {
             border-bottom: 2px solid #1d4ed8;
-            padding-bottom: 12px;
+            padding-bottom: 14px;
             margin-bottom: 18px;
             text-align: center;
         }
 
         .letter-head img {
-            width: 54px;
-            height: 54px;
+            width: 118px;
+            height: 118px;
             object-fit: contain;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .letter-head h1 {
             margin: 0;
             color: #123c91;
-            font-size: 20px;
+            font-size: 24px;
             letter-spacing: 0;
             line-height: 1.2;
         }
 
+        .platform-tagline {
+            margin-top: 3px;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
         .letter-title {
-            margin: 12px 0 4px;
+            margin: 13px 0 4px;
             text-align: center;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             text-transform: uppercase;
             color: #111827;
         }
 
-        .letter-meta {
+        .letter-info-box {
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #1d4ed8;
+            background: #f8fbff;
+            padding: 11px 14px;
+            margin: 16px 0;
+            font-size: 12pt;
+        }
+
+        .letter-info-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            grid-template-columns: 132px 1fr;
+            gap: 8px;
+            margin: 3px 0;
+        }
+
+        .letter-info-label {
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        .letter-info-value {
+            color: #111827;
+        }
+
+        .letter-meta {
             margin: 16px 0;
             font-size: 12pt;
         }
@@ -270,25 +365,44 @@
         }
 
         .official-signature-area {
-            margin-top: 34px;
+            margin-top: 28px;
             margin-left: auto;
-            max-width: 340px;
-            min-height: 120px;
+            max-width: 320px;
+            min-height: 0;
             position: relative;
-            padding-right: 128px;
+            padding-right: 0;
+            text-align: center;
         }
 
         .official-signature-area p {
             margin: 5px 0;
             position: relative;
-            z-index: 1;
+            z-index: 3;
+        }
+
+        .signature-visual {
+            height: 128px;
+            position: relative;
+            margin: 2px auto 6px;
         }
 
         .official-signature-area .official-seal {
-            width: 136px;
-            height: 136px;
-            right: -2px;
-            top: -8px;
+            width: 126px;
+            height: 126px;
+            right: 18px;
+            top: 8px;
+            z-index: 1;
+        }
+
+        .official-signature-img {
+            width: 154px;
+            height: auto;
+            object-fit: contain;
+            position: absolute;
+            right: 40px;
+            top: 22px;
+            z-index: 2;
+            pointer-events: none;
         }
 
         .official-letter-footer {
@@ -298,6 +412,21 @@
             text-align: center;
             font-size: 11px;
             color: #475569;
+            line-height: 1.5;
+        }
+
+        @media screen and (min-width: 769px) {
+            .official-letter-page {
+                position: relative;
+            }
+
+            .official-letter-page .official-letter-footer {
+                position: absolute;
+                left: 22mm;
+                right: 22mm;
+                bottom: 18mm;
+                margin-top: 0;
+            }
         }
 
         .actions {
@@ -411,6 +540,7 @@
                 grid-column: 1 / -1;
             }
 
+            .letter-info-row,
             .letter-meta {
                 grid-template-columns: 1fr;
             }
@@ -421,7 +551,12 @@
 
             .official-signature-area {
                 margin-left: 0;
-                padding-right: 122px;
+                padding-right: 0;
+            }
+
+            .letter-head img {
+                width: 96px;
+                height: 96px;
             }
         }
 
@@ -493,14 +628,80 @@
 
             .official-signature-area {
                 min-height: 36mm;
-                padding-right: 35mm;
+                padding-right: 0;
+            }
+
+            .official-letter-page {
+                min-height: 270mm;
+                padding-top: 12mm;
+                padding-bottom: 12mm;
+                position: relative;
+            }
+
+            .official-letter-page .letter-head {
+                padding-bottom: 9px;
+                margin-bottom: 12px;
+            }
+
+            .official-letter-page .letter-head img {
+                width: 26mm;
+                height: 26mm;
+                margin-bottom: 4px;
+            }
+
+            .official-letter-page .letter-head h1 {
+                font-size: 18px;
+            }
+
+            .official-letter-page .platform-tagline {
+                font-size: 11px;
+            }
+
+            .official-letter-page .letter-title {
+                margin-top: 7px;
+                font-size: 12px;
+            }
+
+            .official-letter-page .letter-info-box {
+                margin: 10px 0;
+                padding: 8px 11px;
+                font-size: 11pt;
+            }
+
+            .official-letter-page .letter-body p {
+                margin-bottom: 7px;
+                font-size: 11pt;
+            }
+
+            .official-letter-page .official-signature-area {
+                margin-top: 14px;
+                font-size: 11pt;
+            }
+
+            .official-letter-page .signature-visual {
+                height: 25mm;
+                margin-bottom: 2px;
+            }
+
+            .official-letter-page .official-letter-footer {
+                position: absolute;
+                left: 18mm;
+                right: 18mm;
+                bottom: 8mm;
+                margin-top: 0;
             }
 
             .official-signature-area .official-seal {
-                width: 34mm;
-                height: 34mm;
-                right: -1mm;
-                top: -2mm;
+                width: 26mm;
+                height: 26mm;
+                right: 2mm;
+                top: 3mm;
+            }
+
+            .official-signature-img {
+                width: 31mm;
+                right: 7mm;
+                top: 6mm;
             }
 
             .actions {
@@ -584,12 +785,23 @@
             <div class="letter-head">
                 <img src="logo.png" alt="Bihar Skill Interns logo">
                 <h1>BIHAR SKILL INTERNS</h1>
+                <div class="platform-tagline">Official Internship &amp; Skill Development Platform</div>
                 <div class="letter-title">OFFICIAL INTERNSHIP VERIFICATION &amp; RECOMMENDATION LETTER</div>
             </div>
 
-            <div class="letter-meta">
-                <div><strong>Reference No.</strong> BSI/NOC/<span data-field="registrationNumber"></span></div>
-                <div><strong>Date</strong> ____/____/20____</div>
+            <div class="letter-info-box">
+                <div class="letter-info-row">
+                    <span class="letter-info-label">Reference No.</span>
+                    <span class="letter-info-value">BSI/NOC/<span data-field="issueYear"></span>/<span data-field="registrationNumber"></span></span>
+                </div>
+                <div class="letter-info-row">
+                    <span class="letter-info-label">Issue Date</span>
+                    <span class="letter-info-value" data-field="issueDate"></span>
+                </div>
+                <div class="letter-info-row">
+                    <span class="letter-info-label">Document Type</span>
+                    <span class="letter-info-value">Verification Letter</span>
+                </div>
             </div>
 
             <div class="subject">
@@ -627,15 +839,18 @@
             </div>
 
             <div class="official-signature-area">
-                <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
                 <p>Yours Faithfully,</p>
-                <p style="margin-top: 22px;">Authorized Signatory</p>
-                <p><strong>BIHAR SKILL INTERNS</strong></p>
-                <p>(Official Signature)</p>
+                <div class="signature-visual" aria-label="Official signature and seal">
+                    <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                    <img class="official-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
+                </div>
+                <p>Authorized Signatory</p>
+                <p><strong>Bihar Skill Interns</strong></p>
             </div>
 
             <div class="official-letter-footer">
-                This document is officially generated by Bihar Skill Interns.
+                <div>This document is officially generated by Bihar Skill Interns.</div>
+                <div>www.biharskillinterns.in</div>
             </div>
         </section>
         </div>
@@ -687,12 +902,23 @@
             return '';
         }
 
+        function formatIssueDate(date = new Date()) {
+            return date.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
         function buildNocData(student = {}) {
             const firstName = pick(student, 'firstName');
             const lastName = pick(student, 'lastName');
             const fullName = pick(student, 'name', 'fullName') || [firstName, lastName].filter(Boolean).join(' ');
             const rollNo = pick(student, 'rollNo', 'rollno', 'userRollNo') || getStorageValue('userRollNo');
+            const issueDate = new Date();
             return {
+                issueDate: formatIssueDate(issueDate),
+                issueYear: String(issueDate.getFullYear()),
                 studentName: fullName || getStorageValue('userName') || [getStorageValue('userFirstName'), getStorageValue('userLastName')].filter(Boolean).join(' '),
                 majorSubject: pick(student, 'majorSubject', 'userMajorSubject') || getStorageValue('userMajorSubject'),
                 session: pick(student, 'session', 'userSession') || getStorageValue('userSession'),
