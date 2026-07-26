@@ -287,6 +287,20 @@
             margin-top: 0;
         }
 
+        .pdf-export-document .official-letter-page .verification-qr-block {
+            position: absolute;
+            right: 18mm;
+            bottom: 22mm;
+            width: 25mm;
+            margin: 0;
+            font-size: 7px;
+        }
+
+        .pdf-export-document .official-letter-page .verification-qr-block img {
+            width: 24mm;
+            height: 24mm;
+        }
+
         .letter-head {
             border-bottom: 2px solid #1d4ed8;
             padding-bottom: 14px;
@@ -415,6 +429,31 @@
             line-height: 1.5;
         }
 
+        .verification-qr-block {
+            width: 96px;
+            margin: 20px 0 0 auto;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 9px;
+            line-height: 1.25;
+            color: #334155;
+        }
+
+        .verification-qr-block img {
+            display: block;
+            width: 92px;
+            height: 92px;
+            object-fit: contain;
+            margin: 0 auto 4px;
+            background: #ffffff;
+        }
+
+        .verification-qr-title {
+            display: block;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
         @media screen and (min-width: 769px) {
             .official-letter-page {
                 position: relative;
@@ -426,6 +465,13 @@
                 right: 22mm;
                 bottom: 18mm;
                 margin-top: 0;
+            }
+
+            .official-letter-page .verification-qr-block {
+                position: absolute;
+                right: 22mm;
+                bottom: 36mm;
+                margin: 0;
             }
         }
 
@@ -691,6 +737,20 @@
                 margin-top: 0;
             }
 
+            .official-letter-page .verification-qr-block {
+                position: absolute;
+                right: 18mm;
+                bottom: 22mm;
+                width: 25mm;
+                margin: 0;
+                font-size: 7px;
+            }
+
+            .official-letter-page .verification-qr-block img {
+                width: 24mm;
+                height: 24mm;
+            }
+
             .official-signature-area .official-seal {
                 width: 26mm;
                 height: 26mm;
@@ -846,6 +906,12 @@
                 </div>
                 <p>Authorized Signatory</p>
                 <p><strong>Bihar Skill Interns</strong></p>
+            </div>
+
+            <div class="verification-qr-block">
+                <img src="assets/certificates/bihar-skill-interns-verification-qr.png" alt="Scan to verify Bihar Skill Interns document">
+                <span class="verification-qr-title">Scan to Verify</span>
+                <span>www.biharskillinterns.in</span>
             </div>
 
             <div class="official-letter-footer">
