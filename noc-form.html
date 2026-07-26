@@ -42,10 +42,17 @@
         }
 
         @media screen {
+            .noc-pages,
             .noc-document,
             .actions {
                 width: min(210mm, calc(100vw - 24px));
             }
+        }
+
+        .noc-pages {
+            display: grid;
+            gap: 18px;
+            margin: 0 auto;
         }
 
         .noc-document {
@@ -150,10 +157,28 @@
             width: 210mm !important;
             min-height: auto !important;
             max-width: none !important;
-            padding: 16mm 18mm !important;
+            padding: 0 !important;
             box-shadow: none !important;
             border: 0 !important;
             font-size: 12pt !important;
+            display: block !important;
+            gap: 0 !important;
+        }
+
+        .pdf-export-document .noc-document {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            max-width: none !important;
+            padding: 16mm 18mm !important;
+            box-shadow: none !important;
+            border: 0 !important;
+            page-break-after: always;
+            break-after: page;
+        }
+
+        .pdf-export-document .noc-document:last-child {
+            page-break-after: auto;
+            break-after: auto;
         }
 
         .pdf-export-document .date-line {
@@ -187,6 +212,92 @@
             height: 32mm;
             right: -1mm;
             top: 1mm;
+        }
+
+        .pdf-export-document .official-signature-area .official-seal {
+            width: 34mm;
+            height: 34mm;
+            right: -1mm;
+            top: -2mm;
+        }
+
+        .letter-head {
+            border-bottom: 2px solid #1d4ed8;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        .letter-head img {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+            margin-bottom: 6px;
+        }
+
+        .letter-head h1 {
+            margin: 0;
+            color: #123c91;
+            font-size: 20px;
+            letter-spacing: 0;
+            line-height: 1.2;
+        }
+
+        .letter-title {
+            margin: 12px 0 4px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #111827;
+        }
+
+        .letter-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+            font-size: 12pt;
+        }
+
+        .letter-meta div:last-child {
+            text-align: right;
+        }
+
+        .letter-body p {
+            margin: 0 0 12px;
+            text-align: justify;
+        }
+
+        .official-signature-area {
+            margin-top: 34px;
+            margin-left: auto;
+            max-width: 340px;
+            min-height: 120px;
+            position: relative;
+            padding-right: 128px;
+        }
+
+        .official-signature-area p {
+            margin: 5px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .official-signature-area .official-seal {
+            width: 136px;
+            height: 136px;
+            right: -2px;
+            top: -8px;
+        }
+
+        .official-letter-footer {
+            margin-top: 34px;
+            padding-top: 10px;
+            border-top: 1px solid #cbd5e1;
+            text-align: center;
+            font-size: 11px;
+            color: #475569;
         }
 
         .actions {
@@ -238,6 +349,11 @@
                 width: 100%;
                 max-width: 100%;
                 overflow-x: hidden;
+            }
+
+            .noc-pages {
+                width: 100%;
+                max-width: 100%;
             }
 
             .noc-document {
@@ -294,6 +410,19 @@
             .btn-pdf {
                 grid-column: 1 / -1;
             }
+
+            .letter-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .letter-meta div:last-child {
+                text-align: left;
+            }
+
+            .official-signature-area {
+                margin-left: 0;
+                padding-right: 122px;
+            }
         }
 
         @media print {
@@ -306,14 +435,27 @@
                 max-width: none;
             }
 
+            .noc-pages {
+                width: auto;
+                display: block;
+                gap: 0;
+            }
+
             .noc-document {
                 width: auto;
-                min-height: auto;
+                min-height: 297mm;
                 margin: 0;
                 padding: 16mm 18mm;
                 box-shadow: none;
                 border: 0;
                 font-size: 12pt;
+                page-break-after: always;
+                break-after: page;
+            }
+
+            .noc-document:last-child {
+                page-break-after: auto;
+                break-after: auto;
             }
 
             .date-line {
@@ -349,6 +491,18 @@
                 top: 1mm;
             }
 
+            .official-signature-area {
+                min-height: 36mm;
+                padding-right: 35mm;
+            }
+
+            .official-signature-area .official-seal {
+                width: 34mm;
+                height: 34mm;
+                right: -1mm;
+                top: -2mm;
+            }
+
             .actions {
                 display: none;
             }
@@ -362,7 +516,8 @@
 </head>
 <body>
     <main class="page-shell">
-        <section class="noc-document" id="nocDocument">
+        <div class="noc-pages" id="nocDocument">
+        <section class="noc-document">
             <div class="date-line">दिनांक : ____/____/20____</div>
 
             <div class="recipient-block">
@@ -417,7 +572,6 @@
             </div>
 
             <div class="signature-block">
-                <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
                 <p>विश्वासभाजन,</p>
                 <p>हस्ताक्षर ______________________</p>
                 <p>नाम : <span class="fill" data-field="studentName"></span></p>
@@ -425,6 +579,66 @@
                 <p>मोबाइल नं. : <span class="fill" data-field="mobile"></span></p>
             </div>
         </section>
+
+        <section class="noc-document official-letter-page">
+            <div class="letter-head">
+                <img src="logo.png" alt="Bihar Skill Interns logo">
+                <h1>BIHAR SKILL INTERNS</h1>
+                <div class="letter-title">OFFICIAL INTERNSHIP VERIFICATION &amp; RECOMMENDATION LETTER</div>
+            </div>
+
+            <div class="letter-meta">
+                <div><strong>Reference No.</strong> BSI/NOC/<span data-field="registrationNumber"></span></div>
+                <div><strong>Date</strong> ____/____/20____</div>
+            </div>
+
+            <div class="subject">
+                <strong>Subject:</strong> Verification and Recommendation for Internship Permission
+            </div>
+
+            <div class="letter-body">
+                <p>
+                    This is to officially certify that Mr./Ms. <strong><span data-field="studentName"></span></strong>,
+                    Roll No. <strong><span data-field="universityRoll"></span></strong>, Semester
+                    <strong><span data-field="semester"></span></strong>, enrolled at
+                    <strong><span data-field="collegeName"></span></strong>, has successfully registered on the
+                    Bihar Skill Interns platform and is participating in our structured internship program.
+                </p>
+
+                <p>
+                    The internship is conducted in accordance with academic and industry-oriented learning objectives.
+                    Bihar Skill Interns will monitor the student's internship progress, maintain the required records,
+                    and issue the internship completion certificate after successful completion of all prescribed requirements.
+                </p>
+
+                <p>
+                    We respectfully request your institution to kindly grant the necessary permission/NOC to enable the
+                    student to complete the internship within the prescribed academic timeline.
+                </p>
+
+                <p>
+                    Should your institution require any verification or clarification, please contact Bihar Skill Interns
+                    through our official communication channels.
+                </p>
+
+                <p>
+                    We sincerely appreciate your support in promoting skill development and industry-oriented education.
+                </p>
+            </div>
+
+            <div class="official-signature-area">
+                <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                <p>Yours Faithfully,</p>
+                <p style="margin-top: 22px;">Authorized Signatory</p>
+                <p><strong>BIHAR SKILL INTERNS</strong></p>
+                <p>(Official Signature)</p>
+            </div>
+
+            <div class="official-letter-footer">
+                This document is officially generated by Bihar Skill Interns.
+            </div>
+        </section>
+        </div>
 
         <div class="actions">
             <button type="button" class="action-btn btn-back" onclick="goBack()">← Back</button>
