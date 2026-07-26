@@ -215,22 +215,22 @@
         }
 
         .pdf-export-document .official-signature-area .official-seal {
-            width: 30mm;
-            height: 30mm;
+            width: 27mm;
+            height: 27mm;
             right: 0;
             top: 0;
         }
 
         .pdf-export-document .official-signature-img {
-            width: 36mm;
-            right: 8mm;
-            top: 7mm;
+            width: 32mm;
+            right: 7mm;
+            top: 6mm;
         }
 
         .pdf-export-document .official-letter-page {
-            min-height: 270mm !important;
-            padding-top: 12mm !important;
-            padding-bottom: 12mm !important;
+            min-height: 260mm !important;
+            padding-top: 10mm !important;
+            padding-bottom: 10mm !important;
             position: relative;
         }
 
@@ -265,44 +265,54 @@
         }
 
         .pdf-export-document .official-letter-page .letter-body p {
-            margin-bottom: 7px;
-            font-size: 11pt;
+            margin-bottom: 6px;
+            font-size: 10.5pt;
+        }
+
+        .pdf-export-document .official-letter-page .letter-verification-row {
+            grid-template-columns: 24mm 54mm;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16mm;
+            margin-top: 6mm;
         }
 
         .pdf-export-document .official-letter-page .official-signature-area {
-            position: absolute;
-            right: 18mm;
-            bottom: 24mm;
-            width: 58mm;
+            position: relative;
+            right: auto;
+            bottom: auto;
+            width: 54mm;
             margin: 0;
-            font-size: 11pt;
+            font-size: 10.5pt;
         }
 
         .pdf-export-document .official-letter-page .signature-visual {
-            height: 31mm;
+            height: 27mm;
             margin-bottom: 2px;
         }
 
         .pdf-export-document .official-letter-page .official-letter-footer {
-            position: absolute;
+            position: relative;
             left: 18mm;
             right: 18mm;
-            bottom: 8mm;
-            margin-top: 0;
+            bottom: auto;
+            margin-top: 4mm;
+            padding-top: 5px;
+            font-size: 9px;
         }
 
         .pdf-export-document .official-letter-page .verification-qr-block {
-            position: absolute;
-            left: 18mm;
-            bottom: 27mm;
-            width: 25mm;
+            position: relative;
+            left: auto;
+            bottom: auto;
+            width: 24mm;
             margin: 0;
             font-size: 7px;
         }
 
         .pdf-export-document .official-letter-page .verification-qr-block img {
-            width: 24mm;
-            height: 24mm;
+            width: 22mm;
+            height: 22mm;
         }
 
         .letter-head {
@@ -382,8 +392,16 @@
             text-align: justify;
         }
 
+        .letter-verification-row {
+            display: grid;
+            grid-template-columns: 120px minmax(220px, 1fr);
+            align-items: end;
+            gap: 42px;
+            margin-top: 26px;
+        }
+
         .official-signature-area {
-            margin-top: 28px;
+            margin-top: 0;
             margin-left: auto;
             max-width: 320px;
             min-height: 0;
@@ -435,7 +453,7 @@
 
         .verification-qr-block {
             width: 96px;
-            margin: 20px 0 0 auto;
+            margin: 0;
             text-align: center;
             font-family: Arial, sans-serif;
             font-size: 9px;
@@ -459,29 +477,25 @@
         }
 
         @media screen and (min-width: 769px) {
-            .official-letter-page {
-                position: relative;
-            }
-
             .official-letter-page .official-letter-footer {
-                position: absolute;
-                left: 22mm;
-                right: 22mm;
-                bottom: 18mm;
-                margin-top: 0;
+                position: relative;
+                left: auto;
+                right: auto;
+                bottom: auto;
+                margin-top: 28px;
             }
 
             .official-letter-page .verification-qr-block {
-                position: absolute;
-                left: 22mm;
-                bottom: 44mm;
+                position: relative;
+                left: auto;
+                bottom: auto;
                 margin: 0;
             }
 
             .official-letter-page .official-signature-area {
-                position: absolute;
-                right: 22mm;
-                bottom: 38mm;
+                position: relative;
+                right: auto;
+                bottom: auto;
                 width: 250px;
                 margin: 0;
             }
@@ -603,6 +617,12 @@
                 grid-template-columns: 1fr;
             }
 
+            .letter-verification-row {
+                grid-template-columns: 1fr;
+                justify-items: start;
+                gap: 18px;
+            }
+
             .letter-meta div:last-child {
                 text-align: left;
             }
@@ -690,9 +710,9 @@
             }
 
             .official-letter-page {
-                min-height: 270mm;
-                padding-top: 12mm;
-                padding-bottom: 12mm;
+                min-height: 260mm;
+                padding-top: 10mm;
+                padding-bottom: 10mm;
                 position: relative;
             }
 
@@ -727,57 +747,67 @@
             }
 
             .official-letter-page .letter-body p {
-                margin-bottom: 7px;
-                font-size: 11pt;
+                margin-bottom: 6px;
+                font-size: 10.5pt;
+            }
+
+            .official-letter-page .letter-verification-row {
+                grid-template-columns: 24mm 54mm;
+                justify-content: space-between;
+                align-items: end;
+                gap: 16mm;
+                margin-top: 6mm;
             }
 
             .official-letter-page .official-signature-area {
-                position: absolute;
-                right: 18mm;
-                bottom: 24mm;
-                width: 58mm;
+                position: relative;
+                right: auto;
+                bottom: auto;
+                width: 54mm;
                 margin: 0;
-                font-size: 11pt;
+                font-size: 10.5pt;
             }
 
             .official-letter-page .signature-visual {
-                height: 31mm;
+                height: 27mm;
                 margin-bottom: 2px;
             }
 
             .official-letter-page .official-letter-footer {
-                position: absolute;
-                left: 18mm;
-                right: 18mm;
-                bottom: 8mm;
-                margin-top: 0;
+                position: relative;
+                left: auto;
+                right: auto;
+                bottom: auto;
+                margin-top: 4mm;
+                padding-top: 5px;
+                font-size: 9px;
             }
 
             .official-letter-page .verification-qr-block {
-                position: absolute;
-                left: 18mm;
-                bottom: 27mm;
-                width: 25mm;
+                position: relative;
+                left: auto;
+                bottom: auto;
+                width: 24mm;
                 margin: 0;
                 font-size: 7px;
             }
 
             .official-letter-page .verification-qr-block img {
-                width: 24mm;
-                height: 24mm;
+                width: 22mm;
+                height: 22mm;
             }
 
             .official-signature-area .official-seal {
-                width: 30mm;
-                height: 30mm;
+                width: 27mm;
+                height: 27mm;
                 right: 0;
                 top: 0;
             }
 
             .official-signature-img {
-                width: 36mm;
-                right: 8mm;
-                top: 7mm;
+                width: 32mm;
+                right: 7mm;
+                top: 6mm;
             }
 
             .actions {
@@ -914,20 +944,22 @@
                 </p>
             </div>
 
-            <div class="official-signature-area">
-                <p>Yours Faithfully,</p>
-                <div class="signature-visual" aria-label="Official signature and seal">
-                    <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
-                    <img class="official-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
+            <div class="letter-verification-row">
+                <div class="verification-qr-block">
+                    <img src="assets/certificates/bihar-skill-interns-verification-qr.png" alt="Scan to verify Bihar Skill Interns document">
+                    <span class="verification-qr-title">Scan to Verify</span>
+                    <span>www.biharskillinterns.in</span>
                 </div>
-                <p>Authorized Signatory</p>
-                <p><strong>Bihar Skill Interns</strong></p>
-            </div>
 
-            <div class="verification-qr-block">
-                <img src="assets/certificates/bihar-skill-interns-verification-qr.png" alt="Scan to verify Bihar Skill Interns document">
-                <span class="verification-qr-title">Scan to Verify</span>
-                <span>www.biharskillinterns.in</span>
+                <div class="official-signature-area">
+                    <p>Yours Faithfully,</p>
+                    <div class="signature-visual" aria-label="Official signature and seal">
+                        <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                        <img class="official-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
+                    </div>
+                    <p>Authorized Signatory</p>
+                    <p><strong>Bihar Skill Interns</strong></p>
+                </div>
             </div>
 
             <div class="official-letter-footer">
