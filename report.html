@@ -251,9 +251,28 @@
             margin: 0 auto -6px;
         }
 
-        .department-signature-space {
+        .report-program-signature-img {
+            display: block;
+            width: 150px;
             height: 78px;
+            object-fit: contain;
             margin: 0 auto -6px;
+        }
+
+        .report-endorsement-row {
+            display: grid;
+            grid-template-columns: 1fr 120px 1fr;
+            gap: 24px;
+            align-items: end;
+            margin-top: 44px;
+        }
+
+        .report-seal-img {
+            display: block;
+            width: 112px;
+            height: 112px;
+            object-fit: contain;
+            margin: 0 auto 4px;
         }
 
         .signatory-organization {
@@ -769,10 +788,13 @@
                     <tr><th>Completion</th><td>100%</td></tr>
                     <tr><th>Daily Screenshot Record</th><td>Daily learning screenshots are mentioned as part of the internship activity proof and dashboard-based progress record.</td></tr>
                 </table>
-                <div class="signature-row">
+                <div class="report-endorsement-row">
                     <div>
-                        <div class="department-signature-space"></div>
-                        <div class="signature-line">Department Head Signature</div>
+                        <img class="report-program-signature-img" src="assets/certificates/program-coordinator-signature.png" alt="Program Coordinator signature">
+                        <div class="signature-line">Himanshu Bharti<span class="signatory-organization">Program Coordinator<br>Bihar Skill Interns</span></div>
+                    </div>
+                    <div>
+                        <img class="report-seal-img" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
                     </div>
                     <div>
                         <img class="report-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">

@@ -270,10 +270,10 @@
         }
 
         .pdf-export-document .official-letter-page .letter-verification-row {
-            grid-template-columns: 24mm 54mm;
+            grid-template-columns: 24mm 1fr;
             justify-content: space-between;
             align-items: end;
-            gap: 16mm;
+            gap: 7mm;
             margin-top: 6mm;
         }
 
@@ -281,13 +281,13 @@
             position: relative;
             right: auto;
             bottom: auto;
-            width: 54mm;
+            width: auto;
             margin: 0;
             font-size: 10.5pt;
         }
 
         .pdf-export-document .official-letter-page .signature-visual {
-            height: 27mm;
+            height: 22mm;
             margin-bottom: 2px;
         }
 
@@ -313,6 +313,16 @@
         .pdf-export-document .official-letter-page .verification-qr-block img {
             width: 22mm;
             height: 22mm;
+        }
+
+        .pdf-export-document .official-letter-page .official-endorsement-row {
+            grid-template-columns: 1fr 28mm 1fr;
+            gap: 5mm;
+        }
+
+        .pdf-export-document .official-letter-page .program-signature-img,
+        .pdf-export-document .official-letter-page .signature-only-visual .official-signature-img {
+            width: 31mm;
         }
 
         .letter-head {
@@ -394,10 +404,17 @@
 
         .letter-verification-row {
             display: grid;
-            grid-template-columns: 120px minmax(220px, 1fr);
+            grid-template-columns: 120px minmax(0, 1fr);
             align-items: end;
-            gap: 42px;
+            gap: 26px;
             margin-top: 26px;
+        }
+
+        .official-endorsement-row {
+            display: grid;
+            grid-template-columns: 1fr 120px 1fr;
+            align-items: end;
+            gap: 18px;
         }
 
         .official-signature-area {
@@ -422,6 +439,20 @@
             margin: 2px auto 6px;
         }
 
+        .signature-only-visual {
+            height: 82px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .seal-only-visual {
+            height: 118px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .official-signature-area .official-seal {
             width: 126px;
             height: 126px;
@@ -439,6 +470,23 @@
             top: 22px;
             z-index: 2;
             pointer-events: none;
+        }
+
+        .program-signature-img,
+        .signature-only-visual .official-signature-img {
+            width: 150px;
+            height: auto;
+            object-fit: contain;
+            position: static;
+            right: auto;
+            top: auto;
+        }
+
+        .seal-only-visual .official-seal {
+            position: static;
+            width: 118px;
+            height: 118px;
+            object-fit: contain;
         }
 
         .official-letter-footer {
@@ -623,6 +671,12 @@
                 gap: 18px;
             }
 
+            .official-endorsement-row {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                width: 100%;
+            }
+
             .letter-meta div:last-child {
                 text-align: left;
             }
@@ -752,10 +806,10 @@
             }
 
             .official-letter-page .letter-verification-row {
-                grid-template-columns: 24mm 54mm;
+                grid-template-columns: 24mm 1fr;
                 justify-content: space-between;
                 align-items: end;
-                gap: 16mm;
+                gap: 7mm;
                 margin-top: 6mm;
             }
 
@@ -763,13 +817,13 @@
                 position: relative;
                 right: auto;
                 bottom: auto;
-                width: 54mm;
+                width: auto;
                 margin: 0;
                 font-size: 10.5pt;
             }
 
             .official-letter-page .signature-visual {
-                height: 27mm;
+                height: 22mm;
                 margin-bottom: 2px;
             }
 
@@ -795,6 +849,16 @@
             .official-letter-page .verification-qr-block img {
                 width: 22mm;
                 height: 22mm;
+            }
+
+            .official-letter-page .official-endorsement-row {
+                grid-template-columns: 1fr 28mm 1fr;
+                gap: 5mm;
+            }
+
+            .official-letter-page .program-signature-img,
+            .official-letter-page .signature-only-visual .official-signature-img {
+                width: 31mm;
             }
 
             .official-signature-area .official-seal {
@@ -951,14 +1015,31 @@
                     <span>www.biharskillinterns.in</span>
                 </div>
 
-                <div class="official-signature-area">
-                    <p>Yours Faithfully,</p>
-                    <div class="signature-visual" aria-label="Official signature and seal">
-                        <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
-                        <img class="official-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
+                <div class="official-endorsement-row">
+                    <div class="official-signature-area">
+                        <p>Program Coordinator</p>
+                        <div class="signature-visual signature-only-visual">
+                            <img class="program-signature-img" src="assets/certificates/program-coordinator-signature.png" alt="Program Coordinator signature">
+                        </div>
+                        <p><strong>Himanshu Bharti</strong></p>
+                        <p>Program Coordinator</p>
+                        <p>Bihar Skill Interns</p>
                     </div>
-                    <p>Authorized Signatory</p>
-                    <p><strong>Bihar Skill Interns</strong></p>
+
+                    <div class="official-signature-area">
+                        <div class="signature-visual seal-only-visual" aria-label="Official round seal">
+                            <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                        </div>
+                    </div>
+
+                    <div class="official-signature-area">
+                        <p>Authorized Signatory</p>
+                        <div class="signature-visual signature-only-visual">
+                            <img class="official-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
+                        </div>
+                        <p>Authorized Signatory</p>
+                        <p><strong>Bihar Skill Interns</strong></p>
+                    </div>
                 </div>
             </div>
 

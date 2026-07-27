@@ -205,27 +205,34 @@
         }
 
         .receipt-authorization {
-            display: flex;
-            justify-content: flex-end;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: flex-end;
-            gap: 14px;
+            gap: 22px;
             margin-top: 28px;
             page-break-inside: avoid;
         }
 
         .receipt-seal {
-            width: 182px;
-            height: 182px;
+            width: 128px;
+            height: 128px;
             object-fit: contain;
-            margin-right: -28px;
-            margin-bottom: -4px;
+            margin: 0 auto;
         }
 
         .receipt-signature {
-            min-width: 230px;
+            min-width: 0;
             text-align: center;
             color: #0f172a;
             font-weight: 800;
+        }
+
+        .receipt-signature-img {
+            display: block;
+            width: 148px;
+            height: 72px;
+            object-fit: contain;
+            margin: 0 auto -2px;
         }
 
         .receipt-signature-line {
@@ -256,7 +263,8 @@
             }
 
             .receipt-authorization {
-                justify-content: center;
+                grid-template-columns: 1fr;
+                justify-items: center;
             }
         }
 
@@ -400,8 +408,16 @@
 
                 <p class="footer-note">This receipt is generated from the saved payment record on the Bihar Skill Interns portal.</p>
                 <div class="receipt-authorization">
+                    <div class="receipt-signature">
+                        <div>Program Coordinator</div>
+                        <img class="receipt-signature-img" src="assets/certificates/program-coordinator-signature.png" alt="Program Coordinator signature">
+                        <div class="receipt-signature-line">Himanshu Bharti</div>
+                        <small>Program Coordinator<br>Bihar Skill Interns</small>
+                    </div>
                     <img class="receipt-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
                     <div class="receipt-signature">
+                        <div>Authorized Signatory</div>
+                        <img class="receipt-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
                         <div class="receipt-signature-line">Authorized Signatory</div>
                         <small>Bihar Skill Interns</small>
                     </div>
