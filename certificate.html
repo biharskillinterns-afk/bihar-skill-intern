@@ -992,7 +992,7 @@
                 <div class="ornament"><span>*</span></div>
 
                 <header>
-                    <img class="certificate-brand-logo" src="assets/certificates/bihar-skill-intern-logo.png" alt="Bihar Skill Interns logo">
+                    <img class="certificate-brand-logo" src="assets/certificates/bihar-skill-intern-logo.png" data-document-asset="companyLogo" alt="Bihar Skill Interns logo">
                     <h1 class="brand-title">Bihar Skill Interns</h1>
                     <div class="brand-rule">***</div>
                 </header>
@@ -1092,7 +1092,7 @@
                         </div>
                     </div>
 
-                    <img class="bottom-medal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official round seal">
+                    <img class="bottom-medal" src="assets/certificates/bihar-skill-interns-round-seal.png" data-document-asset="officialSeal" alt="Bihar Skill Interns official round seal">
 
                     <div class="signature-block">
                         <div class="signature-script">Approved</div>
@@ -1153,6 +1153,7 @@
         window.addEventListener('load', applyCertificateAssetFallbacks);
     </script>
     <script src="api-config.js"></script>
+    <script src="document-assets.js"></script>
     <script>
         function setText(id, value, fallback) {
             const element = document.getElementById(id);
@@ -1307,6 +1308,7 @@
             }
 
             loadLocalCertificateData(result);
+            if (window.BSIDocumentAssets) window.BSIDocumentAssets.loadAndApply();
 
             const urlParams = new URLSearchParams(window.location.search);
             const certId = urlParams.get('id');

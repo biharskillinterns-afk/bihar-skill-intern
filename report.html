@@ -18,6 +18,8 @@
     <meta name="twitter:title" content="20 Page Internship Report - Bihar Skill Intern">
     <meta name="twitter:description" content="Bihar Skill Intern printable internship report with course learning activities and screenshots.">
     <meta name="twitter:image" content="https://biharskillinterns.in/logo.png">
+    <script src="api-config.js"></script>
+    <script src="document-assets.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -447,7 +449,7 @@
         <section class="page">
             <div class="watermark">BIHAR SKILL INTERN</div>
             <div class="page-content cover">
-                <img class="logo" src="assets/certificates/bihar-skill-intern-logo.png" alt="Bihar Skill Intern logo">
+                <img class="logo" src="assets/certificates/bihar-skill-intern-logo.png" data-document-asset="companyLogo" alt="Bihar Skill Intern logo">
                 <div class="small">VEER KUNWAR SINGH UNIVERSITY</div>
                 <div class="small" data-field="college">College Name</div>
                 <h1 class="cover-title">Internship Report</h1>
@@ -790,14 +792,14 @@
                 </table>
                 <div class="report-endorsement-row">
                     <div>
-                        <img class="report-program-signature-img" src="assets/certificates/program-coordinator-signature.png" alt="Program Coordinator signature">
+                        <img class="report-program-signature-img" src="assets/certificates/program-coordinator-signature.png" data-document-asset="programCoordinatorSignature" alt="Program Coordinator signature">
                         <div class="signature-line">Program Coordinator<span class="signatory-organization">Bihar Skill Interns</span></div>
                     </div>
                     <div>
-                        <img class="report-seal-img" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                        <img class="report-seal-img" src="assets/certificates/bihar-skill-interns-round-seal.png" data-document-asset="officialSeal" alt="Bihar Skill Interns official seal">
                     </div>
                     <div>
-                        <img class="report-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
+                        <img class="report-signature-img" src="assets/certificates/authorized-signature-official.png" data-document-asset="authorizedSignature" alt="Authorized signature">
                         <div class="signature-line">Authorized Signatory<span class="signatory-organization">Bihar Skill Interns</span></div>
                     </div>
                 </div>
@@ -981,7 +983,8 @@
             return classMode === 'offline' ? 'Offline Class' : 'Online Class';
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.BSIDocumentAssets) await window.BSIDocumentAssets.loadAndApply();
             const result = getLatestResult();
             if (!result) {
                 alert('Report is available after you enroll in a course and pass its quiz.');

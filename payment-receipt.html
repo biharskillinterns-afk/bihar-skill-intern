@@ -19,6 +19,7 @@
     <meta name="twitter:description" content="Bihar Skill Intern payment receipt for registration and internship enrollment records.">
     <meta name="twitter:image" content="https://biharskillinterns.in/logo.png">
     <script src="api-config.js"></script>
+    <script src="document-assets.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -410,19 +411,20 @@
                 <div class="receipt-authorization">
                     <div class="receipt-signature">
                         <div>Program Coordinator</div>
-                        <img class="receipt-signature-img" src="assets/certificates/program-coordinator-signature.png" alt="Program Coordinator signature">
+                        <img class="receipt-signature-img" src="assets/certificates/program-coordinator-signature.png" data-document-asset="programCoordinatorSignature" alt="Program Coordinator signature">
                         <div class="receipt-signature-line">Program Coordinator</div>
                         <small>Program Coordinator<br>Bihar Skill Interns</small>
                     </div>
-                    <img class="receipt-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                    <img class="receipt-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" data-document-asset="officialSeal" alt="Bihar Skill Interns official seal">
                     <div class="receipt-signature">
                         <div>Authorized Signatory</div>
-                        <img class="receipt-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
+                        <img class="receipt-signature-img" src="assets/certificates/authorized-signature-official.png" data-document-asset="authorizedSignature" alt="Authorized signature">
                         <div class="receipt-signature-line">Authorized Signatory</div>
                         <small>Bihar Skill Interns</small>
                     </div>
                 </div>
             `;
+            if (window.BSIDocumentAssets) window.BSIDocumentAssets.apply(receiptContent);
         }
 
         async function loadReceipt() {
@@ -453,7 +455,11 @@
             receiptContent.textContent = 'Payment receipt was not found. After payment is completed, the receipt will appear here.';
         }
 
-        window.addEventListener('load', loadReceipt);
+        window.addEventListener('load', async () => {
+            if (window.BSIDocumentAssets) await window.BSIDocumentAssets.load();
+            await loadReceipt();
+            if (window.BSIDocumentAssets) window.BSIDocumentAssets.apply(receiptContent);
+        });
     </script>
 </body>
 </html>

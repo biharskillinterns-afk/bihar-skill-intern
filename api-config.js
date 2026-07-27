@@ -720,6 +720,17 @@ class APIService {
         });
     }
 
+    static async getAdminDocumentAssets() {
+        return this.request('/document-assets/admin');
+    }
+
+    static async uploadAdminDocumentAsset(data) {
+        return this.request('/document-assets/admin/upload', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
     // =============================================
     // COURSES ENDPOINTS
     // =============================================

@@ -155,6 +155,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/payments', paymentsRouter);
 app.use('/api/certificates', require('./routes/certificates'));
+app.use('/api/document-assets', require('./routes/documentAssets'));
 
 app.use(notFoundHandler);
 app.use(errorHandler);

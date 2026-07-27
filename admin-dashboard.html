@@ -1807,6 +1807,15 @@
             </div>
         </div>
 
+        <div class="students-section" id="signatureSealManagerSection" style="margin-bottom: 30px;">
+            <h2 class="section-title">Signature &amp; Seal Manager</h2>
+            <div class="admin-panel">
+                <p style="color:#4b5563; margin-bottom: 16px;">Upload official document assets here. Certificates, NOC, reports, and payment receipts will use the active assets automatically.</p>
+                <div id="documentAssetCards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px;"></div>
+                <p id="documentAssetStatus" style="margin-top:12px; color:#4b5563;">Loading document assets...</p>
+            </div>
+        </div>
+
         <!-- Course Management Section -->
         <div class="students-section" style="margin-bottom: 30px;">
             <h2 class="section-title">🎓 Course Management</h2>
@@ -2948,6 +2957,7 @@
             renderNoticePanel();
             renderActivityLog();
             loadCollegeSettings();
+            loadDocumentAssets();
         }
 
         function switchAdminControlTab(tabName) {
@@ -3226,6 +3236,98 @@
             link.click();
             link.remove();
             URL.revokeObjectURL(url);
+        }
+
+        const DOCUMENT_ASSET_TYPES = [
+            { key: 'companyLogo', label: 'Company Logo' },
+            { key: 'officialSeal', label: 'Official Round Seal' },
+            { key: 'authorizedSignature', label: 'Authorized Signatory Signature' },
+            { key: 'programCoordinatorSignature', label: 'Program Coordinator Signature' },
+            { key: 'verificationQr', label: 'Verification QR Code' }
+        ];
+        let documentAssetsCache = {};
+        let pendingDocumentAssetUploads = {};
+
+        function renderDocumentAssetManager() {
+            const panel = document.getElementById('documentAssetCards');
+            if (!panel) return;
+            panel.innerHTML = DOCUMENT_ASSET_TYPES.map(asset => {
+                const currentUrl = documentAssetsCache[asset.key] || '';
+                return `
+                    <div style="border:1px solid #e5e7eb; border-radius:10px; padding:14px; background:#f8fafc;">
+                        <div style="font-weight:800; color:#111827; margin-bottom:10px;">${escapeHTML(asset.label)}</div>
+                        <div style="height:110px; display:flex; align-items:center; justify-content:center; background:white; border:1px dashed #cbd5e1; border-radius:8px; margin-bottom:10px; overflow:hidden;">
+                            <img id="documentAssetPreview_${asset.key}" src="${escapeHTML(currentUrl)}" alt="${escapeHTML(asset.label)} preview" style="max-width:100%; max-height:96px; object-fit:contain;">
+                        </div>
+                        <input id="documentAssetInput_${asset.key}" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" onchange="handleDocumentAssetFile('${asset.key}', this)" style="width:100%; margin-bottom:10px;">
+                        <button class="search-btn" style="width:100%; background:#0f766e;" onclick="saveDocumentAsset('${asset.key}')">Activate / Replace</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadDocumentAssets() {
+            const status = document.getElementById('documentAssetStatus');
+            try {
+                if (typeof APIService === 'undefined') return;
+                const response = await APIService.getAdminDocumentAssets();
+                if (!response?.success) throw new Error(response?.message || 'Document assets load failed');
+                documentAssetsCache = { ...(response.defaults || {}), ...(response.assets || {}) };
+                if (status) status.textContent = response.tableReady === false
+                    ? 'Migration pending: document asset table is not available yet.'
+                    : 'Active document assets loaded.';
+            } catch (error) {
+                if (status) status.textContent = `Unable to load document assets: ${error.message}`;
+                console.warn('Document assets load failed:', error.message);
+            }
+            renderDocumentAssetManager();
+        }
+
+        function handleDocumentAssetFile(assetKey, input) {
+            const file = input?.files?.[0];
+            if (!file) return;
+            if (!/^image\/(png|jpe?g|webp)$/i.test(file.type || '')) {
+                alert('Please select a PNG, JPG, JPEG, or WEBP image.');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                pendingDocumentAssetUploads[assetKey] = {
+                    dataUrl: reader.result,
+                    originalName: file.name
+                };
+                const preview = document.getElementById(`documentAssetPreview_${assetKey}`);
+                if (preview) preview.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveDocumentAsset(assetKey) {
+            const asset = DOCUMENT_ASSET_TYPES.find(item => item.key === assetKey);
+            const upload = pendingDocumentAssetUploads[assetKey];
+            if (!asset || !upload?.dataUrl) {
+                alert('Please choose an image before saving.');
+                return;
+            }
+
+            try {
+                const response = await APIService.uploadAdminDocumentAsset({
+                    assetKey,
+                    label: asset.label,
+                    dataUrl: upload.dataUrl,
+                    originalName: upload.originalName
+                });
+                if (!response?.success) throw new Error(response?.message || 'Document asset update failed');
+                delete pendingDocumentAssetUploads[assetKey];
+                addActivityLog(`${asset.label} updated`);
+                await loadDocumentAssets();
+                renderActivityLog();
+                alert(`${asset.label} updated successfully.`);
+            } catch (error) {
+                alert(`Unable to update document asset: ${error.message}`);
+            }
         }
 
         async function savePaymentAmount() {

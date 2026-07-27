@@ -22,6 +22,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="api-config.js"></script>
+    <script src="document-assets.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -953,7 +954,7 @@
 
         <section class="noc-document official-letter-page">
             <div class="letter-head">
-                <img src="logo.png" alt="Bihar Skill Interns logo">
+                <img src="logo.png" data-document-asset="companyLogo" alt="Bihar Skill Interns logo">
                 <h1>BIHAR SKILL INTERNS</h1>
                 <div class="platform-tagline">Official Internship &amp; Skill Development Platform</div>
                 <div class="letter-title">OFFICIAL INTERNSHIP VERIFICATION &amp; RECOMMENDATION LETTER</div>
@@ -1010,7 +1011,7 @@
 
             <div class="letter-verification-row">
                 <div class="verification-qr-block">
-                    <img src="assets/certificates/bihar-skill-interns-verification-qr.png" alt="Scan to verify Bihar Skill Interns document">
+                    <img src="assets/certificates/bihar-skill-interns-verification-qr.png" data-document-asset="verificationQr" alt="Scan to verify Bihar Skill Interns document">
                     <span class="verification-qr-title">Scan to Verify</span>
                     <span>www.biharskillinterns.in</span>
                 </div>
@@ -1019,7 +1020,7 @@
                     <div class="official-signature-area">
                         <p>Program Coordinator</p>
                         <div class="signature-visual signature-only-visual">
-                            <img class="program-signature-img" src="assets/certificates/program-coordinator-signature.png" alt="Program Coordinator signature">
+                            <img class="program-signature-img" src="assets/certificates/program-coordinator-signature.png" data-document-asset="programCoordinatorSignature" alt="Program Coordinator signature">
                         </div>
                         <p>Program Coordinator</p>
                         <p>Bihar Skill Interns</p>
@@ -1027,14 +1028,14 @@
 
                     <div class="official-signature-area">
                         <div class="signature-visual seal-only-visual" aria-label="Official round seal">
-                            <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" alt="Bihar Skill Interns official seal">
+                            <img class="official-seal" src="assets/certificates/bihar-skill-interns-round-seal.png" data-document-asset="officialSeal" alt="Bihar Skill Interns official seal">
                         </div>
                     </div>
 
                     <div class="official-signature-area">
                         <p>Authorized Signatory</p>
                         <div class="signature-visual signature-only-visual">
-                            <img class="official-signature-img" src="assets/certificates/authorized-signature-official.png" alt="Authorized signature">
+                            <img class="official-signature-img" src="assets/certificates/authorized-signature-official.png" data-document-asset="authorizedSignature" alt="Authorized signature">
                         </div>
                         <p>Authorized Signatory</p>
                         <p><strong>Bihar Skill Interns</strong></p>
@@ -1164,10 +1165,12 @@
         }
 
         function downloadNocPdf() {
+            if (window.BSIDocumentAssets) window.BSIDocumentAssets.apply(document);
             const studentName = cleanValue(document.querySelector('[data-field="studentName"]').textContent) || 'Student';
             const fileName = `NOC_Form_${studentName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'Student'}.pdf`;
             const wrapper = document.createElement('div');
             const exportDocument = document.getElementById('nocDocument').cloneNode(true);
+            if (window.BSIDocumentAssets) window.BSIDocumentAssets.apply(exportDocument);
             wrapper.className = 'pdf-export-wrapper';
             exportDocument.classList.add('pdf-export-document');
             wrapper.appendChild(exportDocument);
@@ -1186,7 +1189,10 @@
             });
         }
 
-        window.addEventListener('load', loadNocFormData);
+        window.addEventListener('load', async () => {
+            await loadNocFormData();
+            if (window.BSIDocumentAssets) await window.BSIDocumentAssets.loadAndApply();
+        });
     </script>
 </body>
 </html>
