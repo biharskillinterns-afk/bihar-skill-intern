@@ -19,6 +19,8 @@ services:
         value: 7d
       - key: SKIP_SCHEMA_SYNC
         value: "true"
+      - key: DB_REQUEST_WAIT_MS
+        value: "20000"
       - key: DB_HOST
         sync: false
       - key: DB_USER
@@ -40,4 +42,8 @@ services:
       - key: RAZORPAY_KEY_SECRET
         sync: false
       - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
         sync: false

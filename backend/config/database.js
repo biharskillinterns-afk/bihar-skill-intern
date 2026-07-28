@@ -7,6 +7,29 @@ function envValue(key, fallback = '') {
     return String(process.env[key] || fallback).trim();
 }
 
+function parseDatabaseUrl() {
+    const rawUrl = envValue('DATABASE_URL') || envValue('MYSQL_URL');
+    if (!rawUrl) return {};
+
+    try {
+        const parsed = new URL(rawUrl);
+        const isMysqlUrl = /^mysql:$/i.test(parsed.protocol);
+        if (!isMysqlUrl) return {};
+
+        return {
+            host: parsed.hostname,
+            user: decodeURIComponent(parsed.username || ''),
+            password: decodeURIComponent(parsed.password || ''),
+            port: parsed.port || '',
+            database: decodeURIComponent(parsed.pathname.replace(/^\//, '') || '')
+        };
+    } catch (error) {
+        return {};
+    }
+}
+
+const urlConfig = parseDatabaseUrl();
+
 const sslConfig = envValue('DB_SSL').toLowerCase() === 'true'
     ? {
         rejectUnauthorized: envValue('DB_SSL_REJECT_UNAUTHORIZED').toLowerCase() !== 'false',
@@ -52,18 +75,20 @@ function normalizeDbPort(value) {
 }
 
 const baseConfig = {
-    host: normalizeDbHost(process.env.DB_HOST),
-    user: envValue('DB_USER'),
-    password: envValue('DB_PASSWORD'),
-    port: normalizeDbPort(process.env.DB_PORT),
+    host: normalizeDbHost(envValue('DB_HOST') || urlConfig.host),
+    user: envValue('DB_USER') || urlConfig.user || '',
+    password: envValue('DB_PASSWORD') || urlConfig.password || '',
+    port: normalizeDbPort(envValue('DB_PORT') || urlConfig.port),
     ...(sslConfig ? { ssl: sslConfig } : {}),
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 };
 
+const configuredDatabaseName = envValue('DB_NAME') || urlConfig.database || '';
+
 async function ensureDatabaseExists() {
-    const configuredDatabase = envValue('DB_NAME');
+    const configuredDatabase = configuredDatabaseName;
     if (!configuredDatabase) return;
 
     const connection = await mysql.createConnection(baseConfig);
@@ -77,7 +102,7 @@ async function ensureDatabaseExists() {
 
 const pool = mysql.createPool({
     ...baseConfig,
-    database: envValue('DB_NAME')
+    database: configuredDatabaseName
 });
 
 async function testDatabaseConnection() {
@@ -91,5 +116,14 @@ module.exports.testDatabaseConnection = testDatabaseConnection;
 module.exports.dbConnectionInfo = {
     host: baseConfig.host,
     port: baseConfig.port,
-    database: envValue('DB_NAME')
+    database: configuredDatabaseName,
+    ssl: Boolean(sslConfig),
+    sslRejectUnauthorized: sslConfig ? sslConfig.rejectUnauthorized : null,
+    source: Object.keys(urlConfig).length > 0 ? 'DATABASE_URL' : 'DB_*',
+    configured: {
+        host: Boolean(baseConfig.host),
+        user: Boolean(baseConfig.user),
+        password: Boolean(baseConfig.password),
+        database: Boolean(configuredDatabaseName)
+    }
 };

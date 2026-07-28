@@ -13,6 +13,7 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { sanitizeRequestBody } = require('./utils/security');
 const { scheduleDailyBackup } = require('./utils/backup');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const databaseState = {
@@ -64,6 +65,67 @@ function logUploadStorageWarning() {
 function getPublicDatabaseError() {
     if (!databaseState.lastError) return 'Database is starting. Please try again in a moment.';
     return `Database is not ready yet: ${databaseState.lastError}`;
+}
+
+function envPresent(key) {
+    return Boolean(String(process.env[key] || '').trim());
+}
+
+function getEnvironmentDiagnostics() {
+    const dbConfiguredViaUrl = envPresent('DATABASE_URL') || envPresent('MYSQL_URL');
+    const requiredGroups = {
+        database: dbConfiguredViaUrl
+            ? ['DATABASE_URL']
+            : ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'],
+        auth: ['JWT_SECRET'],
+        payment: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'],
+        email: ['EMAIL_USER', 'EMAIL_PASS']
+    };
+
+    const groups = Object.fromEntries(
+        Object.entries(requiredGroups).map(([group, keys]) => [
+            group,
+            {
+                configured: keys.every(envPresent),
+                missing: keys.filter(key => !envPresent(key))
+            }
+        ])
+    );
+
+    return {
+        nodeEnv: process.env.NODE_ENV || 'development',
+        portConfigured: envPresent('PORT'),
+        renderRuntime: isRenderRuntime(),
+        schemaSyncSkipped: shouldSkipSchemaSync(),
+        dbRequestWaitMs: Number(process.env.DB_REQUEST_WAIT_MS || 20000),
+        groups
+    };
+}
+
+async function getStorageDiagnostics() {
+    let uploadsExists = false;
+    let uploadsWritable = false;
+    let uploadsError = null;
+
+    try {
+        await fs.promises.mkdir(uploadsPath, { recursive: true });
+        uploadsExists = true;
+        await fs.promises.access(uploadsPath, fs.constants.W_OK);
+        uploadsWritable = true;
+    } catch (error) {
+        uploadsError = error.message;
+    }
+
+    return {
+        uploadsPath,
+        uploadsExists,
+        uploadsWritable,
+        renderLocalFilesystem: isRenderRuntime(),
+        recommendation: isRenderRuntime()
+            ? 'Use Render persistent disk or cloud storage for production uploads.'
+            : null,
+        error: uploadsError
+    };
 }
 
 function getOrigin(url) {
@@ -131,7 +193,8 @@ app.use((req, res, next) => {
 });
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+    const environmentDiagnostics = getEnvironmentDiagnostics();
     res.json({
         status: 'Backend is running successfully!',
         uptimeSeconds: Math.round(process.uptime()),
@@ -143,7 +206,22 @@ app.get('/api/health', (req, res) => {
             lastCheckedAt: databaseState.lastCheckedAt,
             host: dbConnectionInfo.host,
             port: dbConnectionInfo.port,
-            name: dbConnectionInfo.database
+            name: dbConnectionInfo.database,
+            ssl: dbConnectionInfo.ssl,
+            sslRejectUnauthorized: dbConnectionInfo.sslRejectUnauthorized,
+            configSource: dbConnectionInfo.source,
+            configured: dbConnectionInfo.configured
+        },
+        storage: await getStorageDiagnostics(),
+        services: {
+            email: environmentDiagnostics.groups.email,
+            payment: environmentDiagnostics.groups.payment
+        },
+        environmentDiagnostics,
+        staticFrontend: {
+            servedByBackend: false,
+            expectedHost: process.env.FRONTEND_URL || 'https://biharskillinterns.in',
+            note: 'Render service is API-only because render.yaml uses rootDir=backend. Root HTML files are deployed by the frontend host.'
         }
     });
 });
