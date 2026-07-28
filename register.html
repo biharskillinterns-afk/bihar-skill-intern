@@ -1248,7 +1248,16 @@
         }
 
         async function fetchRegistrationCourses() {
-            const response = await APIService.request('/courses');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            let response;
+            try {
+                response = await APIService.request('/courses', {
+                    signal: controller.signal
+                });
+            } finally {
+                clearTimeout(timeoutId);
+            }
             const courses = extractRegistrationCourses(response);
             if (courses.length > 0) return courses;
 

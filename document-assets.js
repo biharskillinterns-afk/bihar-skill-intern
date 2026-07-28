@@ -8,8 +8,26 @@
     };
 
     const STORAGE_KEY = 'bsiDocumentBrandingAssets';
+    const STYLE_ID = 'bsi-document-assets-style';
+    const FETCH_TIMEOUT_MS = 4000;
     let activeAssets = { ...DEFAULT_ASSETS };
     let loadPromise = null;
+
+    function ensureAssetStyle() {
+        if (document.getElementById(STYLE_ID)) return;
+        const style = document.createElement('style');
+        style.id = STYLE_ID;
+        style.textContent = `
+            [data-document-asset] {
+                opacity: 0;
+            }
+
+            [data-document-asset][data-document-asset-ready="true"] {
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
     function normalizeAssets(value) {
         return value && typeof value === 'object' ? value : {};
@@ -32,10 +50,20 @@
 
     async function load() {
         if (loadPromise) return loadPromise;
-        loadCachedAssets();
         loadPromise = (async () => {
+            loadCachedAssets();
             try {
-                const response = await fetch(`${getApiBaseUrl()}/document-assets/public`, { cache: 'no-store' });
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+                let response;
+                try {
+                    response = await fetch(`${getApiBaseUrl()}/document-assets/public`, {
+                        cache: 'no-store',
+                        signal: controller.signal
+                    });
+                } finally {
+                    clearTimeout(timeoutId);
+                }
                 const payload = await response.json();
                 if (response.ok && payload?.success && payload.assets) {
                     activeAssets = { ...DEFAULT_ASSETS, ...payload.assets };
@@ -61,6 +89,7 @@
             if (url && element.getAttribute('src') !== url) {
                 element.setAttribute('src', url);
             }
+            element.setAttribute('data-document-asset-ready', 'true');
         });
     }
 
@@ -77,4 +106,11 @@
         apply,
         loadAndApply
     };
+
+    ensureAssetStyle();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => loadAndApply());
+    } else {
+        loadAndApply();
+    }
 })();
