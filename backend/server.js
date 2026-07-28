@@ -27,6 +27,18 @@ function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function waitForDatabaseReady(timeoutMs = Number(process.env.DB_REQUEST_WAIT_MS || 20000)) {
+    if (databaseState.ready) return true;
+
+    const startedAt = Date.now();
+    while (databaseState.initializing && Date.now() - startedAt < timeoutMs) {
+        await wait(250);
+        if (databaseState.ready) return true;
+    }
+
+    return databaseState.ready;
+}
+
 function isEnabled(value) {
     return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
 }
@@ -136,8 +148,13 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-app.use('/api', (req, res, next) => {
+app.use('/api', async (req, res, next) => {
     if (databaseState.ready || req.path === '/health') {
+        next();
+        return;
+    }
+
+    if (databaseState.initializing && await waitForDatabaseReady()) {
         next();
         return;
     }

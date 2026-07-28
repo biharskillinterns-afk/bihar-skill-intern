@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Verification - Bihar Skill Intern</title>
+    <meta name="description" content="Verify Bihar Skill Intern certificate details using the existing certificate verification flow.">
+    <link rel="icon" type="image/png" href="/logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bihar Skill Intern">
+    <meta property="og:title" content="Certificate Verification - Bihar Skill Intern">
+    <meta property="og:description" content="Verify Bihar Skill Intern certificate details using the existing certificate verification flow.">
+    <meta property="og:url" content="https://biharskillinterns.in/verify-certificate.html">
+    <meta property="og:image" content="https://biharskillinterns.in/logo.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Certificate Verification - Bihar Skill Intern">
+    <meta name="twitter:description" content="Verify Bihar Skill Intern certificate details using the existing certificate verification flow.">
+    <meta name="twitter:image" content="https://biharskillinterns.in/logo.png">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            font-family: Inter, Arial, sans-serif;
+            color: #0f172a;
+            background: #f8fafc;
+        }
+
+        .status-card {
+            width: min(92vw, 460px);
+            padding: 28px;
+            text-align: center;
+            background: #ffffff;
+            border: 1px solid #dbe7f3;
+            border-radius: 16px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        a {
+            color: #2563eb;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <main class="status-card">
+        <h1>Opening Certificate Verification</h1>
+        <p>Please wait while we open the official certificate verification page.</p>
+        <p><a id="verificationLink" href="certificate.html">Open manually</a></p>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id') || params.get('certificateNumber') || '';
+        const target = id ? `certificate.html?id=${encodeURIComponent(id)}` : 'certificate.html';
+        document.getElementById('verificationLink').href = target;
+        window.location.replace(target);
+    </script>
+</body>
+</html>
