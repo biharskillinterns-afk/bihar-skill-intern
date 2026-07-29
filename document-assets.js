@@ -81,21 +81,73 @@
         return activeAssets[assetKey] || DEFAULT_ASSETS[assetKey] || '';
     }
 
+    function getDefault(assetKey) {
+        return DEFAULT_ASSETS[assetKey] || '';
+    }
+
+    function markReady(element) {
+        element.setAttribute('data-document-asset-ready', 'true');
+    }
+
+    function prepareImageElement(element, assetKey, url) {
+        const fallbackUrl = getDefault(assetKey);
+
+        element.removeAttribute('data-document-asset-ready');
+        element.onerror = () => {
+            if (fallbackUrl && element.getAttribute('src') !== fallbackUrl) {
+                element.removeAttribute('crossorigin');
+                element.setAttribute('src', fallbackUrl);
+                return;
+            }
+            markReady(element);
+        };
+        element.onload = () => markReady(element);
+
+        if (/^https?:\/\//i.test(url)) {
+            element.crossOrigin = 'anonymous';
+        } else {
+            element.removeAttribute('crossorigin');
+        }
+
+        if (url && element.getAttribute('src') !== url) {
+            element.setAttribute('src', url);
+            return;
+        }
+
+        if (element.complete) markReady(element);
+    }
+
     function apply(root = document) {
         if (!root?.querySelectorAll) return;
         root.querySelectorAll('[data-document-asset]').forEach(element => {
             const assetKey = element.getAttribute('data-document-asset');
             const url = get(assetKey);
-            if (url && element.getAttribute('src') !== url) {
-                element.setAttribute('src', url);
-            }
-            element.setAttribute('data-document-asset-ready', 'true');
+            prepareImageElement(element, assetKey, url);
         });
+    }
+
+    async function waitForImages(root = document, timeoutMs = 5000) {
+        if (!root?.querySelectorAll) return;
+        const images = Array.from(root.querySelectorAll('[data-document-asset]'));
+        if (images.length === 0) return;
+
+        const startedAt = Date.now();
+        while (Date.now() - startedAt < timeoutMs) {
+            const loaded = images.every(image => image.complete && image.naturalWidth > 0);
+            if (loaded) {
+                images.forEach(markReady);
+                return;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        images.forEach(markReady);
     }
 
     async function loadAndApply(root = document) {
         await load();
         apply(root);
+        await waitForImages(root);
         return activeAssets;
     }
 
@@ -104,6 +156,7 @@
         load,
         get,
         apply,
+        waitForImages,
         loadAndApply
     };
 

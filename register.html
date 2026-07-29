@@ -1326,7 +1326,7 @@
                 try {
                     courses = await fetchRegistrationCourses();
                 } catch (apiError) {
-                    console.error(`Registration Courses API failed at ${API_BASE_URL}/courses: ${apiError.message}`, apiError);
+                    console.warn(`Registration Courses API failed at ${API_BASE_URL}/courses: ${apiError.message}`, apiError);
                     courses = await fetchRegistrationCoursesFromLiveApi(apiError);
                 }
                 registrationCourseCache = courses;

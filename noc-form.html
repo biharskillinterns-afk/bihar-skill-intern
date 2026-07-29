@@ -20,6 +20,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="api-config.js"></script>
     <script src="document-assets.js"></script>
@@ -146,12 +148,13 @@
         }
 
         .pdf-export-wrapper {
-            position: fixed;
-            left: -9999px;
+            position: absolute;
+            left: 0;
             top: 0;
             width: 210mm;
             background: #ffffff;
             z-index: -1;
+            pointer-events: none;
         }
 
         .pdf-export-document {
@@ -169,10 +172,12 @@
         .pdf-export-document .noc-document {
             width: 210mm !important;
             min-height: 297mm !important;
+            height: 297mm !important;
             max-width: none !important;
             padding: 16mm 18mm !important;
             box-shadow: none !important;
             border: 0 !important;
+            overflow: hidden !important;
             page-break-after: always;
             break-after: page;
         }
@@ -229,7 +234,8 @@
         }
 
         .pdf-export-document .official-letter-page {
-            min-height: 260mm !important;
+            min-height: 297mm !important;
+            height: 297mm !important;
             padding-top: 10mm !important;
             padding-bottom: 10mm !important;
             position: relative;
@@ -1164,8 +1170,8 @@
             window.location.href = 'courses.html';
         }
 
-        function downloadNocPdf() {
-            if (window.BSIDocumentAssets) window.BSIDocumentAssets.apply(document);
+        async function downloadNocPdf() {
+            if (window.BSIDocumentAssets) await window.BSIDocumentAssets.loadAndApply(document);
             const studentName = cleanValue(document.querySelector('[data-field="studentName"]').textContent) || 'Student';
             const fileName = `NOC_Form_${studentName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'Student'}.pdf`;
             const wrapper = document.createElement('div');
@@ -1175,18 +1181,48 @@
             exportDocument.classList.add('pdf-export-document');
             wrapper.appendChild(exportDocument);
             document.body.appendChild(wrapper);
+            if (window.BSIDocumentAssets) await window.BSIDocumentAssets.waitForImages(exportDocument);
 
             const options = {
                 margin: 0,
                 filename: fileName,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    scrollX: 0,
+                    scrollY: 0,
+                    windowWidth: exportDocument.scrollWidth,
+                    windowHeight: exportDocument.scrollHeight
+                },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(options).from(exportDocument).save().finally(() => {
+            try {
+                if (window.html2canvas && window.jspdf && window.jspdf.jsPDF) {
+                    const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                    const pages = Array.from(exportDocument.querySelectorAll('.noc-document'));
+                    for (const [index, page] of pages.entries()) {
+                        const canvas = await window.html2canvas(page, {
+                            scale: 2,
+                            useCORS: true,
+                            backgroundColor: '#ffffff',
+                            scrollX: 0,
+                            scrollY: 0,
+                            windowWidth: page.scrollWidth,
+                            windowHeight: page.scrollHeight
+                        });
+                        if (index > 0) pdf.addPage('a4', 'portrait');
+                        pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', 0, 0, 210, 297);
+                    }
+                    pdf.save(fileName);
+                    return;
+                }
+
+                await html2pdf().set(options).from(exportDocument).save();
+            } finally {
                 wrapper.remove();
-            });
+            }
         }
 
         window.addEventListener('load', async () => {
