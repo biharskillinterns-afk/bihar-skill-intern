@@ -245,6 +245,44 @@
             margin: 8px auto 4px;
         }
 
+        .college-verification-box {
+            margin-top: 44px;
+            border: 1.5px solid #111827;
+            padding: 16px 18px 18px;
+            background: #ffffff;
+        }
+
+        .college-verification-box h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: #0f172a;
+        }
+
+        .college-verification-box p {
+            margin: 0 0 14px;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .college-verification-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            margin-top: 34px;
+            align-items: end;
+        }
+
+        .college-verification-line {
+            min-height: 54px;
+            border-top: 1.5px solid #111827;
+            padding-top: 8px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
         .report-signature-img {
             display: block;
             width: 150px;
@@ -499,6 +537,20 @@
                     <strong>Student Name:</strong> <span data-field="studentName">Student</span><br>
                     <strong>Course:</strong> <span data-field="courseName">Completed Course</span><br>
                     <strong>Report Date:</strong> <span data-field="reportDate">N/A</span>
+                </div>
+                <div class="college-verification-box">
+                    <h3>College / Department Verification</h3>
+                    <p>
+                        This is to certify that the above student is undertaking the internship for academic submission
+                        through <strong><span data-field="college">the college</span></strong>,
+                        Department of <strong><span data-field="department">the department</span></strong>.
+                        The report may be accepted as part of the student's internship record after college verification.
+                    </p>
+                    <div class="college-verification-grid">
+                        <div class="college-verification-line">Department Head Signature</div>
+                        <div class="college-verification-line">Internship Coordinator Signature</div>
+                        <div class="college-verification-line">College Seal / Stamp</div>
+                    </div>
                 </div>
             </div>
             <div class="page-footer"><span>Declaration</span><span>Page 3 of 20</span></div>
