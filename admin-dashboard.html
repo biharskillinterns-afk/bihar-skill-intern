@@ -3273,6 +3273,7 @@
                 const response = await APIService.getAdminDocumentAssets();
                 if (!response?.success) throw new Error(response?.message || 'Document assets load failed');
                 documentAssetsCache = { ...(response.defaults || {}), ...(response.assets || {}) };
+                localStorage.setItem('bsiDocumentBrandingAssets', JSON.stringify(documentAssetsCache));
                 if (status) status.textContent = response.tableReady === false
                     ? 'Migration pending: document asset table is not available yet.'
                     : 'Active document assets loaded.';
@@ -3321,6 +3322,11 @@
                 });
                 if (!response?.success) throw new Error(response?.message || 'Document asset update failed');
                 delete pendingDocumentAssetUploads[assetKey];
+                const activeAssets = JSON.parse(localStorage.getItem('bsiDocumentBrandingAssets') || '{}');
+                localStorage.setItem('bsiDocumentBrandingAssets', JSON.stringify({
+                    ...activeAssets,
+                    [assetKey]: response.asset?.fileUrl || upload.dataUrl
+                }));
                 addActivityLog(`${asset.label} updated`);
                 await loadDocumentAssets();
                 renderActivityLog();

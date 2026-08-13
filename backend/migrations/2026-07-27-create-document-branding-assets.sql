@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS document_branding_assets (
     assetKey VARCHAR(80) NOT NULL,
     label VARCHAR(160) NOT NULL,
     fileUrl VARCHAR(500) NOT NULL,
+    assetDataUrl LONGTEXT NULL,
     originalName VARCHAR(255) DEFAULT NULL,
     mimeType VARCHAR(120) DEFAULT NULL,
     isActive TINYINT(1) DEFAULT 1,

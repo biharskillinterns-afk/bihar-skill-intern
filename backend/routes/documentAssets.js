@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const { logAdminAction } = require('../utils/audit');
-const { compatTableExists, safeRecordUploadedFile } = require('../utils/compat');
+const { compatColumnExists, compatTableExists, safeRecordUploadedFile } = require('../utils/compat');
 const { saveDataUrlFile, recordUploadedFile } = require('../utils/security');
 
 const DEFAULT_ASSETS = {
@@ -29,11 +29,12 @@ function toAbsoluteUploadUrl(req, fileUrl) {
 }
 
 function normalizeAsset(req, row) {
+    const displayUrl = row.assetDataUrl || toAbsoluteUploadUrl(req, row.fileUrl);
     return {
         id: row.id,
         assetKey: row.assetKey,
         label: row.label || ASSET_LABELS[row.assetKey] || row.assetKey,
-        fileUrl: toAbsoluteUploadUrl(req, row.fileUrl),
+        fileUrl: displayUrl,
         originalName: row.originalName || '',
         mimeType: row.mimeType || '',
         isActive: row.isActive !== 0,
@@ -48,15 +49,19 @@ async function loadActiveAssets(req) {
         return { assets, rows: [] };
     }
 
+    const hasAssetDataUrl = await compatColumnExists(connection, 'document_branding_assets', 'assetDataUrl');
+    const assetDataUrlSelect = hasAssetDataUrl ? ', assetDataUrl' : ', NULL AS assetDataUrl';
     const [rows] = await connection.query(
-        `SELECT id, assetKey, label, fileUrl, originalName, mimeType, isActive, createdAt, updatedAt
+        `SELECT id, assetKey, label, fileUrl${assetDataUrlSelect}, originalName, mimeType, isActive, createdAt, updatedAt
          FROM document_branding_assets
          WHERE isActive = 1
          ORDER BY updatedAt DESC, id DESC`
     );
 
     rows.forEach(row => {
-        if (row.assetKey && row.fileUrl) assets[row.assetKey] = toAbsoluteUploadUrl(req, row.fileUrl);
+        if (row.assetKey && (row.assetDataUrl || row.fileUrl)) {
+            assets[row.assetKey] = row.assetDataUrl || toAbsoluteUploadUrl(req, row.fileUrl);
+        }
     });
 
     return {
@@ -137,29 +142,58 @@ router.post('/admin/upload', verifyToken, isAdmin, async (req, res, next) => {
         });
 
         const resolvedLabel = String(label || ASSET_LABELS[assetKey]).trim() || ASSET_LABELS[assetKey];
-        await req.db.query(
-            `INSERT INTO document_branding_assets
-                (assetKey, label, fileUrl, originalName, mimeType, isActive, uploadedFileId, createdBy, createdAt, updatedAt)
-             VALUES (?, ?, ?, ?, ?, 1, ?, ?, NOW(), NOW())
-             ON DUPLICATE KEY UPDATE
-                label = VALUES(label),
-                fileUrl = VALUES(fileUrl),
-                originalName = VALUES(originalName),
-                mimeType = VALUES(mimeType),
-                isActive = 1,
-                uploadedFileId = VALUES(uploadedFileId),
-                createdBy = VALUES(createdBy),
-                updatedAt = NOW()`,
-            [
-                assetKey,
-                resolvedLabel,
-                file.fileUrl,
-                file.originalName,
-                file.mimeType,
-                uploadedFileId,
-                req.user?.id || null
-            ]
-        );
+        const hasAssetDataUrl = await compatColumnExists(req.db, 'document_branding_assets', 'assetDataUrl');
+        if (hasAssetDataUrl) {
+            await req.db.query(
+                `INSERT INTO document_branding_assets
+                    (assetKey, label, fileUrl, assetDataUrl, originalName, mimeType, isActive, uploadedFileId, createdBy, createdAt, updatedAt)
+                 VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, NOW(), NOW())
+                 ON DUPLICATE KEY UPDATE
+                    label = VALUES(label),
+                    fileUrl = VALUES(fileUrl),
+                    assetDataUrl = VALUES(assetDataUrl),
+                    originalName = VALUES(originalName),
+                    mimeType = VALUES(mimeType),
+                    isActive = 1,
+                    uploadedFileId = VALUES(uploadedFileId),
+                    createdBy = VALUES(createdBy),
+                    updatedAt = NOW()`,
+                [
+                    assetKey,
+                    resolvedLabel,
+                    file.fileUrl,
+                    dataUrl,
+                    file.originalName,
+                    file.mimeType,
+                    uploadedFileId,
+                    req.user?.id || null
+                ]
+            );
+        } else {
+            await req.db.query(
+                `INSERT INTO document_branding_assets
+                    (assetKey, label, fileUrl, originalName, mimeType, isActive, uploadedFileId, createdBy, createdAt, updatedAt)
+                 VALUES (?, ?, ?, ?, ?, 1, ?, ?, NOW(), NOW())
+                 ON DUPLICATE KEY UPDATE
+                    label = VALUES(label),
+                    fileUrl = VALUES(fileUrl),
+                    originalName = VALUES(originalName),
+                    mimeType = VALUES(mimeType),
+                    isActive = 1,
+                    uploadedFileId = VALUES(uploadedFileId),
+                    createdBy = VALUES(createdBy),
+                    updatedAt = NOW()`,
+                [
+                    assetKey,
+                    resolvedLabel,
+                    file.fileUrl,
+                    file.originalName,
+                    file.mimeType,
+                    uploadedFileId,
+                    req.user?.id || null
+                ]
+            );
+        }
 
         await logAdminAction(req.db, req, 'document_asset_update', {
             entityType: 'document_branding_assets',
@@ -172,7 +206,7 @@ router.post('/admin/upload', verifyToken, isAdmin, async (req, res, next) => {
             asset: {
                 assetKey,
                 label: resolvedLabel,
-                fileUrl: toAbsoluteUploadUrl(req, file.fileUrl),
+                fileUrl: hasAssetDataUrl ? dataUrl : toAbsoluteUploadUrl(req, file.fileUrl),
                 originalName: file.originalName,
                 mimeType: file.mimeType,
                 isActive: true

@@ -248,6 +248,7 @@ async function ensureRuntimeSchema(pool) {
                 assetKey VARCHAR(80) NOT NULL,
                 label VARCHAR(160) NOT NULL,
                 fileUrl VARCHAR(500) NOT NULL,
+                assetDataUrl LONGTEXT NULL,
                 originalName VARCHAR(255) DEFAULT NULL,
                 mimeType VARCHAR(120) DEFAULT NULL,
                 isActive TINYINT(1) DEFAULT 1,
@@ -260,6 +261,8 @@ async function ensureRuntimeSchema(pool) {
                 INDEX idx_document_branding_updated (updatedAt)
             )
         `);
+
+        await addColumnIfMissing(connection, 'document_branding_assets', 'assetDataUrl', 'LONGTEXT NULL');
 
         await connection.query(`
             CREATE TABLE IF NOT EXISTS admin_audit_logs (
