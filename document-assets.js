@@ -9,7 +9,7 @@
 
     const STORAGE_KEY = 'bsiDocumentBrandingAssets';
     const STYLE_ID = 'bsi-document-assets-style';
-    const FETCH_TIMEOUT_MS = 4000;
+    const FETCH_TIMEOUT_MS = 1500;
     let activeAssets = { ...DEFAULT_ASSETS };
     let loadPromise = null;
 
@@ -126,7 +126,7 @@
         });
     }
 
-    async function waitForImages(root = document, timeoutMs = 5000) {
+    async function waitForImages(root = document, timeoutMs = 2500) {
         if (!root?.querySelectorAll) return;
         const images = Array.from(root.querySelectorAll('[data-document-asset]'));
         if (images.length === 0) return;
@@ -145,6 +145,8 @@
     }
 
     async function loadAndApply(root = document) {
+        loadCachedAssets();
+        apply(root);
         await load();
         apply(root);
         await waitForImages(root);

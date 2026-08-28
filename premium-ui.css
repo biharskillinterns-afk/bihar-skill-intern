@@ -479,7 +479,7 @@ table tbody tr:hover {
     .testimonial-card,
     .partner-card,
     .choose-card {
-        animation: premiumFadeUp 0.45s ease both;
+        animation: premiumFadeUp 0.22s ease both;
     }
 }
 
@@ -497,7 +497,7 @@ table tbody tr:hover {
 @keyframes premiumFadeUp {
     from {
         opacity: 0;
-        transform: translateY(12px);
+        transform: translateY(6px);
     }
     to {
         opacity: 1;

@@ -14,6 +14,8 @@ const DEFAULT_API_BASE_URL = IS_LOCAL_FRONTEND
     : LIVE_API_BASE_URL;
 const STORED_API_BASE_URL = IS_LOCAL_FRONTEND ? localStorage.getItem('bsiApiBaseUrl') : '';
 const API_BASE_URL = window.BSI_API_BASE_URL || STORED_API_BASE_URL || DEFAULT_API_BASE_URL;
+const API_REQUEST_TIMEOUT_MS = 15000;
+const API_HEALTH_TIMEOUT_MS = 6000;
 
 // Shared auth storage for static file mode and normal hosted mode.
 // window.name survives file:// page navigation in the same tab, so it backs up localStorage.
@@ -370,7 +372,7 @@ class APIService {
     static async wakeBackend() {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 25000);
+            const timeoutId = setTimeout(() => controller.abort(), API_HEALTH_TIMEOUT_MS);
             await fetch(`${API_BASE_URL}/health`, {
                 method: 'GET',
                 cache: 'no-store',
@@ -401,12 +403,13 @@ class APIService {
             ...(options.headers || {})
         };
         const controller = options.signal ? null : new AbortController();
-        const timeoutId = controller ? setTimeout(() => controller.abort(), 70000) : null;
+        const requestTimeout = Number(options.timeoutMs || API_REQUEST_TIMEOUT_MS);
+        const timeoutId = controller ? setTimeout(() => controller.abort(), requestTimeout) : null;
         let response;
 
         try {
             response = await fetch(url, {
-                ...options,
+                ...Object.fromEntries(Object.entries(options).filter(([key]) => key !== 'timeoutMs')),
                 headers,
                 signal: options.signal || controller.signal
             });
