@@ -1200,19 +1200,12 @@
         }
 
         window.addEventListener('load', () => {
-            console.log('Profile page loaded');
             const token = getStoredProfileValue('authToken') || getStoredProfileValue('token');
             const isLoggedIn = getStoredProfileValue('isLoggedIn') === 'true';
             const paymentComplete = typeof BSIAuthStorage !== 'undefined'
                 ? BSIAuthStorage.hasCompletedRegistration()
                 : getStoredProfileValue('paymentStatus') === 'completed' || getStoredProfileValue('isRegistrationComplete') === 'true';
             const hasUserData = getStoredProfileValue('userName') || getStoredProfileValue('currentStudentId');
-            
-            console.log('Token:', token);
-            console.log('isLoggedIn:', isLoggedIn);
-            console.log('hasUserData:', hasUserData);
-            console.log('userName:', getStoredProfileValue('userName'));
-            console.log('currentStudentId:', getStoredProfileValue('currentStudentId'));
             
             if (!isLoggedIn || (!token && !hasUserData)) {
                 alert('Please login first!');

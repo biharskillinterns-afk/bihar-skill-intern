@@ -41,11 +41,10 @@ async function ensureCourseQuestionsColumn(connection) {
 
 // Get all courses
 router.get('/', async (req, res) => {
+    let connection;
     try {
-        const connection = await req.db.getConnection();
-        await ensureCourseQuestionsColumn(connection);
+        connection = await req.db.getConnection();
         const [courses] = await connection.query("SELECT * FROM courses WHERE status = 'active'");
-        connection.release();
         
         res.json({
             success: true,
@@ -57,16 +56,17 @@ router.get('/', async (req, res) => {
             message: 'Failed to fetch courses',
             error: error.message
         });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
 // Get course by ID
 router.get('/:id', async (req, res) => {
+    let connection;
     try {
-        const connection = await req.db.getConnection();
-        await ensureCourseQuestionsColumn(connection);
+        connection = await req.db.getConnection();
         const [courses] = await connection.query('SELECT * FROM courses WHERE id = ?', [req.params.id]);
-        connection.release();
         
         if (courses.length === 0) {
             return res.status(404).json({
@@ -85,13 +85,16 @@ router.get('/:id', async (req, res) => {
             message: 'Failed to fetch course',
             error: error.message
         });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
 // Enroll in course
 router.post('/:id/enroll', verifyToken, isStudent, async (req, res) => {
+    let connection;
     try {
-        const connection = await req.db.getConnection();
+        connection = await req.db.getConnection();
 
         const [courses] = await connection.query(
             "SELECT id FROM courses WHERE id = ? AND status = 'active'",
@@ -99,7 +102,6 @@ router.post('/:id/enroll', verifyToken, isStudent, async (req, res) => {
         );
 
         if (courses.length === 0) {
-            connection.release();
             return res.status(404).json({
                 success: false,
                 message: 'Course not found or inactive'
@@ -113,7 +115,6 @@ router.post('/:id/enroll', verifyToken, isStudent, async (req, res) => {
         );
         
         if (existing.length > 0) {
-            connection.release();
             return res.status(400).json({
                 success: false,
                 message: 'Already enrolled in this course'
@@ -126,8 +127,6 @@ router.post('/:id/enroll', verifyToken, isStudent, async (req, res) => {
             [req.user.id, req.params.id]
         );
         
-        connection.release();
-        
         res.json({
             success: true,
             message: 'Successfully enrolled in course'
@@ -138,6 +137,8 @@ router.post('/:id/enroll', verifyToken, isStudent, async (req, res) => {
             message: 'Failed to enroll',
             error: error.message
         });
+    } finally {
+        if (connection) connection.release();
     }
 });
 

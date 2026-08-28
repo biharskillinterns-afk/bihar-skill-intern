@@ -3,7 +3,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
-const { verifyToken, isStudent } = require('../middleware/auth');
+const { verifyToken, isStudent, isAdmin } = require('../middleware/auth');
 const { getRegistrationAmount } = require('../config/settings');
 const { getEffectiveCollegePaymentSettings } = require('../config/collegeSettings');
 const { buildRegistrationId, buildStudentCode } = require('../utils/ids');
@@ -879,8 +879,9 @@ router.get('/registration-status/:orderId', async (req, res) => {
 router.post('/registration-reconcile', async (req, res) => {
     try {
         const { studentEmail = '', razorpayPaymentId = '', razorpayOrderId = '', pendingRegistrationId = '', selectedCourseId = '' } = req.body;
+        const requestedEmail = String(studentEmail || '').trim().toLowerCase();
 
-        if (!studentEmail || (!razorpayPaymentId && !razorpayOrderId)) {
+        if (!requestedEmail || (!razorpayPaymentId && !razorpayOrderId)) {
             return res.status(400).json({
                 success: false,
                 message: 'Student email and Razorpay payment/order ID are required'
@@ -909,22 +910,55 @@ router.post('/registration-reconcile', async (req, res) => {
             });
         }
 
-        const paymentEmail = getPaymentEmail(successfulPayment);
-        if (paymentEmail && paymentEmail !== String(studentEmail).trim().toLowerCase()) {
+        if (razorpayOrderId && successfulPayment.order_id && successfulPayment.order_id !== razorpayOrderId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment does not belong to the provided order'
+            });
+        }
+
+        let paymentOrder = null;
+        const resolvedOrderId = successfulPayment.order_id || razorpayOrderId;
+        if (resolvedOrderId) {
+            try {
+                paymentOrder = await razorpay.orders.fetch(resolvedOrderId);
+            } catch (error) {
+                console.warn('Unable to fetch Razorpay order during reconciliation:', error.message);
+            }
+        }
+
+        const paymentEmail = getRegistrationEmailFromNotes(successfulPayment, paymentOrder) || getPaymentEmail(successfulPayment);
+        if (!paymentEmail || paymentEmail !== requestedEmail) {
             return res.status(400).json({
                 success: false,
                 message: 'Payment email does not match student email'
             });
         }
 
+        const paymentPendingRegistrationId = getRegistrationNoteValue(successfulPayment, paymentOrder);
+        if (paymentPendingRegistrationId && pendingRegistrationId && paymentPendingRegistrationId !== String(pendingRegistrationId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment registration reference does not match'
+            });
+        }
+
+        const paymentCourseId = getRegistrationSelectedCourseIdFromNotes(successfulPayment, paymentOrder);
+        if (paymentCourseId && selectedCourseId && Number(selectedCourseId) !== paymentCourseId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment course reference does not match'
+            });
+        }
+
         const completion = await markRegistrationPaymentCompleted(req, {
             razorpayPaymentId: successfulPayment.id,
-            razorpayOrderId: successfulPayment.order_id || razorpayOrderId,
-            studentEmail,
-            pendingRegistrationId,
-            selectedCourseId: selectedCourseId || getRegistrationSelectedCourseIdFromNotes(successfulPayment),
+            razorpayOrderId: resolvedOrderId,
+            studentEmail: requestedEmail,
+            pendingRegistrationId: pendingRegistrationId || paymentPendingRegistrationId,
+            selectedCourseId: selectedCourseId || paymentCourseId,
             amount: getValidAmount(Number(successfulPayment.amount) / 100) ||
-                (await getRegistrationPaymentSettings(req.db, { pendingRegistrationId })).amount,
+                (await getRegistrationPaymentSettings(req.db, { pendingRegistrationId: pendingRegistrationId || paymentPendingRegistrationId })).amount,
             paymentMethod: mapPaymentMethod(successfulPayment.method)
         });
         const token = completion?.student ? jwt.sign(
@@ -953,7 +987,7 @@ router.post('/registration-reconcile', async (req, res) => {
     }
 });
 
-router.get('/registration-debug', async (req, res) => {
+router.get('/registration-debug', verifyToken, isAdmin, async (req, res) => {
     let connection;
     try {
         const studentEmail = String(req.query.studentEmail || '').trim().toLowerCase();

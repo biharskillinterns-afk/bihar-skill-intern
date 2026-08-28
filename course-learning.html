@@ -4573,7 +4573,7 @@ Mastering comprehensive corporate strategy and capstone integration is the final
             let correct = 0;
 
             normalizedQuestions.forEach((q, index) => {
-                if (quizAnswers[index] === q.correct) {
+                if (Number(quizAnswers[index]) === Number(q.correct)) {
                     correct++;
                 }
             });

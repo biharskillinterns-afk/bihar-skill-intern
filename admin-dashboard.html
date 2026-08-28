@@ -1960,6 +1960,7 @@
                 <button class="search-btn" style="background: #10b981;" onclick="downloadReportCSV('progress')">Export Progress CSV</button>
                 <button class="search-btn" style="background: #f59e0b;" onclick="downloadReportCSV('quiz')">Export Quiz CSV</button>
                 <button class="search-btn" style="background: #8b5cf6;" onclick="downloadReportCSV('certificates')">Export Certificates CSV</button>
+                <button class="search-btn" style="background: #0f766e;" onclick="bulkApproveCertificates()">Bulk Unlock Certificates</button>
             </div>
 
             <div class="admin-control-tabs" role="tablist" aria-label="Admin control sections">
@@ -2827,12 +2828,25 @@
             if (index >= 0) openStudentDetailModal(index);
         }
 
-        function setCertificateOverrideByIndex(index, status) {
+        function getStudentAssignedCourseId(student) {
+            const raw = getRawStudent(student);
+            return raw.currentCourseId || raw.courseId || raw.selectedCourseId || getCourseIdByName(student.course);
+        }
+
+        async function setCertificateOverrideByIndex(index, status) {
             const student = allStudents[index];
             if (!student) return;
-            const courseId = getCourseIdByName(student.course);
+            const courseId = getStudentAssignedCourseId(student);
             if (!courseId) {
                 alert('Please assign a course first.');
+                return;
+            }
+            if (status === 'approved') {
+                await unlockStudentCourseByIndex(index, true);
+                return;
+            }
+            if (status === 'auto') {
+                await unlockStudentCourseByIndex(index, false);
                 return;
             }
             setCertificateOverride(student.id, courseId, status);
@@ -2841,7 +2855,7 @@
         async function unlockStudentCourseByIndex(index, unlock = true) {
             const student = allStudents[index];
             if (!student) return;
-            const courseId = getCourseIdByName(student.course);
+            const courseId = getStudentAssignedCourseId(student);
             if (!courseId) {
                 alert('Please assign a course first.');
                 return;
@@ -2856,7 +2870,13 @@
                     throw new Error(response?.message || 'Unlock update failed.');
                 }
 
-                setEarlyUnlockOverride(student.id, courseId, unlock ? new Date().toISOString() : null);
+                const changedAt = new Date().toISOString();
+                const raw = getRawStudent(student);
+                raw.currentCourseId = courseId;
+                raw.adminUnlockedAt = unlock ? changedAt : null;
+                raw.adminUnlockedBy = unlock ? (StorageManager.get('adminEmail') || 'admin') : null;
+                student.fullData = raw;
+                setEarlyUnlockOverride(student.id, courseId, unlock ? changedAt : null);
                 if (unlock) setCertificateOverride(student.id, courseId, 'approved');
                 else setCertificateOverride(student.id, courseId, 'auto');
                 addActivityLog(`${unlock ? 'Unlocked' : 'Removed unlock for'} quiz and certificate for ${student.name}`);
@@ -2882,7 +2902,8 @@
         }
 
         function getStudentCourseSummary(student) {
-            const courseId = getCourseIdByName(student.course);
+            const raw = getRawStudent(student);
+            const courseId = getStudentAssignedCourseId(student);
             if (!courseId) {
                 return {
                     courseId: '',
@@ -2894,9 +2915,16 @@
                 };
             }
 
-            const result = getCourseResult(courseId);
+            const localResult = getCourseResult(courseId);
+            const result = localResult || (raw.courseCertificateNumber || raw.certificateNumber ? {
+                courseId,
+                courseName: student.course,
+                certificateNumber: raw.courseCertificateNumber || raw.certificateNumber,
+                passed: false
+            } : null);
             const override = getCertificateOverride(student.id, courseId);
-            const earlyUnlock = getEarlyUnlockOverride(student.id, courseId);
+            const earlyUnlock = getEarlyUnlockOverride(student.id, courseId) || raw.adminUnlockedAt || raw.courseAdminUnlockedAt;
+            const storedProgress = Number(raw.courseProgress || raw.progress || 0);
             let certificateStatus = 'Pending';
             if (earlyUnlock) certificateStatus = 'Unlocked by admin';
             else if (override === 'approved') certificateStatus = 'Approved by admin';
@@ -2905,7 +2933,7 @@
 
             return {
                 courseId,
-                progress: getCourseProgress(courseId),
+                progress: Math.max(getCourseProgress(courseId), Number.isFinite(storedProgress) ? storedProgress : 0),
                 materialAccepted: isCourseMaterialAccepted(courseId),
                 quizLocked: isCourseQuizLocked(courseId),
                 result,
@@ -3432,11 +3460,9 @@
             `;
         }
 
-        function renderCertificatePanel() {
-            const panel = document.getElementById('certificatePanel');
-            if (!panel) return;
+        function getFilteredCertificateRows() {
             const search = (document.getElementById('certificateSearchInput')?.value || '').toLowerCase();
-            const rows = allStudents.map(student => {
+            return allStudents.map(student => {
                 const summary = getStudentCourseSummary(student);
                 return { student, summary };
             }).filter(row => {
@@ -3449,6 +3475,12 @@
                     row.summary.certificateStatus
                 ].some(value => String(value || '').toLowerCase().includes(search));
             });
+        }
+
+        function renderCertificatePanel() {
+            const panel = document.getElementById('certificatePanel');
+            if (!panel) return;
+            const rows = getFilteredCertificateRows();
 
             if (rows.length === 0) {
                 panel.innerHTML = '<p style="color:#777;">No matching certificate data.</p>';
@@ -3457,11 +3489,65 @@
 
             panel.innerHTML = rows.slice(0, 8).map(({ student, summary }) => `
                 <div class="pending-item">
-                    <strong>${escapeHTML(student.name)}</strong>
-                    <div style="font-size:0.9em;color:#555;">${escapeHTML(student.course)} - ${escapeHTML(summary.result?.certificateNumber || 'Not generated')}</div>
+                    <div>
+                        <strong>${escapeHTML(student.name)}</strong>
+                        <div style="font-size:0.9em;color:#555;">${escapeHTML(student.course)} - ${escapeHTML(summary.result?.certificateNumber || 'Not generated')}</div>
+                    </div>
                     <span class="status-pill ${statusClass(summary.certificateStatus)}">${escapeHTML(summary.certificateStatus)}</span>
+                    <div class="quick-report-row" style="margin:10px 0 0;">
+                        <button class="search-btn" style="background:#0f766e;" onclick="unlockStudentCourseByIndex(${allStudents.findIndex(item => String(item.id) === String(student.id))}, true)" ${!summary.courseId ? 'disabled' : ''}>Unlock Certificate</button>
+                        <button class="search-btn" style="background:#64748b;" onclick="unlockStudentCourseByIndex(${allStudents.findIndex(item => String(item.id) === String(student.id))}, false)" ${!summary.courseId ? 'disabled' : ''}>Use Auto Status</button>
+                        <button class="search-btn" style="background:#ef4444;" onclick="setCertificateOverrideByIndex(${allStudents.findIndex(item => String(item.id) === String(student.id))}, 'blocked')" ${!summary.courseId ? 'disabled' : ''}>Block</button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        async function bulkApproveCertificates() {
+            const rows = getFilteredCertificateRows().filter(({ student, summary }) => {
+                return summary.courseId
+                    && summary.certificateStatus !== 'Unlocked by admin'
+                    && summary.certificateStatus !== 'Approved by admin'
+                    && summary.certificateStatus !== 'Blocked by admin';
+            });
+
+            if (rows.length === 0) {
+                alert('No pending certificate records found in the current certificate list.');
+                return;
+            }
+
+            if (!confirm(`Unlock certificates for ${rows.length} student(s)?`)) return;
+
+            let successCount = 0;
+            const failed = [];
+            for (const { student, summary } of rows) {
+                try {
+                    const response = await APIService.updateStudentCourseUnlock(student.id, summary.courseId, true);
+                    if (!response || response.success === false) {
+                        throw new Error(response?.message || 'Unlock update failed.');
+                    }
+                    const changedAt = new Date().toISOString();
+                    const raw = getRawStudent(student);
+                    raw.currentCourseId = summary.courseId;
+                    raw.adminUnlockedAt = changedAt;
+                    raw.adminUnlockedBy = StorageManager.get('adminEmail') || 'admin';
+                    student.fullData = raw;
+                    setEarlyUnlockOverride(student.id, summary.courseId, changedAt);
+                    const overrides = getStoredObject('adminCertificateOverrides');
+                    overrides[`${student.id}_${summary.courseId}`] = 'approved';
+                    StorageManager.set('adminCertificateOverrides', overrides);
+                    successCount += 1;
+                } catch (error) {
+                    failed.push(`${student.name}: ${error.message || 'Unknown error'}`);
+                }
+            }
+
+            renderAdminExtras();
+            if (failed.length > 0) {
+                alert(`Unlocked ${successCount} student(s). Failed:\n${failed.join('\n')}`);
+            } else {
+                alert(`Unlocked certificates for ${successCount} student(s).`);
+            }
         }
 
         function renderCourseAnalytics() {

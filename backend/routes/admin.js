@@ -5,7 +5,7 @@ const { getRegistrationAmount, setRegistrationAmount, DEFAULT_REGISTRATION_AMOUN
 const { splitCollegeValue, normalizeCollegeSettingsRow } = require('../config/collegeSettings');
 const { addColumnIfMissing, withTransaction } = require('../utils/db');
 const { logAdminAction } = require('../utils/audit');
-const { compatColumnExists, studentActiveClause } = require('../utils/compat');
+const { compatTableExists, compatColumnExists, studentActiveClause } = require('../utils/compat');
 
 function normalizeProofStatus(status) {
     return ['pending', 'approved', 'rejected'].includes(status) ? status : 'pending';
@@ -293,14 +293,35 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
         const majorSubjectSelect = await compatColumnExists(connection, 'students', 'majorSubject')
             ? 's.majorSubject,'
             : "'' AS majorSubject,";
+        const hasCoursesTable = await compatTableExists(connection, 'courses');
+        const hasStudentCoursesTable = await compatTableExists(connection, 'student_courses');
+        let enrollmentSelect = `NULL AS currentCourseId, NULL AS adminUnlockedAt,
+                    NULL AS adminUnlockedBy, NULL AS courseCertificateNumber, NULL AS courseProgress`;
+        let enrollmentJoin = '';
+        if (hasCoursesTable && hasStudentCoursesTable) {
+            const hasAdminUnlockedAt = await compatColumnExists(connection, 'student_courses', 'adminUnlockedAt');
+            const hasAdminUnlockedBy = await compatColumnExists(connection, 'student_courses', 'adminUnlockedBy');
+            const hasCertificateNumber = await compatColumnExists(connection, 'student_courses', 'certificateNumber');
+            const hasProgress = await compatColumnExists(connection, 'student_courses', 'progress');
+            enrollmentSelect = `c.id AS currentCourseId,
+                    ${hasAdminUnlockedAt ? 'sc.adminUnlockedAt' : 'NULL'} AS adminUnlockedAt,
+                    ${hasAdminUnlockedBy ? 'sc.adminUnlockedBy' : 'NULL'} AS adminUnlockedBy,
+                    ${hasCertificateNumber ? 'sc.certificateNumber' : 'NULL'} AS courseCertificateNumber,
+                    ${hasProgress ? 'sc.progress' : 'NULL'} AS courseProgress`;
+            enrollmentJoin = `
+             LEFT JOIN (SELECT MIN(id) AS id, courseName FROM courses GROUP BY courseName) c ON c.courseName = s.course
+             LEFT JOIN student_courses sc ON sc.studentId = s.id AND sc.courseId = c.id`;
+        }
         const [students] = await connection.query(
             `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
                     s.course, s.district, s.state, s.rollNo, s.rollNo AS rollno, s.pincode,
                     ${majorSubjectSelect}
                     s.status, s.createdAt, p.status AS paymentStatus, p.amount AS paymentAmount,
                     p.gatewayPaymentId AS razorpayPaymentId, p.gatewayOrderId AS razorpayOrderId,
-                    p.completedAt AS paymentCompletedAt, p.createdAt AS paymentCreatedAt
+                    p.completedAt AS paymentCompletedAt, p.createdAt AS paymentCreatedAt,
+                    ${enrollmentSelect}
              FROM students s
+             ${enrollmentJoin}
              LEFT JOIN (
                 SELECT p1.*
                 FROM payments p1
@@ -337,6 +358,25 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
         const majorSubjectSelect = await compatColumnExists(connection, 'students', 'majorSubject')
             ? 's.majorSubject,'
             : "'' AS majorSubject,";
+        const hasCoursesTable = await compatTableExists(connection, 'courses');
+        const hasStudentCoursesTable = await compatTableExists(connection, 'student_courses');
+        let enrollmentSelect = `NULL AS currentCourseId, NULL AS adminUnlockedAt,
+                    NULL AS adminUnlockedBy, NULL AS courseCertificateNumber, NULL AS courseProgress`;
+        let enrollmentJoin = '';
+        if (hasCoursesTable && hasStudentCoursesTable) {
+            const hasAdminUnlockedAt = await compatColumnExists(connection, 'student_courses', 'adminUnlockedAt');
+            const hasAdminUnlockedBy = await compatColumnExists(connection, 'student_courses', 'adminUnlockedBy');
+            const hasCertificateNumber = await compatColumnExists(connection, 'student_courses', 'certificateNumber');
+            const hasProgress = await compatColumnExists(connection, 'student_courses', 'progress');
+            enrollmentSelect = `c.id AS currentCourseId,
+                    ${hasAdminUnlockedAt ? 'sc.adminUnlockedAt' : 'NULL'} AS adminUnlockedAt,
+                    ${hasAdminUnlockedBy ? 'sc.adminUnlockedBy' : 'NULL'} AS adminUnlockedBy,
+                    ${hasCertificateNumber ? 'sc.certificateNumber' : 'NULL'} AS courseCertificateNumber,
+                    ${hasProgress ? 'sc.progress' : 'NULL'} AS courseProgress`;
+            enrollmentJoin = `
+             LEFT JOIN (SELECT MIN(id) AS id, courseName FROM courses GROUP BY courseName) c ON c.courseName = s.course
+             LEFT JOIN student_courses sc ON sc.studentId = s.id AND sc.courseId = c.id`;
+        }
         const [students] = await connection.query(
             `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
                     s.course, s.district, s.state, s.rollNo, s.rollNo AS rollno, s.guardian, s.address,
@@ -345,8 +385,10 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
                     s.bio, s.status, s.createdAt, s.updatedAt, p.status AS paymentStatus,
                     p.amount AS paymentAmount, p.gatewayPaymentId AS razorpayPaymentId,
                     p.gatewayOrderId AS razorpayOrderId, p.completedAt AS paymentCompletedAt,
-                    p.createdAt AS paymentCreatedAt
+                    p.createdAt AS paymentCreatedAt,
+                    ${enrollmentSelect}
              FROM students s
+             ${enrollmentJoin}
              LEFT JOIN (
                 SELECT p1.*
                 FROM payments p1

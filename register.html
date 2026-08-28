@@ -1248,20 +1248,28 @@
         }
 
         async function fetchRegistrationCourses() {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-            let response;
-            try {
-                response = await APIService.request('/courses', {
-                    signal: controller.signal
-                });
-            } finally {
-                clearTimeout(timeoutId);
+            let lastError;
+            for (let attempt = 1; attempt <= 3; attempt += 1) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                try {
+                    const response = await APIService.request('/courses', {
+                        signal: controller.signal
+                    });
+                    const courses = extractRegistrationCourses(response);
+                    if (courses.length > 0) return courses;
+                    throw new Error(response?.message || 'No active courses returned by Courses API.');
+                } catch (error) {
+                    lastError = error;
+                    if (attempt < 3) {
+                        await new Promise(resolve => setTimeout(resolve, attempt * 1200));
+                    }
+                } finally {
+                    clearTimeout(timeoutId);
+                }
             }
-            const courses = extractRegistrationCourses(response);
-            if (courses.length > 0) return courses;
 
-            throw new Error(response?.message || 'No active courses returned by Courses API.');
+            throw lastError || new Error('No active courses returned by Courses API.');
         }
 
         async function fetchRegistrationCoursesFromLiveApi(originalError) {

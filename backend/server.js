@@ -23,6 +23,8 @@ const databaseState = {
     lastCheckedAt: null
 };
 const uploadsPath = path.join(__dirname, 'uploads');
+const isProduction = process.env.NODE_ENV === 'production';
+const rateLimitBuckets = new Map();
 
 function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -54,6 +56,40 @@ function isRenderRuntime() {
         || Boolean(process.env.RENDER_SERVICE_ID)
         || Boolean(process.env.RENDER_INSTANCE_ID);
 }
+
+function createRateLimiter({ windowMs, max, message }) {
+    return (req, res, next) => {
+        const forwardedFor = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+        const ip = forwardedFor || req.ip || req.socket?.remoteAddress || 'unknown';
+        const key = `${req.method}:${req.baseUrl || req.path}:${ip}`;
+        const now = Date.now();
+        const current = rateLimitBuckets.get(key);
+
+        if (!current || current.resetAt <= now) {
+            rateLimitBuckets.set(key, { count: 1, resetAt: now + windowMs });
+            next();
+            return;
+        }
+
+        current.count += 1;
+        if (current.count > max) {
+            res.status(429).json({
+                success: false,
+                message
+            });
+            return;
+        }
+
+        next();
+    };
+}
+
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, bucket] of rateLimitBuckets.entries()) {
+        if (bucket.resetAt <= now) rateLimitBuckets.delete(key);
+    }
+}, 10 * 60 * 1000).unref();
 
 function logUploadStorageWarning() {
     if (!isRenderRuntime()) return;
@@ -156,7 +192,7 @@ const allowedOrigins = new Set([
     'https://biharskillinterns-afk.github.io',
     'http://localhost',
     'http://127.0.0.1',
-    'null'
+    ...(isProduction ? [] : ['null'])
 ].filter(Boolean));
 
 // Webhook must receive the raw body so Razorpay signature verification works.
@@ -184,6 +220,22 @@ app.use(sanitizeRequestBody);
 app.use('/uploads', express.static(uploadsPath, {
     maxAge: '7d',
     immutable: true
+}));
+
+app.use('/api/auth', createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+    message: 'Too many authentication requests. Please try again later.'
+}));
+app.use('/api/payments/registration-reconcile', createRateLimiter({
+    windowMs: 10 * 60 * 1000,
+    max: 30,
+    message: 'Too many payment verification attempts. Please try again later.'
+}));
+app.use('/api/payments/registration-status', createRateLimiter({
+    windowMs: 10 * 60 * 1000,
+    max: 120,
+    message: 'Too many payment status checks. Please try again later.'
 }));
 
 // Make pool accessible to routes
