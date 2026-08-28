@@ -2764,7 +2764,7 @@
         }
 
         function normalizeStudentRecord(student) {
-            const course = student.course || student.skill || student.selectedSkill || student.userSkill || 'Not Selected';
+            const course = student.currentCourseName || student.course || student.skill || student.selectedSkill || student.userSkill || 'Not Selected';
             return {
                 id: student.id || student.studentId || student.rollno || student.email || `student_${Date.now()}`,
                 name: getStudentDisplayName(student),
@@ -3521,8 +3521,11 @@
             if (!studentSelect) return;
             const selectedStudent = studentSelect.value;
             const options = allStudents
-                .filter(student => getStudentAssignedCourseId(student))
-                .map(student => `<option value="${escapeHTML(student.id)}">${escapeHTML(student.name)} - ${escapeHTML(student.rollno || student.email || '')}</option>`)
+                .map(student => {
+                    const courseId = getStudentAssignedCourseId(student);
+                    const courseLabel = courseId ? student.course : 'No assigned course';
+                    return `<option value="${escapeHTML(student.id)}">${escapeHTML(student.name)} - ${escapeHTML(student.rollno || student.email || '')} - ${escapeHTML(courseLabel)}</option>`;
+                })
                 .join('');
             studentSelect.innerHTML = `<option value="">Select student</option>${options}`;
             if ([...studentSelect.options].some(option => option.value === selectedStudent)) {
@@ -4065,7 +4068,7 @@
                             phone: student.phone || 'N/A',
                             district: student.district || 'N/A',
                             college: student.college || 'N/A',
-                            course: student.course || 'Not Selected',
+                            course: student.currentCourseName || student.course || 'Not Selected',
                             dob: student.dob || 'N/A',
                             rollno: student.rollno || student.id || 'N/A',
                             department: student.department || 'N/A',

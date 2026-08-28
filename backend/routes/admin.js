@@ -307,7 +307,7 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
         const hasStudentCoursesTable = await compatTableExists(connection, 'student_courses');
         let enrollmentSelect = `NULL AS currentCourseId, NULL AS adminUnlockedAt,
                     NULL AS adminUnlockedBy, NULL AS courseCertificateNumber, NULL AS courseProgress,
-                    NULL AS courseStatus, NULL AS courseMarks, NULL AS courseGrade,
+                    NULL AS currentCourseName, NULL AS courseStatus, NULL AS courseMarks, NULL AS courseGrade,
                     NULL AS courseQuizData, NULL AS courseCompletedAt`;
         let enrollmentJoin = '';
         if (hasCoursesTable && hasStudentCoursesTable) {
@@ -320,7 +320,8 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
             const hasGrade = await compatColumnExists(connection, 'student_courses', 'grade');
             const hasQuizData = await compatColumnExists(connection, 'student_courses', 'quizData');
             const hasCompletedAt = await compatColumnExists(connection, 'student_courses', 'completedAt');
-            enrollmentSelect = `c.id AS currentCourseId,
+            enrollmentSelect = `COALESCE(c.id, c_assigned.id) AS currentCourseId,
+                    COALESCE(c.courseName, c_assigned.courseName, s.course) AS currentCourseName,
                     ${hasAdminUnlockedAt ? 'sc.adminUnlockedAt' : 'NULL'} AS adminUnlockedAt,
                     ${hasAdminUnlockedBy ? 'sc.adminUnlockedBy' : 'NULL'} AS adminUnlockedBy,
                     ${hasCertificateNumber ? 'sc.certificateNumber' : 'NULL'} AS courseCertificateNumber,
@@ -331,8 +332,17 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
                     ${hasQuizData ? 'sc.quizData' : 'NULL'} AS courseQuizData,
                     ${hasCompletedAt ? 'sc.completedAt' : 'NULL'} AS courseCompletedAt`;
             enrollmentJoin = `
-             LEFT JOIN (SELECT MIN(id) AS id, courseName FROM courses GROUP BY courseName) c ON c.courseName = s.course
-             LEFT JOIN student_courses sc ON sc.studentId = s.id AND sc.courseId = c.id`;
+             LEFT JOIN (
+                SELECT sc1.*
+                FROM student_courses sc1
+                INNER JOIN (
+                    SELECT studentId, MAX(id) AS latestStudentCourseId
+                    FROM student_courses
+                    GROUP BY studentId
+                ) latest_sc ON latest_sc.latestStudentCourseId = sc1.id
+             ) sc ON sc.studentId = s.id
+             LEFT JOIN courses c ON c.id = sc.courseId
+             LEFT JOIN (SELECT MIN(id) AS id, courseName FROM courses GROUP BY courseName) c_assigned ON c_assigned.courseName = s.course`;
         }
         const [students] = await connection.query(
             `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
@@ -384,7 +394,7 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
         const hasStudentCoursesTable = await compatTableExists(connection, 'student_courses');
         let enrollmentSelect = `NULL AS currentCourseId, NULL AS adminUnlockedAt,
                     NULL AS adminUnlockedBy, NULL AS courseCertificateNumber, NULL AS courseProgress,
-                    NULL AS courseStatus, NULL AS courseMarks, NULL AS courseGrade,
+                    NULL AS currentCourseName, NULL AS courseStatus, NULL AS courseMarks, NULL AS courseGrade,
                     NULL AS courseQuizData, NULL AS courseCompletedAt`;
         let enrollmentJoin = '';
         if (hasCoursesTable && hasStudentCoursesTable) {
@@ -397,7 +407,8 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
             const hasGrade = await compatColumnExists(connection, 'student_courses', 'grade');
             const hasQuizData = await compatColumnExists(connection, 'student_courses', 'quizData');
             const hasCompletedAt = await compatColumnExists(connection, 'student_courses', 'completedAt');
-            enrollmentSelect = `c.id AS currentCourseId,
+            enrollmentSelect = `COALESCE(c.id, c_assigned.id) AS currentCourseId,
+                    COALESCE(c.courseName, c_assigned.courseName, s.course) AS currentCourseName,
                     ${hasAdminUnlockedAt ? 'sc.adminUnlockedAt' : 'NULL'} AS adminUnlockedAt,
                     ${hasAdminUnlockedBy ? 'sc.adminUnlockedBy' : 'NULL'} AS adminUnlockedBy,
                     ${hasCertificateNumber ? 'sc.certificateNumber' : 'NULL'} AS courseCertificateNumber,
@@ -408,8 +419,17 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
                     ${hasQuizData ? 'sc.quizData' : 'NULL'} AS courseQuizData,
                     ${hasCompletedAt ? 'sc.completedAt' : 'NULL'} AS courseCompletedAt`;
             enrollmentJoin = `
-             LEFT JOIN (SELECT MIN(id) AS id, courseName FROM courses GROUP BY courseName) c ON c.courseName = s.course
-             LEFT JOIN student_courses sc ON sc.studentId = s.id AND sc.courseId = c.id`;
+             LEFT JOIN (
+                SELECT sc1.*
+                FROM student_courses sc1
+                INNER JOIN (
+                    SELECT studentId, MAX(id) AS latestStudentCourseId
+                    FROM student_courses
+                    GROUP BY studentId
+                ) latest_sc ON latest_sc.latestStudentCourseId = sc1.id
+             ) sc ON sc.studentId = s.id
+             LEFT JOIN courses c ON c.id = sc.courseId
+             LEFT JOIN (SELECT MIN(id) AS id, courseName FROM courses GROUP BY courseName) c_assigned ON c_assigned.courseName = s.course`;
         }
         const [students] = await connection.query(
             `SELECT s.id, s.firstName, s.lastName, s.email, s.phone, s.dob, s.gender, s.college,
@@ -712,19 +732,6 @@ router.put('/students/:studentId/courses/:courseId/result-override', verifyToken
                 throw error;
             }
 
-            const assignedCourse = String(students[0].course || '').trim().toLowerCase();
-            const selectedCourse = String(courses[0].courseName || '').trim().toLowerCase();
-            if (!assignedCourse) {
-                const error = new Error('Student has no assigned course.');
-                error.statusCode = 400;
-                throw error;
-            }
-            if (assignedCourse !== selectedCourse) {
-                const error = new Error('Result can be entered only for the student assigned course.');
-                error.statusCode = 400;
-                throw error;
-            }
-
             if (!(await compatTableExists(connection, 'student_courses'))) {
                 const error = new Error('Student course records are unavailable.');
                 error.statusCode = 503;
@@ -741,6 +748,18 @@ router.put('/students/:studentId/courses/:courseId/result-override', verifyToken
                 [studentId, courseId]
             );
             const existing = existingRows[0] || null;
+            const assignedCourse = String(students[0].course || '').trim().toLowerCase();
+            const selectedCourse = String(courses[0].courseName || '').trim().toLowerCase();
+            if (!existing && !assignedCourse) {
+                const error = new Error('Student has no assigned course.');
+                error.statusCode = 400;
+                throw error;
+            }
+            if (!existing && assignedCourse !== selectedCourse) {
+                const error = new Error('Result can be entered only for the student assigned course.');
+                error.statusCode = 400;
+                throw error;
+            }
             const grade = getGradeFromMarks(marks);
             const certificateNumber = hasCertificateNumber
                 ? (existing?.certificateNumber || await generateUniqueCertificateNumber(connection, studentId, courseId))
