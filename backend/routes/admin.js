@@ -6,6 +6,7 @@ const { splitCollegeValue, normalizeCollegeSettingsRow } = require('../config/co
 const { addColumnIfMissing, withTransaction } = require('../utils/db');
 const { logAdminAction } = require('../utils/audit');
 const { compatTableExists, compatColumnExists, studentActiveClause } = require('../utils/compat');
+const { generateUniqueCertificateNumber } = require('../utils/ids');
 
 function normalizeProofStatus(status) {
     return ['pending', 'approved', 'rejected'].includes(status) ? status : 'pending';
@@ -101,6 +102,15 @@ function mergeCourseMaterial(existingMaterial = '', incomingMaterial = '') {
     if (!current) return next;
     if (current.includes(next)) return current;
     return `${current}\n\n--- Added Material ---\n\n${next}`;
+}
+
+function getGradeFromMarks(marks) {
+    if (marks >= 90) return 'A+';
+    if (marks >= 80) return 'A';
+    if (marks >= 70) return 'B+';
+    if (marks >= 60) return 'B';
+    if (marks >= 50) return 'C';
+    return 'F';
 }
 
 router.get('/settings/payment-amount', verifyToken, isAdmin, async (req, res) => {
@@ -296,18 +306,30 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
         const hasCoursesTable = await compatTableExists(connection, 'courses');
         const hasStudentCoursesTable = await compatTableExists(connection, 'student_courses');
         let enrollmentSelect = `NULL AS currentCourseId, NULL AS adminUnlockedAt,
-                    NULL AS adminUnlockedBy, NULL AS courseCertificateNumber, NULL AS courseProgress`;
+                    NULL AS adminUnlockedBy, NULL AS courseCertificateNumber, NULL AS courseProgress,
+                    NULL AS courseStatus, NULL AS courseMarks, NULL AS courseGrade,
+                    NULL AS courseQuizData, NULL AS courseCompletedAt`;
         let enrollmentJoin = '';
         if (hasCoursesTable && hasStudentCoursesTable) {
             const hasAdminUnlockedAt = await compatColumnExists(connection, 'student_courses', 'adminUnlockedAt');
             const hasAdminUnlockedBy = await compatColumnExists(connection, 'student_courses', 'adminUnlockedBy');
             const hasCertificateNumber = await compatColumnExists(connection, 'student_courses', 'certificateNumber');
             const hasProgress = await compatColumnExists(connection, 'student_courses', 'progress');
+            const hasStatus = await compatColumnExists(connection, 'student_courses', 'status');
+            const hasMarks = await compatColumnExists(connection, 'student_courses', 'marks');
+            const hasGrade = await compatColumnExists(connection, 'student_courses', 'grade');
+            const hasQuizData = await compatColumnExists(connection, 'student_courses', 'quizData');
+            const hasCompletedAt = await compatColumnExists(connection, 'student_courses', 'completedAt');
             enrollmentSelect = `c.id AS currentCourseId,
                     ${hasAdminUnlockedAt ? 'sc.adminUnlockedAt' : 'NULL'} AS adminUnlockedAt,
                     ${hasAdminUnlockedBy ? 'sc.adminUnlockedBy' : 'NULL'} AS adminUnlockedBy,
                     ${hasCertificateNumber ? 'sc.certificateNumber' : 'NULL'} AS courseCertificateNumber,
-                    ${hasProgress ? 'sc.progress' : 'NULL'} AS courseProgress`;
+                    ${hasProgress ? 'sc.progress' : 'NULL'} AS courseProgress,
+                    ${hasStatus ? 'sc.status' : 'NULL'} AS courseStatus,
+                    ${hasMarks ? 'sc.marks' : 'NULL'} AS courseMarks,
+                    ${hasGrade ? 'sc.grade' : 'NULL'} AS courseGrade,
+                    ${hasQuizData ? 'sc.quizData' : 'NULL'} AS courseQuizData,
+                    ${hasCompletedAt ? 'sc.completedAt' : 'NULL'} AS courseCompletedAt`;
             enrollmentJoin = `
              LEFT JOIN (SELECT MIN(id) AS id, courseName FROM courses GROUP BY courseName) c ON c.courseName = s.course
              LEFT JOIN student_courses sc ON sc.studentId = s.id AND sc.courseId = c.id`;
@@ -361,18 +383,30 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
         const hasCoursesTable = await compatTableExists(connection, 'courses');
         const hasStudentCoursesTable = await compatTableExists(connection, 'student_courses');
         let enrollmentSelect = `NULL AS currentCourseId, NULL AS adminUnlockedAt,
-                    NULL AS adminUnlockedBy, NULL AS courseCertificateNumber, NULL AS courseProgress`;
+                    NULL AS adminUnlockedBy, NULL AS courseCertificateNumber, NULL AS courseProgress,
+                    NULL AS courseStatus, NULL AS courseMarks, NULL AS courseGrade,
+                    NULL AS courseQuizData, NULL AS courseCompletedAt`;
         let enrollmentJoin = '';
         if (hasCoursesTable && hasStudentCoursesTable) {
             const hasAdminUnlockedAt = await compatColumnExists(connection, 'student_courses', 'adminUnlockedAt');
             const hasAdminUnlockedBy = await compatColumnExists(connection, 'student_courses', 'adminUnlockedBy');
             const hasCertificateNumber = await compatColumnExists(connection, 'student_courses', 'certificateNumber');
             const hasProgress = await compatColumnExists(connection, 'student_courses', 'progress');
+            const hasStatus = await compatColumnExists(connection, 'student_courses', 'status');
+            const hasMarks = await compatColumnExists(connection, 'student_courses', 'marks');
+            const hasGrade = await compatColumnExists(connection, 'student_courses', 'grade');
+            const hasQuizData = await compatColumnExists(connection, 'student_courses', 'quizData');
+            const hasCompletedAt = await compatColumnExists(connection, 'student_courses', 'completedAt');
             enrollmentSelect = `c.id AS currentCourseId,
                     ${hasAdminUnlockedAt ? 'sc.adminUnlockedAt' : 'NULL'} AS adminUnlockedAt,
                     ${hasAdminUnlockedBy ? 'sc.adminUnlockedBy' : 'NULL'} AS adminUnlockedBy,
                     ${hasCertificateNumber ? 'sc.certificateNumber' : 'NULL'} AS courseCertificateNumber,
-                    ${hasProgress ? 'sc.progress' : 'NULL'} AS courseProgress`;
+                    ${hasProgress ? 'sc.progress' : 'NULL'} AS courseProgress,
+                    ${hasStatus ? 'sc.status' : 'NULL'} AS courseStatus,
+                    ${hasMarks ? 'sc.marks' : 'NULL'} AS courseMarks,
+                    ${hasGrade ? 'sc.grade' : 'NULL'} AS courseGrade,
+                    ${hasQuizData ? 'sc.quizData' : 'NULL'} AS courseQuizData,
+                    ${hasCompletedAt ? 'sc.completedAt' : 'NULL'} AS courseCompletedAt`;
             enrollmentJoin = `
              LEFT JOIN (SELECT MIN(id) AS id, courseName FROM courses GROUP BY courseName) c ON c.courseName = s.course
              LEFT JOIN student_courses sc ON sc.studentId = s.id AND sc.courseId = c.id`;
@@ -612,8 +646,8 @@ router.put('/students/:studentId/courses/:courseId/unlock', verifyToken, isAdmin
         res.json({
             success: true,
             message: unlock
-                ? 'Quiz, marksheet, certificate, and report unlocked for this student.'
-                : 'Admin early unlock removed for this student.',
+                ? 'Quiz timing unlocked for this student. Certificate still requires quiz pass or Program Controller result.'
+                : 'Admin early quiz unlock removed for this student.',
             studentId,
             courseId,
             courseName: result.courseName,
@@ -623,6 +657,185 @@ router.put('/students/:studentId/courses/:courseId/unlock', verifyToken, isAdmin
         res.status(error.statusCode || 500).json({
             success: false,
             message: error.statusCode ? error.message : 'Failed to update student course unlock',
+            error: error.message
+        });
+    }
+});
+
+router.put('/students/:studentId/courses/:courseId/result-override', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const { studentId, courseId } = req.params;
+        const marks = Number(req.body.marks);
+        const reason = String(req.body.reason || '').trim();
+
+        if (!Number.isInteger(marks) || marks < 0 || marks > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Program Controller marks must be a whole number between 0 and 100.'
+            });
+        }
+
+        if (marks < 60) {
+            return res.status(400).json({
+                success: false,
+                message: 'Passing override requires minimum 60 marks.'
+            });
+        }
+
+        if (reason.length < 10) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please enter a clear reason with at least 10 characters.'
+            });
+        }
+
+        const result = await withTransaction(req.db, async tx => {
+            const connection = tx;
+            const activeClause = await studentActiveClause(connection);
+            const [students] = await connection.query(
+                `SELECT id, firstName, lastName, course FROM students WHERE id = ?${activeClause} LIMIT 1 FOR UPDATE`,
+                [studentId]
+            );
+            if (students.length === 0) {
+                const error = new Error('Student not found');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            const [courses] = await connection.query(
+                'SELECT id, courseName FROM courses WHERE id = ? LIMIT 1',
+                [courseId]
+            );
+            if (courses.length === 0) {
+                const error = new Error('Course not found');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            const assignedCourse = String(students[0].course || '').trim().toLowerCase();
+            const selectedCourse = String(courses[0].courseName || '').trim().toLowerCase();
+            if (!assignedCourse) {
+                const error = new Error('Student has no assigned course.');
+                error.statusCode = 400;
+                throw error;
+            }
+            if (assignedCourse !== selectedCourse) {
+                const error = new Error('Result can be entered only for the student assigned course.');
+                error.statusCode = 400;
+                throw error;
+            }
+
+            if (!(await compatTableExists(connection, 'student_courses'))) {
+                const error = new Error('Student course records are unavailable.');
+                error.statusCode = 503;
+                throw error;
+            }
+
+            const hasGrade = await compatColumnExists(connection, 'student_courses', 'grade');
+            const hasCertificateNumber = await compatColumnExists(connection, 'student_courses', 'certificateNumber');
+            const hasQuizData = await compatColumnExists(connection, 'student_courses', 'quizData');
+            const hasCompletedAt = await compatColumnExists(connection, 'student_courses', 'completedAt');
+
+            const [existingRows] = await connection.query(
+                'SELECT * FROM student_courses WHERE studentId = ? AND courseId = ? LIMIT 1 FOR UPDATE',
+                [studentId, courseId]
+            );
+            const existing = existingRows[0] || null;
+            const grade = getGradeFromMarks(marks);
+            const certificateNumber = hasCertificateNumber
+                ? (existing?.certificateNumber || await generateUniqueCertificateNumber(connection, studentId, courseId))
+                : null;
+            const quizData = {
+                manualOverride: true,
+                source: 'program_controller',
+                passed: true,
+                scorePercentage: marks,
+                correctAnswers: marks,
+                totalQuestions: 100,
+                grade,
+                courseId: Number(courseId),
+                courseName: courses[0].courseName,
+                certificateNumber,
+                reason,
+                enteredByAdminId: req.user.id,
+                enteredAt: new Date().toISOString()
+            };
+
+            const columns = ['studentId', 'courseId', 'enrolledAt', 'progress', 'status', 'marks'];
+            const valuesSql = ['?', '?', 'COALESCE(?, NOW())', '100', "'completed'", '?'];
+            const values = [studentId, courseId, existing?.enrolledAt || null, marks];
+            const updates = ['progress = 100', "status = 'completed'", 'marks = VALUES(marks)'];
+
+            if (hasCompletedAt) {
+                columns.push('completedAt');
+                valuesSql.push('NOW()');
+                updates.push('completedAt = COALESCE(completedAt, NOW())');
+            }
+            if (hasGrade) {
+                columns.push('grade');
+                valuesSql.push('?');
+                values.push(grade);
+                updates.push('grade = VALUES(grade)');
+            }
+            if (hasCertificateNumber) {
+                columns.push('certificateNumber');
+                valuesSql.push('?');
+                values.push(certificateNumber);
+                updates.push('certificateNumber = VALUES(certificateNumber)');
+            }
+            if (hasQuizData) {
+                columns.push('quizData');
+                valuesSql.push('?');
+                values.push(JSON.stringify(quizData));
+                updates.push('quizData = VALUES(quizData)');
+            }
+
+            await connection.query(
+                `INSERT INTO student_courses (${columns.join(', ')})
+                 VALUES (${valuesSql.join(', ')})
+                 ON DUPLICATE KEY UPDATE ${updates.join(', ')}`,
+                values
+            );
+
+            await logAdminAction(connection, req, 'program_controller_result_override', {
+                entityType: 'student_courses',
+                entityId: Number(studentId),
+                beforeValue: existing ? {
+                    progress: existing.progress,
+                    status: existing.status,
+                    marks: existing.marks,
+                    grade: existing.grade,
+                    certificateNumber: existing.certificateNumber
+                } : null,
+                afterValue: {
+                    studentId,
+                    courseId,
+                    marks,
+                    grade,
+                    certificateNumber,
+                    reason
+                }
+            });
+
+            return {
+                studentName: `${students[0].firstName || ''} ${students[0].lastName || ''}`.trim(),
+                courseName: courses[0].courseName,
+                marks,
+                grade,
+                certificateNumber,
+                quizData
+            };
+        });
+
+        res.json({
+            success: true,
+            message: 'Program Controller result saved successfully.',
+            result
+        });
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode ? error.message : 'Failed to save Program Controller result',
             error: error.message
         });
     }

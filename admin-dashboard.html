@@ -1960,7 +1960,7 @@
                 <button class="search-btn" style="background: #10b981;" onclick="downloadReportCSV('progress')">Export Progress CSV</button>
                 <button class="search-btn" style="background: #f59e0b;" onclick="downloadReportCSV('quiz')">Export Quiz CSV</button>
                 <button class="search-btn" style="background: #8b5cf6;" onclick="downloadReportCSV('certificates')">Export Certificates CSV</button>
-                <button class="search-btn" style="background: #0f766e;" onclick="bulkApproveCertificates()">Bulk Unlock Certificates</button>
+                <button class="search-btn" style="background: #0f766e;" onclick="openProgramControllerResultEntry()">Program Controller Result Entry</button>
             </div>
 
             <div class="admin-control-tabs" role="tablist" aria-label="Admin control sections">
@@ -1986,6 +1986,36 @@
 
                 <div class="admin-panel admin-panel-tab" data-admin-panel="quiz">
                     <h3>Quiz Attempt Report</h3>
+                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:14px; margin:12px 0 16px; background:#f8fafc;">
+                        <h4 style="margin:0 0 10px; color:#111827;">Program Controller Result Entry</h4>
+                        <p style="margin:0 0 12px; color:#64748b; font-size:0.9em;">Use only for verified cases where the Program Controller has approved the student's result. Reason is mandatory and saved in admin audit logs.</p>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; align-items:end;">
+                            <div>
+                                <label for="controllerResultStudent" style="display:block; font-weight:700; color:#374151; margin-bottom:6px;">Student</label>
+                                <select id="controllerResultStudent" onchange="updateProgramControllerCourse()" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px;">
+                                    <option value="">Select student</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="controllerResultCourse" style="display:block; font-weight:700; color:#374151; margin-bottom:6px;">Assigned Course</label>
+                                <select id="controllerResultCourse" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px;">
+                                    <option value="">Select student first</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="controllerResultMarks" style="display:block; font-weight:700; color:#374151; margin-bottom:6px;">Marks / Percentage</label>
+                                <input id="controllerResultMarks" type="number" min="60" max="100" step="1" placeholder="60-100" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px;">
+                            </div>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <label for="controllerResultReason" style="display:block; font-weight:700; color:#374151; margin-bottom:6px;">Approval Reason</label>
+                            <textarea id="controllerResultReason" rows="2" placeholder="Example: Program Controller verified offline/internal assessment records." style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px; resize:vertical;"></textarea>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px;">
+                            <button class="search-btn" style="background:#0f766e;" onclick="saveProgramControllerResult()">Save Program Controller Result</button>
+                            <span id="controllerResultStatus" style="color:#64748b; font-size:0.9em;">No result selected.</span>
+                        </div>
+                    </div>
                     <div id="quizReportPanel"></div>
                 </div>
 
@@ -2819,6 +2849,7 @@
         }
 
         function setCertificateOverride(studentId, courseId, status) {
+            if (status === 'approved') return;
             const overrides = getStoredObject('adminCertificateOverrides');
             overrides[`${studentId}_${courseId}`] = status;
             StorageManager.set('adminCertificateOverrides', overrides);
@@ -2842,7 +2873,7 @@
                 return;
             }
             if (status === 'approved') {
-                await unlockStudentCourseByIndex(index, true);
+                openProgramControllerResultByIndex(index);
                 return;
             }
             if (status === 'auto') {
@@ -2877,20 +2908,19 @@
                 raw.adminUnlockedBy = unlock ? (StorageManager.get('adminEmail') || 'admin') : null;
                 student.fullData = raw;
                 setEarlyUnlockOverride(student.id, courseId, unlock ? changedAt : null);
-                if (unlock) setCertificateOverride(student.id, courseId, 'approved');
-                else setCertificateOverride(student.id, courseId, 'auto');
-                addActivityLog(`${unlock ? 'Unlocked' : 'Removed unlock for'} quiz and certificate for ${student.name}`);
+                if (!unlock) setCertificateOverride(student.id, courseId, 'auto');
+                addActivityLog(`${unlock ? 'Unlocked quiz timing for' : 'Removed early quiz unlock for'} ${student.name}`);
                 alert(response.message || (unlock ? 'Student unlocked successfully.' : 'Student unlock removed.'));
                 renderAdminExtras();
                 openStudentDetailModal(index);
             } catch (error) {
                 const message = String(error.message || '');
                 if (error.status === 404 || message.toLowerCase().includes('route not found')) {
-                    alert('Early unlock backend route live nahi hai. Render me Manual Deploy > Deploy latest commit karo, phir dobara Unlock Quiz + Certificate dabao.');
+                    alert('Early quiz unlock backend route live nahi hai. Render me Manual Deploy > Deploy latest commit karo, phir dobara Unlock Quiz Timing dabao.');
                     return;
                 }
                 if (error.status === 401 || message.toLowerCase().includes('token') || message.toLowerCase().includes('expired')) {
-                    alert('Admin session expire ho gaya hai. Please logout/login karke admin panel dobara kholo, phir Unlock Quiz + Certificate dabao.');
+                    alert('Admin session expire ho gaya hai. Please logout/login karke admin panel dobara kholo, phir Unlock Quiz Timing dabao.');
                     return;
                 }
                 if (error.status === 403) {
@@ -2915,8 +2945,23 @@
                 };
             }
 
+            let backendQuizData = null;
+            try {
+                backendQuizData = raw.courseQuizData ? JSON.parse(raw.courseQuizData) : null;
+            } catch (error) {
+                backendQuizData = null;
+            }
+            const backendResult = backendQuizData || (String(raw.courseStatus || '').toLowerCase() === 'completed' ? {
+                courseId,
+                courseName: student.course,
+                passed: Number(raw.courseMarks || 0) >= 60,
+                scorePercentage: Number(raw.courseMarks || 0),
+                grade: raw.courseGrade || '',
+                certificateNumber: raw.courseCertificateNumber || raw.certificateNumber || '',
+                completedAt: raw.courseCompletedAt || ''
+            } : null);
             const localResult = getCourseResult(courseId);
-            const result = localResult || (raw.courseCertificateNumber || raw.certificateNumber ? {
+            const result = localResult || backendResult || (raw.courseCertificateNumber || raw.certificateNumber ? {
                 courseId,
                 courseName: student.course,
                 certificateNumber: raw.courseCertificateNumber || raw.certificateNumber,
@@ -2926,10 +2971,11 @@
             const earlyUnlock = getEarlyUnlockOverride(student.id, courseId) || raw.adminUnlockedAt || raw.courseAdminUnlockedAt;
             const storedProgress = Number(raw.courseProgress || raw.progress || 0);
             let certificateStatus = 'Pending';
-            if (earlyUnlock) certificateStatus = 'Unlocked by admin';
-            else if (override === 'approved') certificateStatus = 'Approved by admin';
+            if (earlyUnlock) certificateStatus = 'Quiz unlocked early';
             if (override === 'blocked') certificateStatus = 'Blocked by admin';
-            if (override === 'auto' && result?.passed) certificateStatus = 'Auto approved';
+            if (override === 'auto' && result?.passed) {
+                certificateStatus = result.manualOverride ? 'Program Controller approved' : 'Auto approved';
+            }
 
             return {
                 courseId,
@@ -2944,12 +2990,46 @@
 
         function getAllCourseResults() {
             const results = [];
+            const seen = new Set();
+            allStudents.forEach(student => {
+                const raw = getRawStudent(student);
+                const courseId = getStudentAssignedCourseId(student);
+                if (!courseId) return;
+                let backendQuizData = null;
+                try {
+                    backendQuizData = raw.courseQuizData ? JSON.parse(raw.courseQuizData) : null;
+                } catch (error) {
+                    backendQuizData = null;
+                }
+                const backendResult = backendQuizData || (String(raw.courseStatus || '').toLowerCase() === 'completed' ? {
+                    courseId,
+                    courseName: student.course,
+                    passed: Number(raw.courseMarks || 0) >= 60,
+                    scorePercentage: Number(raw.courseMarks || 0),
+                    grade: raw.courseGrade || '',
+                    certificateNumber: raw.courseCertificateNumber || '',
+                    completedAt: raw.courseCompletedAt || ''
+                } : null);
+                if (backendResult) {
+                    const key = `${student.id}_${courseId}`;
+                    seen.add(key);
+                    results.push({
+                        studentId: student.id,
+                        studentName: student.name,
+                        courseId,
+                        courseName: backendResult.courseName || student.course || getCourseNameById(courseId),
+                        ...backendResult
+                    });
+                }
+            });
             for (let i = 0; i < localStorage.length; i += 1) {
                 const key = localStorage.key(i);
                 if (!key || !key.startsWith('courseResult_')) continue;
                 const courseId = key.replace('courseResult_', '');
                 const result = StorageManager.get(key);
                 if (result && typeof result === 'object') {
+                    const resultKey = `${result.studentId || ''}_${courseId}`;
+                    if (result.studentId && seen.has(resultKey)) continue;
                     results.push({
                         courseId,
                         courseName: result.courseName || getCourseNameById(courseId),
@@ -2978,6 +3058,7 @@
             loadPaymentAmountSettings();
             renderPaymentOverview();
             renderProgressTracker();
+            populateProgramControllerResultForm();
             renderQuizReport();
             renderCertificatePanel();
             renderCourseAnalytics();
@@ -3435,6 +3516,129 @@
             `;
         }
 
+        function populateProgramControllerResultForm() {
+            const studentSelect = document.getElementById('controllerResultStudent');
+            if (!studentSelect) return;
+            const selectedStudent = studentSelect.value;
+            const options = allStudents
+                .filter(student => getStudentAssignedCourseId(student))
+                .map(student => `<option value="${escapeHTML(student.id)}">${escapeHTML(student.name)} - ${escapeHTML(student.rollno || student.email || '')}</option>`)
+                .join('');
+            studentSelect.innerHTML = `<option value="">Select student</option>${options}`;
+            if ([...studentSelect.options].some(option => option.value === selectedStudent)) {
+                studentSelect.value = selectedStudent;
+            }
+            updateProgramControllerCourse();
+        }
+
+        function updateProgramControllerCourse() {
+            const studentId = document.getElementById('controllerResultStudent')?.value || '';
+            const courseSelect = document.getElementById('controllerResultCourse');
+            const status = document.getElementById('controllerResultStatus');
+            if (!courseSelect) return;
+            const student = allStudents.find(item => String(item.id) === String(studentId));
+            if (!student) {
+                courseSelect.innerHTML = '<option value="">Select student first</option>';
+                if (status) status.textContent = 'No result selected.';
+                return;
+            }
+
+            const courseId = getStudentAssignedCourseId(student);
+            const courseName = student.course || getCourseNameById(courseId);
+            courseSelect.innerHTML = courseId
+                ? `<option value="${escapeHTML(courseId)}">${escapeHTML(courseName)}</option>`
+                : '<option value="">No assigned course</option>';
+            if (status) status.textContent = courseId
+                ? `Ready to enter Program Controller result for ${student.name}.`
+                : 'This student has no assigned course.';
+        }
+
+        function openProgramControllerResultEntry() {
+            switchAdminControlTab('quiz');
+            document.getElementById('controllerResultStudent')?.focus();
+        }
+
+        function openProgramControllerResultByIndex(index) {
+            const student = allStudents[index];
+            if (!student) return;
+            openProgramControllerResultEntry();
+            const studentSelect = document.getElementById('controllerResultStudent');
+            if (studentSelect) {
+                studentSelect.value = String(student.id);
+                updateProgramControllerCourse();
+            }
+            document.getElementById('controllerResultMarks')?.focus();
+        }
+
+        function getProgramControllerGrade(marks) {
+            if (marks >= 90) return 'A+';
+            if (marks >= 80) return 'A';
+            if (marks >= 70) return 'B+';
+            if (marks >= 60) return 'B';
+            if (marks >= 50) return 'C';
+            return 'F';
+        }
+
+        async function saveProgramControllerResult() {
+            const studentId = document.getElementById('controllerResultStudent')?.value || '';
+            const courseId = document.getElementById('controllerResultCourse')?.value || '';
+            const marks = Number(document.getElementById('controllerResultMarks')?.value);
+            const reason = String(document.getElementById('controllerResultReason')?.value || '').trim();
+            const status = document.getElementById('controllerResultStatus');
+            const student = allStudents.find(item => String(item.id) === String(studentId));
+
+            if (!student || !courseId) {
+                alert('Please select a student with an assigned course.');
+                return;
+            }
+            if (!Number.isInteger(marks) || marks < 60 || marks > 100) {
+                alert('Please enter marks between 60 and 100.');
+                return;
+            }
+            if (reason.length < 10) {
+                alert('Please enter a clear approval reason with at least 10 characters.');
+                return;
+            }
+            if (!confirm(`Save ${marks}% as Program Controller result for ${student.name}?`)) return;
+
+            try {
+                if (status) status.textContent = 'Saving Program Controller result...';
+                const response = await APIService.saveProgramControllerResult(studentId, courseId, { marks, reason });
+                if (!response?.success) throw new Error(response?.message || 'Result save failed.');
+
+                const result = response.result || {};
+                const raw = getRawStudent(student);
+                raw.currentCourseId = courseId;
+                raw.courseProgress = 100;
+                raw.courseStatus = 'completed';
+                raw.courseMarks = marks;
+                raw.courseGrade = result.grade || getProgramControllerGrade(marks);
+                raw.courseCertificateNumber = result.certificateNumber || raw.courseCertificateNumber || '';
+                raw.courseCompletedAt = new Date().toISOString();
+                raw.courseQuizData = JSON.stringify(result.quizData || {
+                    manualOverride: true,
+                    source: 'program_controller',
+                    passed: true,
+                    scorePercentage: marks,
+                    grade: raw.courseGrade,
+                    courseId,
+                    courseName: student.course,
+                    certificateNumber: raw.courseCertificateNumber,
+                    reason
+                });
+                student.fullData = raw;
+                addActivityLog(`Program Controller result saved for ${student.name}: ${marks}%`);
+                document.getElementById('controllerResultMarks').value = '';
+                document.getElementById('controllerResultReason').value = '';
+                if (status) status.textContent = response.message || 'Program Controller result saved.';
+                renderAdminExtras();
+                alert('Program Controller result saved successfully.');
+            } catch (error) {
+                if (status) status.textContent = `Unable to save result: ${error.message}`;
+                alert(`Unable to save Program Controller result: ${error.message}`);
+            }
+        }
+
         function renderQuizReport() {
             const panel = document.getElementById('quizReportPanel');
             if (!panel) return;
@@ -3495,59 +3699,12 @@
                     </div>
                     <span class="status-pill ${statusClass(summary.certificateStatus)}">${escapeHTML(summary.certificateStatus)}</span>
                     <div class="quick-report-row" style="margin:10px 0 0;">
-                        <button class="search-btn" style="background:#0f766e;" onclick="unlockStudentCourseByIndex(${allStudents.findIndex(item => String(item.id) === String(student.id))}, true)" ${!summary.courseId ? 'disabled' : ''}>Unlock Certificate</button>
+                        <button class="search-btn" style="background:#0f766e;" onclick="openProgramControllerResultByIndex(${allStudents.findIndex(item => String(item.id) === String(student.id))})" ${!summary.courseId ? 'disabled' : ''}>Enter Controller Result</button>
                         <button class="search-btn" style="background:#64748b;" onclick="unlockStudentCourseByIndex(${allStudents.findIndex(item => String(item.id) === String(student.id))}, false)" ${!summary.courseId ? 'disabled' : ''}>Use Auto Status</button>
                         <button class="search-btn" style="background:#ef4444;" onclick="setCertificateOverrideByIndex(${allStudents.findIndex(item => String(item.id) === String(student.id))}, 'blocked')" ${!summary.courseId ? 'disabled' : ''}>Block</button>
                     </div>
                 </div>
             `).join('');
-        }
-
-        async function bulkApproveCertificates() {
-            const rows = getFilteredCertificateRows().filter(({ student, summary }) => {
-                return summary.courseId
-                    && summary.certificateStatus !== 'Unlocked by admin'
-                    && summary.certificateStatus !== 'Approved by admin'
-                    && summary.certificateStatus !== 'Blocked by admin';
-            });
-
-            if (rows.length === 0) {
-                alert('No pending certificate records found in the current certificate list.');
-                return;
-            }
-
-            if (!confirm(`Unlock certificates for ${rows.length} student(s)?`)) return;
-
-            let successCount = 0;
-            const failed = [];
-            for (const { student, summary } of rows) {
-                try {
-                    const response = await APIService.updateStudentCourseUnlock(student.id, summary.courseId, true);
-                    if (!response || response.success === false) {
-                        throw new Error(response?.message || 'Unlock update failed.');
-                    }
-                    const changedAt = new Date().toISOString();
-                    const raw = getRawStudent(student);
-                    raw.currentCourseId = summary.courseId;
-                    raw.adminUnlockedAt = changedAt;
-                    raw.adminUnlockedBy = StorageManager.get('adminEmail') || 'admin';
-                    student.fullData = raw;
-                    setEarlyUnlockOverride(student.id, summary.courseId, changedAt);
-                    const overrides = getStoredObject('adminCertificateOverrides');
-                    overrides[`${student.id}_${summary.courseId}`] = 'approved';
-                    StorageManager.set('adminCertificateOverrides', overrides);
-                    successCount += 1;
-                } catch (error) {
-                    failed.push(`${student.name}: ${error.message || 'Unknown error'}`);
-                }
-            }
-
-            renderAdminExtras();
-            if (failed.length > 0) {
-                alert(`Unlocked ${successCount} student(s). Failed:\n${failed.join('\n')}`);
-            } else {
-                alert(`Unlocked certificates for ${successCount} student(s).`);
-            }
         }
 
         function renderCourseAnalytics() {
@@ -3784,14 +3941,14 @@
                     <div class="detail-box"><strong>Score</strong>${escapeHTML(result.scorePercentage ?? 'N/A')}${result.scorePercentage !== undefined ? '%' : ''}</div>
                     <div class="detail-box"><strong>Certificate</strong>${escapeHTML(summary.certificateStatus)}</div>
                 </div>
-                <h3 style="margin-top:18px;">Early Unlock Control</h3>
+                <h3 style="margin-top:18px;">Early Quiz Unlock Control</h3>
                 <div class="quick-report-row">
-                    <button class="search-btn" style="background:#0f766e;" onclick="unlockStudentCourseByIndex(${index}, true)" ${!summary.courseId ? 'disabled' : ''}>Unlock Quiz + Certificate</button>
+                    <button class="search-btn" style="background:#0f766e;" onclick="unlockStudentCourseByIndex(${index}, true)" ${!summary.courseId ? 'disabled' : ''}>Unlock Quiz Timing</button>
                     <button class="search-btn" style="background:#64748b;" onclick="unlockStudentCourseByIndex(${index}, false)" ${!summary.courseId ? 'disabled' : ''}>Remove Early Unlock</button>
                 </div>
-                <h3 style="margin-top:18px;">Manual Certificate Control</h3>
+                <h3 style="margin-top:18px;">Certificate Control</h3>
                 <div class="quick-report-row">
-                    <button class="search-btn" style="background:#10b981;" onclick="setCertificateOverrideByIndex(${index}, 'approved')" ${!summary.courseId ? 'disabled' : ''}>Approve Certificate</button>
+                    <button class="search-btn" style="background:#10b981;" onclick="openProgramControllerResultByIndex(${index})" ${!summary.courseId ? 'disabled' : ''}>Enter Controller Result</button>
                     <button class="search-btn" style="background:#ef4444;" onclick="setCertificateOverrideByIndex(${index}, 'blocked')" ${!summary.courseId ? 'disabled' : ''}>Block Certificate</button>
                     <button class="search-btn" style="background:#64748b;" onclick="setCertificateOverrideByIndex(${index}, 'auto')" ${!summary.courseId ? 'disabled' : ''}>Use Auto Status</button>
                 </div>

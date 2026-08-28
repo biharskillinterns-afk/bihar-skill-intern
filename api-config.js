@@ -686,6 +686,13 @@ class APIService {
         });
     }
 
+    static async saveProgramControllerResult(studentId, courseId, data) {
+        return this.request(`/admin/students/${encodeURIComponent(studentId)}/courses/${encodeURIComponent(courseId)}/result-override`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
     static async getAdminPaymentAmount() {
         return this.request('/admin/settings/payment-amount');
     }

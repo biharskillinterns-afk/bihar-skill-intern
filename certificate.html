@@ -1202,7 +1202,7 @@
                     const enrolled = localStorage.getItem('course_' + id) === 'true';
                     const override = overrides[`${studentId}_${id}`] || 'auto';
                     if (override === 'blocked') continue;
-                    if (enrolled && result && String(resultCourseId) === String(id) && (override === 'approved' || (result.passed && Number(result.scorePercentage) >= 60))) {
+                    if (enrolled && result && String(resultCourseId) === String(id) && result.passed && Number(result.scorePercentage) >= 60) {
                         return { ...result, courseId: result.courseId || id };
                     }
                 } catch (error) {
