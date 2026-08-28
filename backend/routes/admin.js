@@ -297,8 +297,9 @@ router.delete('/college-settings/:id', verifyToken, isAdmin, async (req, res) =>
 
 // Get all students
 router.get('/students', verifyToken, isAdmin, async (req, res) => {
+    let connection;
     try {
-        const connection = await req.db.getConnection();
+        connection = await req.db.getConnection();
         const activeClause = await studentActiveClause(connection, 's');
         const majorSubjectSelect = await compatColumnExists(connection, 'students', 'majorSubject')
             ? 's.majorSubject,'
@@ -366,8 +367,6 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
              WHERE 1=1${activeClause}
              ORDER BY s.createdAt DESC`
         );
-        connection.release();
-        
         res.json({
             success: true,
             total: students.length,
@@ -379,13 +378,16 @@ router.get('/students', verifyToken, isAdmin, async (req, res) => {
             message: 'Failed to fetch students',
             error: error.message
         });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
 // Get student by ID
 router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
+    let connection;
     try {
-        const connection = await req.db.getConnection();
+        connection = await req.db.getConnection();
         const activeClause = await studentActiveClause(connection, 's');
         const majorSubjectSelect = await compatColumnExists(connection, 'students', 'majorSubject')
             ? 's.majorSubject,'
@@ -455,8 +457,6 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
               WHERE s.id = ?${activeClause}`,
             [req.params.id]
         );
-        connection.release();
-        
         if (students.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -474,6 +474,8 @@ router.get('/students/:id', verifyToken, isAdmin, async (req, res) => {
             message: 'Failed to fetch student',
             error: error.message
         });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
